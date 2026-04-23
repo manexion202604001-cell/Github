@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キャラクター生成アプリ</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1 class="header__title">⚔️ キャラクター生成アプリ</h1>
+      <p class="header__subtitle">あなたの冒険者を作ろう</p>
+    </header>
+
+    <main class="main">
+      <!-- Controls -->
+      <section class="controls">
+        <div class="controls__row">
+          <div class="control-group">
+            <label for="raceSelect">種族</label>
+            <select id="raceSelect">
+              <option value="random">ランダム</option>
+              <option value="human">人間</option>
+              <option value="elf">エルフ</option>
+              <option value="dwarf">ドワーフ</option>
+              <option value="halfling">ハーフリング</option>
+              <option value="orc">オーク</option>
+              <option value="dragonborn">ドラゴンボーン</option>
+              <option value="tiefling">ティーフリング</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="classSelect">クラス</label>
+            <select id="classSelect">
+              <option value="random">ランダム</option>
+              <option value="warrior">戦士</option>
+              <option value="mage">魔法使い</option>
+              <option value="rogue">盗賊</option>
+              <option value="paladin">聖騎士</option>
+              <option value="ranger">レンジャー</option>
+              <option value="cleric">聖職者</option>
+              <option value="bard">吟遊詩人</option>
+              <option value="druid">ドルイド</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="genderSelect">性別</label>
+            <select id="genderSelect">
+              <option value="random">ランダム</option>
+              <option value="male">男性</option>
+              <option value="female">女性</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls__actions">
+          <button id="generateBtn" class="btn btn--primary">
+            <span class="btn__icon">✨</span>キャラクターを生成
+          </button>
+          <button id="saveBtn" class="btn btn--secondary" disabled>
+            <span class="btn__icon">💾</span>保存
+          </button>
+          <button id="exportBtn" class="btn btn--secondary" disabled>
+            <span class="btn__icon">📋</span>コピー
+          </button>
+        </div>
+      </section>
+
+      <!-- Character Card -->
+      <section class="card-area">
+        <div class="character-card" id="characterCard">
+          <div class="card-placeholder">
+            <div class="placeholder-icon">⚔️</div>
+            <p>「キャラクターを生成」ボタンを押してキャラクターを作成してください</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Saved Characters -->
+      <section class="saved-section" id="savedSection" style="display:none">
+        <h2 class="saved-section__title">💼 保存されたキャラクター</h2>
+        <div class="saved-list" id="savedList"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
