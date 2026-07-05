@@ -254,6 +254,69 @@ h3 { font-size: 1.02rem; color: var(--navy); margin-bottom: 10px; }
   z-index: 1;
 }
 
+/* 簡易マップ（オンライン地図が使えないときのフォールバック） */
+#map.fallback-map {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(47, 93, 138, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 93, 138, 0.07) 1px, transparent 1px),
+    linear-gradient(160deg, #eef3f7, #f2efe4);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+}
+
+.fallback-note {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 8px 14px;
+  font-size: 0.7rem;
+  color: var(--gray);
+  background: rgba(255, 255, 255, 0.82);
+  z-index: 2;
+}
+
+.fallback-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  z-index: 1;
+}
+
+.fallback-pin .pin-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 50% 50% 50% 6px;
+  border: 2px solid var(--white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  font-size: 17px;
+}
+
+.fallback-pin.todo .pin-emoji { background: var(--indigo); }
+.fallback-pin.done .pin-emoji { background: var(--accent); }
+
+.fallback-pin:hover,
+.fallback-pin:focus-visible { z-index: 3; }
+
+.fallback-pin .pin-name {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .map-legend {
   display: flex;
   align-items: center;

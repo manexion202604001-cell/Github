@@ -160,6 +160,7 @@
 
   let map = null;
   let mapMarkers = {};
+  let fallbackMap = false;
 
   function switchView(name) {
     $$(".view").forEach((v) => v.classList.remove("active"));
@@ -187,14 +188,74 @@
     });
   }
 
+  /** オンライン地図が使えないときの簡易マップ（緯度経度の相対配置） */
+  function renderFallbackMap() {
+    const el = $("#map");
+    el.classList.add("fallback-map");
+    const lats = SPOTS.map((s) => s.lat);
+    const lngs = SPOTS.map((s) => s.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const spanLat = maxLat - minLat || 1;
+    const spanLng = maxLng - minLng || 1;
+    const PAD = 10; // 端の余白(%)
+
+    // 市街地中心部はスポットが密集するため、重なったピンを反復計算で離す
+    // （簡易マップは概略表示なので、位置の厳密さより視認性・タップしやすさを優先）
+    const MIN_GAP = 11; // ピン間の最小距離(%)
+    const pts = SPOTS.map((s) => ({
+      spot: s,
+      x: PAD + ((s.lng - minLng) / spanLng) * (100 - PAD * 2),
+      y: PAD + ((maxLat - s.lat) / spanLat) * (100 - PAD * 2),
+    }));
+    for (let iter = 0; iter < 40; iter++) {
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          let dx = pts[j].x - pts[i].x;
+          let dy = pts[j].y - pts[i].y;
+          let d = Math.hypot(dx, dy);
+          if (d >= MIN_GAP) continue;
+          if (d === 0) { dx = 1; dy = 0.5; d = Math.hypot(dx, dy); }
+          const push = (MIN_GAP - d) / 2 / d;
+          pts[i].x -= dx * push; pts[i].y -= dy * push;
+          pts[j].x += dx * push; pts[j].y += dy * push;
+        }
+      }
+      for (const p of pts) {
+        p.x = Math.min(100 - PAD, Math.max(PAD, p.x));
+        p.y = Math.min(100 - PAD, Math.max(PAD, p.y));
+      }
+    }
+
+    el.innerHTML =
+      '<div class="fallback-note">📡 オンライン地図を読み込めないため、スポットのおおよその位置関係を表示しています（上が北）</div>' +
+      pts.map(({ spot: s, x, y }) => {
+        const done = isStamped(s.id);
+        return (
+          `<button class="fallback-pin ${done ? "done" : "todo"}" style="left:${x}%;top:${y}%" data-spot="${s.id}">` +
+          `<span class="pin-emoji">${s.emoji}</span><span class="pin-name">${s.name}</span></button>`
+        );
+      }).join("");
+
+    el.querySelectorAll("[data-spot]").forEach((b) =>
+      b.addEventListener("click", () => openSpotModal(b.dataset.spot))
+    );
+  }
+
   function initMap() {
     if (map) {
       map.invalidateSize();
       return;
     }
+    if (fallbackMap) {
+      renderFallbackMap();
+      return;
+    }
     if (typeof L === "undefined") {
-      $("#map").innerHTML =
-        '<p style="padding:20px;text-align:center;color:#7d7d76">地図ライブラリを読み込めませんでした。通信環境をご確認ください。</p>';
+      fallbackMap = true;
+      renderFallbackMap();
       return;
     }
     map = L.map("map").setView([36.19, 139.705], 13);
@@ -220,6 +281,10 @@
   }
 
   function refreshMapMarkers() {
+    if (fallbackMap) {
+      renderFallbackMap();
+      return;
+    }
     if (!map) return;
     for (const spot of SPOTS) {
       mapMarkers[spot.id]?.setIcon(pinIcon(spot));
@@ -228,7 +293,10 @@
 
   let userMarker = null;
   async function locateUser() {
-    if (!map) return;
+    if (!map) {
+      showToast("簡易マップでは現在地表示は使えません");
+      return;
+    }
     try {
       showToast("📡 現在地を取得中…", 8000);
       const pos = await getPosition();
