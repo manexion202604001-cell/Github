@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/public-release-b2lxtx]
   workflow_dispatch:
 
 permissions:
