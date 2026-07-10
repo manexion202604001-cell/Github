@@ -205,11 +205,51 @@ body { margin: 0; }
 }
 .gate-error { color: var(--danger); font-size: 12px; margin-bottom: 8px; }
 
+.back-btn { margin-bottom: 12px; }
+.sum-table-wrap { overflow-x: auto; }
+
 @media (max-width: 720px) {
-  .layout { grid-template-columns: 1fr; height: auto; }
-  .list-pane { max-height: 40vh; }
+  .topbar { flex-wrap: wrap; gap: 6px 12px; padding: 10px 14px; }
+  .brand-mark { font-size: 17px; }
+  .save-indicator { min-width: 0; font-size: 11px; }
+  .sync-badge { font-size: 10px; }
+  .tabs { order: 10; width: 100%; margin: 2px -14px -10px; padding: 0 14px; border-top: 1px solid var(--line); }
+  .tab { flex: 1; padding: 10px 0; }
+
+  .layout { display: block; height: auto; }
+  .list-pane { border-right: none; }
+  .list-scroll { overflow-y: visible; }
+  .row { padding: 14px; }
+
+  .detail-pane { overflow-y: visible; padding: 16px 14px 48px; }
   .grid2 { grid-template-columns: 1fr; }
-  .ref-fee { min-width: 84px; }
+
+  /* iOSのフォーカス時自動ズームを防ぐため入力は16px以上にする */
+  .field input, .field select, .search, .title-input,
+  .note-input textarea, .ref-name, .ref-percent input, .gate-card input {
+    font-size: 16px;
+  }
+  .title-input { font-size: 20px; }
+
+  .btn { padding: 10px 14px; }
+  .icon-btn { padding: 8px 10px; font-size: 18px; }
+
+  .ref-row { flex-wrap: wrap; row-gap: 6px; }
+  .ref-name { flex: 1 1 calc(100% - 24px); }
+  .ref-percent { margin-left: 20px; }
+  .ref-fee { flex: 1; min-width: 0; }
+
+  .note-input { flex-wrap: wrap; }
+  .note-input textarea { flex: 1 1 100%; }
+  .note-input .btn { margin-left: auto; }
+
+  .summary { padding: 16px 14px 48px; }
+  .sum-row { padding: 14px; gap: 10px; }
+  .sum-table { min-width: 480px; }
+  .sum-table th, .sum-table td { padding: 8px 14px; }
+
+  .empty.tall { padding: 48px 20px; }
+  .gate-card { width: calc(100vw - 32px); max-width: 320px; padding: 28px 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
@@ -244,6 +284,24 @@ const now = () => {
   const p = (x) => String(x).padStart(2, "0");
   return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 };
+
+// ---------- モバイル判定 ----------
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    window.matchMedia("(max-width: 720px)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 720px)");
+    const onChange = (e) => setMobile(e.matches);
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
+      else mq.removeListener(onChange);
+    };
+  }, []);
+  return mobile;
+}
 
 // ---------- パスコードゲート ----------
 function Gate({ onPass }) {
@@ -288,6 +346,7 @@ function App() {
   const [saveState, setSaveState] = useState("idle");
   const [errMsg, setErrMsg] = useState("");
   const [realtimeOn, setRealtimeOn] = useState(false);
+  const isMobile = useIsMobile();
   const saveTimers = useRef({});
   const customersRef = useRef(customers);
   customersRef.current = customers;
@@ -442,6 +501,7 @@ function App() {
         <ReferrerSummary summary={referrerSummary} />
       ) : (
         <div className="layout">
+          {(!isMobile || !selected) && (
           <aside className="list-pane">
             <div className="list-head">
               <input
@@ -483,7 +543,9 @@ function App() {
               ))}
             </div>
           </aside>
+          )}
 
+          {(!isMobile || selected) && (
           <main className="detail-pane">
             {!selected ? (
               <div className="empty tall">左の一覧から顧客を選択するか、新規登録してください。</div>
@@ -492,16 +554,18 @@ function App() {
                 customer={selected}
                 onChange={(patch) => update(selected.id, patch)}
                 onDelete={() => removeCustomer(selected.id)}
+                onBack={isMobile ? () => setSelectedId(null) : null}
               />
             )}
           </main>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function CustomerDetail({ customer, onChange, onDelete }) {
+function CustomerDetail({ customer, onChange, onDelete, onBack }) {
   const [noteDraft, setNoteDraft] = useState("");
   const amount = Number(customer.amount) || 0;
   const refs = customer.referrers || [];
@@ -528,6 +592,9 @@ function CustomerDetail({ customer, onChange, onDelete }) {
 
   return (
     <div className="detail">
+      {onBack && (
+        <button className="btn back-btn" onClick={onBack}>← 一覧に戻る</button>
+      )}
       <div className="detail-head">
         <input
           className="title-input"
@@ -677,6 +744,7 @@ function ReferrerSummary({ summary }) {
             <span className="sum-total">{yen(r.total)}</span>
           </button>
           {openName === r.name && (
+            <div className="sum-table-wrap">
             <table className="sum-table">
               <thead>
                 <tr>
@@ -700,6 +768,7 @@ function ReferrerSummary({ summary }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       ))}
