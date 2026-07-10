@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>顧客台帳 | 紹介者・報酬管理</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="./config.js"></script>
+<style>
+:root {
+  --ink: #1a2333;
+  --sub: #66707f;
+  --line: #dfe4ec;
+  --paper: #f7f8fa;
+  --white: #ffffff;
+  --accent: #2563eb;
+  --danger: #b91c1c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.crm-root {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  font-size: 14px;
+}
+.topbar {
+  display: flex; align-items: center; gap: 24px;
+  padding: 14px 24px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 5;
+}
+.brand { display: flex; flex-direction: column; }
+.brand-mark {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 20px; font-weight: 600; letter-spacing: 0.12em;
+}
+.brand-sub { font-size: 11px; color: var(--sub); letter-spacing: 0.08em; }
+.tabs { display: flex; gap: 4px; }
+.tab {
+  border: none; background: transparent; padding: 8px 14px;
+  font-size: 13px; color: var(--sub); cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.save-indicator { margin-left: auto; font-size: 12px; color: var(--sub); min-width: 90px; text-align: right; }
+.sync-badge { font-size: 11px; color: #15803d; }
+.sync-badge.off { color: var(--sub); }
+
+.layout {
+  display: grid; grid-template-columns: 320px 1fr;
+  gap: 0; height: calc(100vh - 61px);
+}
+.list-pane {
+  border-right: 1px solid var(--line);
+  background: var(--white);
+  display: flex; flex-direction: column;
+}
+.list-head { padding: 12px; display: flex; gap: 8px; border-bottom: 1px solid var(--line); }
+.search {
+  flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+  font-size: 13px; min-width: 0;
+}
+.list-scroll { overflow-y: auto; flex: 1; }
+.row {
+  display: block; width: 100%; text-align: left;
+  padding: 12px 14px; border: none; background: transparent;
+  border-bottom: 1px solid var(--line); cursor: pointer; font: inherit; color: inherit;
+}
+.row:hover { background: #f0f4ff; }
+.row.selected { background: #e8effc; box-shadow: inset 3px 0 0 var(--accent); }
+.row-top { display: flex; align-items: center; justify-content: space-between; }
+.row-name { font-weight: 600; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.row-sub { display: flex; justify-content: space-between; color: var(--sub); font-size: 12px; margin-top: 3px; }
+.row-amount { font-variant-numeric: tabular-nums; }
+.row-refs { font-size: 11px; color: var(--accent); margin-top: 4px; }
+
+.detail-pane { overflow-y: auto; padding: 24px; }
+.detail { max-width: 760px; margin: 0 auto; }
+.detail-head { display: flex; gap: 12px; align-items: center; }
+.title-input {
+  flex: 1; font-size: 24px; font-weight: 600; border: none; background: transparent;
+  border-bottom: 1px solid transparent; padding: 4px 0; min-width: 0;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+.title-input:focus { outline: none; border-bottom-color: var(--accent); }
+.meta { font-size: 12px; color: var(--sub); margin: 4px 0 16px; }
+
+.card {
+  background: var(--white); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px; margin-bottom: 16px;
+}
+.card-title { margin: 0 0 12px; font-size: 14px; letter-spacing: 0.06em; }
+.card-title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.card-title-row .card-title { margin: 0; }
+.percent-total { font-size: 12px; color: var(--sub); }
+.percent-total.over { color: var(--danger); font-weight: 600; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font-size: 12px; color: var(--sub); }
+.field input, .field select {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px;
+  background: var(--white);
+}
+.field input:focus, .field select:focus, .search:focus, textarea:focus {
+  outline: 2px solid var(--accent); outline-offset: -1px;
+}
+
+.ref-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ref-swatch { width: 10px; height: 24px; border-radius: 3px; flex: none; }
+.ref-name { flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+.ref-percent { display: flex; align-items: center; gap: 4px; }
+.ref-percent input {
+  width: 72px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+  text-align: right;
+}
+.ref-fee { min-width: 110px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.icon-btn {
+  border: none; background: transparent; color: var(--sub); font-size: 16px;
+  cursor: pointer; padding: 4px 8px; border-radius: 4px;
+}
+.icon-btn:hover { color: var(--danger); background: #fdf0f0; }
+
+.split-viz { margin-top: 14px; }
+.split-bar {
+  display: flex; height: 14px; border-radius: 7px; overflow: hidden;
+  background: var(--line);
+}
+.split-seg { height: 100%; }
+.split-seg.remain { background: repeating-linear-gradient(45deg, #e7ebf2, #e7ebf2 4px, #f1f4f9 4px, #f1f4f9 8px); }
+.split-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-top: 6px; }
+
+.note-input { display: flex; gap: 8px; margin-bottom: 14px; align-items: flex-start; }
+.note-input textarea {
+  flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+  font-size: 14px; resize: vertical; font-family: inherit; min-width: 0;
+}
+.note { border-top: 1px solid var(--line); padding: 10px 0; }
+.note-head { display: flex; justify-content: space-between; align-items: center; }
+.note-date { font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
+.note-text { white-space: pre-wrap; margin-top: 4px; line-height: 1.7; }
+
+.btn {
+  padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--white); cursor: pointer; font-size: 13px; white-space: nowrap; font-family: inherit;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.primary:disabled { opacity: 0.4; cursor: default; }
+.btn.ghost { border-style: dashed; color: var(--accent); }
+.btn.danger { color: var(--danger); border-color: #eecaca; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.empty { padding: 24px; color: var(--sub); text-align: center; line-height: 1.8; }
+.empty.tall { padding: 80px 24px; }
+.empty.small { padding: 10px 0; text-align: left; font-size: 13px; }
+.loading { padding: 80px; text-align: center; color: var(--sub); }
+.error-banner {
+  background: #fdf0f0; color: var(--danger); font-size: 13px;
+  padding: 10px 24px; border-bottom: 1px solid #eecaca;
+}
+
+.summary { max-width: 760px; margin: 0 auto; padding: 24px; }
+.summary-lead { color: var(--sub); font-size: 13px; margin: 0 0 16px; }
+.sum-block { background: var(--white); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.sum-row {
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  padding: 14px 18px; border: none; background: transparent; cursor: pointer;
+  font-size: 14px; text-align: left; font-family: inherit; color: inherit;
+}
+.sum-row:hover { background: #f0f4ff; }
+.sum-name { font-weight: 600; flex: 1; }
+.sum-count { color: var(--sub); font-size: 12px; }
+.sum-total { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+.sum-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sum-table th, .sum-table td { padding: 8px 18px; border-top: 1px solid var(--line); text-align: left; }
+.sum-table th { color: var(--sub); font-weight: 500; font-size: 12px; }
+.sum-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.status-pill { font-size: 11px; border: 1px solid; border-radius: 999px; padding: 2px 8px; }
+
+.gate {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--paper); font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+}
+.gate-card {
+  background: var(--white); border: 1px solid var(--line); border-radius: 12px;
+  padding: 36px; width: 320px; text-align: center;
+}
+.gate-card h1 {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 20px; letter-spacing: 0.12em; margin: 0 0 4px;
+}
+.gate-card p { font-size: 12px; color: var(--sub); margin: 0 0 20px; }
+.gate-card input {
+  width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 6px;
+  font-size: 15px; text-align: center; margin-bottom: 12px;
+}
+.gate-error { color: var(--danger); font-size: 12px; margin-bottom: 8px; }
+
+@media (max-width: 720px) {
+  .layout { grid-template-columns: 1fr; height: auto; }
+  .list-pane { max-height: 40vh; }
+  .grid2 { grid-template-columns: 1fr; }
+  .ref-fee { min-width: 84px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+const STATUSES = ["商談中", "成約", "請求済", "入金済", "失注"];
+const STATUS_COLORS = {
+  "商談中": "#8a94a6",
+  "成約": "#2563eb",
+  "請求済": "#b45309",
+  "入金済": "#15803d",
+  "失注": "#9f1239",
+};
+const BAR_COLORS = ["#2563eb", "#60a5fa", "#1e40af", "#93c5fd", "#3b82f6", "#bfdbfe"];
+
+const yen = (n) =>
+  new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" }).format(
+    Math.round(Number(n) || 0)
+  );
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const now = () => {
+  const d = new Date();
+  const p = (x) => String(x).padStart(2, "0");
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+// ---------- パスコードゲート ----------
+function Gate({ onPass }) {
+  const [val, setVal] = useState("");
+  const [err, setErr] = useState(false);
+  const submit = () => {
+    if (val === CONFIG.APP_PASSCODE) {
+      sessionStorage.setItem("crm_ok", "1");
+      onPass();
+    } else {
+      setErr(true);
+    }
+  };
+  return (
+    <div className="gate">
+      <div className="gate-card">
+        <h1>顧客台帳</h1>
+        <p>パスコードを入力してください</p>
+        {err && <div className="gate-error">パスコードが違います</div>}
+        <input
+          type="password"
+          value={val}
+          onChange={(e) => { setVal(e.target.value); setErr(false); }}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          autoFocus
+        />
+        <button className="btn primary" style={{ width: "100%" }} onClick={submit}>
+          開く
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- メインアプリ ----------
+function App() {
+  const [customers, setCustomers] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [tab, setTab] = useState("customers");
+  const [query, setQuery] = useState("");
+  const [saveState, setSaveState] = useState("idle");
+  const [errMsg, setErrMsg] = useState("");
+  const [realtimeOn, setRealtimeOn] = useState(false);
+  const saveTimers = useRef({});
+  const customersRef = useRef(customers);
+  customersRef.current = customers;
+
+  // ---- 全件読み込み ----
+  const loadAll = async () => {
+    const { data, error } = await sb
+      .from("customers")
+      .select("id, data")
+      .order("updated_at", { ascending: false });
+    if (error) {
+      setErrMsg("データの読み込みに失敗しました。config.js の設定と setup.sql の実行を確認してください。(" + error.message + ")");
+    } else {
+      setCustomers((data || []).map((r) => r.data));
+      setErrMsg("");
+    }
+    setLoaded(true);
+  };
+
+  useEffect(() => {
+    loadAll();
+    // リアルタイム同期: 他メンバーの編集を即時反映
+    const channel = sb
+      .channel("customers-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, (payload) => {
+        setCustomers((cs) => {
+          if (payload.eventType === "DELETE") {
+            return cs.filter((c) => c.id !== payload.old.id);
+          }
+          const incoming = payload.new.data;
+          const exists = cs.some((c) => c.id === incoming.id);
+          return exists
+            ? cs.map((c) => (c.id === incoming.id ? incoming : c))
+            : [incoming, ...cs];
+        });
+      })
+      .subscribe((status) => setRealtimeOn(status === "SUBSCRIBED"));
+    return () => { sb.removeChannel(channel); };
+  }, []);
+
+  // ---- 顧客単位の保存(デバウンス) ----
+  const persist = (customer) => {
+    setSaveState("saving");
+    clearTimeout(saveTimers.current[customer.id]);
+    saveTimers.current[customer.id] = setTimeout(async () => {
+      const latest = customersRef.current.find((c) => c.id === customer.id);
+      if (!latest) return;
+      const { error } = await sb
+        .from("customers")
+        .upsert({ id: latest.id, data: latest, updated_at: new Date().toISOString() });
+      if (error) {
+        setSaveState("error");
+        setErrMsg("保存に失敗しました: " + error.message);
+      } else {
+        setSaveState("saved");
+        setErrMsg("");
+        setTimeout(() => setSaveState("idle"), 1500);
+      }
+    }, 600);
+  };
+
+  const update = (id, patch) => {
+    setCustomers((cs) => {
+      const next = cs.map((c) => (c.id === id ? { ...c, ...patch } : c));
+      const target = next.find((c) => c.id === id);
+      if (target) persist(target);
+      return next;
+    });
+  };
+
+  const addCustomer = async () => {
+    const c = {
+      id: uid(), name: "", company: "", contact: "", amount: "",
+      status: "商談中", referrers: [], notes: [], createdAt: now(),
+    };
+    setCustomers((cs) => [c, ...cs]);
+    setSelectedId(c.id);
+    setTab("customers");
+    persist(c);
+  };
+
+  const removeCustomer = async (id) => {
+    if (!window.confirm("この顧客を削除しますか?この操作は取り消せません。")) return;
+    setCustomers((cs) => cs.filter((c) => c.id !== id));
+    if (selectedId === id) setSelectedId(null);
+    const { error } = await sb.from("customers").delete().eq("id", id);
+    if (error) setErrMsg("削除に失敗しました: " + error.message);
+  };
+
+  const selected = customers.find((c) => c.id === selectedId) || null;
+
+  const referrerSummary = useMemo(() => {
+    const map = new Map();
+    customers.forEach((c) => {
+      const amt = Number(c.amount) || 0;
+      (c.referrers || []).forEach((r) => {
+        const key = (r.name || "").trim();
+        if (!key) return;
+        const cur = map.get(key) || { name: key, total: 0, deals: [] };
+        const fee = (amt * (Number(r.percent) || 0)) / 100;
+        cur.total += fee;
+        cur.deals.push({
+          customer: c.name || "(未入力)", status: c.status,
+          amount: amt, percent: Number(r.percent) || 0, fee,
+        });
+        map.set(key, cur);
+      });
+    });
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  }, [customers]);
+
+  const filtered = customers.filter((c) => {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return (
+      (c.name || "").toLowerCase().includes(q) ||
+      (c.company || "").toLowerCase().includes(q) ||
+      (c.referrers || []).some((r) => (r.name || "").toLowerCase().includes(q))
+    );
+  });
+
+  return (
+    <div className="crm-root">
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark">顧客台帳</span>
+          <span className="brand-sub">紹介者・報酬管理</span>
+        </div>
+        <nav className="tabs">
+          <button className={tab === "customers" ? "tab active" : "tab"} onClick={() => setTab("customers")}>
+            顧客一覧
+          </button>
+          <button className={tab === "referrers" ? "tab active" : "tab"} onClick={() => setTab("referrers")}>
+            紹介者サマリー
+          </button>
+        </nav>
+        <div className="save-indicator" aria-live="polite">
+          {saveState === "saving" && "保存中…"}
+          {saveState === "saved" && "保存しました"}
+          {saveState === "error" && "保存に失敗しました"}
+        </div>
+        <span className={"sync-badge" + (realtimeOn ? "" : " off")}>
+          {realtimeOn ? "● リアルタイム同期中" : "○ 同期オフライン"}
+        </span>
+      </header>
+
+      {errMsg && <div className="error-banner">{errMsg}</div>}
+
+      {!loaded ? (
+        <div className="loading">読み込み中…</div>
+      ) : tab === "referrers" ? (
+        <ReferrerSummary summary={referrerSummary} />
+      ) : (
+        <div className="layout">
+          <aside className="list-pane">
+            <div className="list-head">
+              <input
+                className="search"
+                placeholder="顧客名・会社名・紹介者で検索"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <button className="btn primary" onClick={addCustomer}>+ 新規顧客</button>
+            </div>
+            <div className="list-scroll">
+              {filtered.length === 0 && (
+                <div className="empty">
+                  {customers.length === 0
+                    ? "まだ顧客がありません。「+ 新規顧客」から登録してください。"
+                    : "検索条件に一致する顧客がありません。"}
+                </div>
+              )}
+              {filtered.map((c) => (
+                <button
+                  key={c.id}
+                  className={"row" + (c.id === selectedId ? " selected" : "")}
+                  onClick={() => setSelectedId(c.id)}
+                >
+                  <div className="row-top">
+                    <span className="row-name">{c.name || "(名称未入力)"}</span>
+                    <span className="status-dot" style={{ background: STATUS_COLORS[c.status] }} title={c.status} />
+                  </div>
+                  <div className="row-sub">
+                    <span>{c.company || "—"}</span>
+                    <span className="row-amount">{c.amount ? yen(c.amount) : ""}</span>
+                  </div>
+                  {(c.referrers || []).filter((r) => r.name).length > 0 && (
+                    <div className="row-refs">
+                      紹介: {(c.referrers || []).filter((r) => r.name).map((r) => r.name).join("、")}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          <main className="detail-pane">
+            {!selected ? (
+              <div className="empty tall">左の一覧から顧客を選択するか、新規登録してください。</div>
+            ) : (
+              <CustomerDetail
+                customer={selected}
+                onChange={(patch) => update(selected.id, patch)}
+                onDelete={() => removeCustomer(selected.id)}
+              />
+            )}
+          </main>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CustomerDetail({ customer, onChange, onDelete }) {
+  const [noteDraft, setNoteDraft] = useState("");
+  const amount = Number(customer.amount) || 0;
+  const refs = customer.referrers || [];
+  const totalPercent = refs.reduce((s, r) => s + (Number(r.percent) || 0), 0);
+  const over = totalPercent > 100;
+
+  const setRef2 = (id, patch) =>
+    onChange({ referrers: refs.map((r) => (r.id === id ? { ...r, ...patch } : r)) });
+  const addRef = () =>
+    onChange({ referrers: [...refs, { id: uid(), name: "", percent: "" }] });
+  const removeRef = (id) =>
+    onChange({ referrers: refs.filter((r) => r.id !== id) });
+
+  const addNote = () => {
+    const text = noteDraft.trim();
+    if (!text) return;
+    onChange({ notes: [{ id: uid(), text, date: now() }, ...(customer.notes || [])] });
+    setNoteDraft("");
+  };
+  const removeNote = (id) =>
+    onChange({ notes: (customer.notes || []).filter((n) => n.id !== id) });
+
+  const namedRefs = refs.filter((r) => r.name && Number(r.percent) > 0);
+
+  return (
+    <div className="detail">
+      <div className="detail-head">
+        <input
+          className="title-input"
+          placeholder="顧客名を入力"
+          value={customer.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+        />
+        <button className="btn danger" onClick={onDelete}>削除</button>
+      </div>
+      <div className="meta">登録日: {customer.createdAt}</div>
+
+      <section className="card">
+        <h3 className="card-title">基本情報</h3>
+        <div className="grid2">
+          <label className="field">
+            <span>会社名</span>
+            <input value={customer.company} onChange={(e) => onChange({ company: e.target.value })} placeholder="株式会社◯◯" />
+          </label>
+          <label className="field">
+            <span>連絡先</span>
+            <input value={customer.contact} onChange={(e) => onChange({ contact: e.target.value })} placeholder="メール・電話など" />
+          </label>
+          <label className="field">
+            <span>金額(税抜)</span>
+            <input type="number" min="0" value={customer.amount} onChange={(e) => onChange({ amount: e.target.value })} placeholder="1000000" />
+          </label>
+          <label className="field">
+            <span>ステータス</span>
+            <select value={customer.status} onChange={(e) => onChange({ status: e.target.value })}>
+              {STATUSES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="card-title-row">
+          <h3 className="card-title">紹介者と報酬配分</h3>
+          <span className={"percent-total" + (over ? " over" : "")}>
+            合計 {totalPercent}%{over && "(100%を超えています)"}
+          </span>
+        </div>
+
+        {refs.length === 0 && <div className="empty small">紹介者が未登録です。</div>}
+
+        {refs.map((r, i) => {
+          const fee = (amount * (Number(r.percent) || 0)) / 100;
+          return (
+            <div className="ref-row" key={r.id}>
+              <span className="ref-swatch" style={{ background: BAR_COLORS[i % BAR_COLORS.length] }} />
+              <input
+                className="ref-name"
+                placeholder="紹介者名"
+                value={r.name}
+                onChange={(e) => setRef2(r.id, { name: e.target.value })}
+              />
+              <div className="ref-percent">
+                <input
+                  type="number" min="0" max="100" step="0.5"
+                  value={r.percent}
+                  onChange={(e) => setRef2(r.id, { percent: e.target.value })}
+                  placeholder="0"
+                />
+                <span>%</span>
+              </div>
+              <span className="ref-fee">{yen(fee)}</span>
+              <button className="icon-btn" title="この紹介者を削除" onClick={() => removeRef(r.id)}>×</button>
+            </div>
+          );
+        })}
+
+        <button className="btn ghost" onClick={addRef}>+ 紹介者を追加</button>
+
+        {namedRefs.length > 0 && amount > 0 && (
+          <div className="split-viz">
+            <div className="split-bar" role="img" aria-label="報酬配分の内訳">
+              {refs.map((r, i) =>
+                Number(r.percent) > 0 ? (
+                  <div
+                    key={r.id}
+                    className="split-seg"
+                    style={{
+                      width: `${Math.min(Number(r.percent), 100)}%`,
+                      background: BAR_COLORS[i % BAR_COLORS.length],
+                    }}
+                    title={`${r.name || "紹介者"} ${r.percent}%`}
+                  />
+                ) : null
+              )}
+              {totalPercent < 100 && (
+                <div
+                  className="split-seg remain"
+                  style={{ width: `${100 - Math.min(totalPercent, 100)}%` }}
+                  title={`自社 ${(100 - totalPercent).toFixed(1)}%`}
+                />
+              )}
+            </div>
+            <div className="split-legend">
+              <span>紹介料合計 {yen((amount * Math.min(totalPercent, 100)) / 100)}</span>
+              <span>自社残額 {yen(amount - (amount * Math.min(totalPercent, 100)) / 100)}</span>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="card">
+        <h3 className="card-title">メモ・備考</h3>
+        <div className="note-input">
+          <textarea
+            rows={2}
+            placeholder="打合せ内容、注意事項などを記録"
+            value={noteDraft}
+            onChange={(e) => setNoteDraft(e.target.value)}
+          />
+          <button className="btn primary" onClick={addNote} disabled={!noteDraft.trim()}>追記</button>
+        </div>
+        {(customer.notes || []).length === 0 && <div className="empty small">メモはまだありません。</div>}
+        {(customer.notes || []).map((n) => (
+          <div className="note" key={n.id}>
+            <div className="note-head">
+              <span className="note-date">{n.date}</span>
+              <button className="icon-btn" title="削除" onClick={() => removeNote(n.id)}>×</button>
+            </div>
+            <div className="note-text">{n.text}</div>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function ReferrerSummary({ summary }) {
+  const [openName, setOpenName] = useState(null);
+  return (
+    <div className="summary">
+      <p className="summary-lead">
+        全顧客を横断した、紹介者ごとの報酬合計です。行を選択すると案件の内訳が開きます。
+      </p>
+      {summary.length === 0 && (
+        <div className="empty tall">紹介者が登録された顧客がまだありません。</div>
+      )}
+      {summary.map((r) => (
+        <div className="sum-block" key={r.name}>
+          <button className="sum-row" onClick={() => setOpenName(openName === r.name ? null : r.name)}>
+            <span className="sum-name">{r.name}</span>
+            <span className="sum-count">{r.deals.length}件</span>
+            <span className="sum-total">{yen(r.total)}</span>
+          </button>
+          {openName === r.name && (
+            <table className="sum-table">
+              <thead>
+                <tr>
+                  <th>顧客</th><th>ステータス</th>
+                  <th className="num">金額</th><th className="num">配分</th><th className="num">報酬</th>
+                </tr>
+              </thead>
+              <tbody>
+                {r.deals.map((d, i) => (
+                  <tr key={i}>
+                    <td>{d.customer}</td>
+                    <td>
+                      <span className="status-pill" style={{ color: STATUS_COLORS[d.status], borderColor: STATUS_COLORS[d.status] }}>
+                        {d.status}
+                      </span>
+                    </td>
+                    <td className="num">{yen(d.amount)}</td>
+                    <td className="num">{d.percent}%</td>
+                    <td className="num">{yen(d.fee)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Root() {
+  const [ok, setOk] = useState(
+    !CONFIG.APP_PASSCODE || sessionStorage.getItem("crm_ok") === "1"
+  );
+  return ok ? <App /> : <Gate onPass={() => setOk(true)} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+</script>
+</body>
+</html>
