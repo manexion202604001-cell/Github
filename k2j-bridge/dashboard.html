@@ -248,11 +248,44 @@
   .p-tag2 { font-size: 15px; font-weight: 900; }
   .gen-badge.light { background: #eef1fd; color: var(--accent-2); }
   .gen-badge.light.live { background: rgba(45,212,168,.15); color: #0f9d78; }
-  .mood-visual { border-bottom: 1px solid var(--line); }
-  .mood-visual svg { display: block; width: 100%; height: auto; }
   .mini-swatch { display: flex; gap: 4px; margin-top: 10px; }
   .mini-swatch i { width: 16px; height: 16px; border-radius: 4px; display: block; }
   .subhead { font-size: 16px; font-weight: 900; margin-top: 8px; }
+
+  /* ===== Pinterest風マスonryグリッド(実写真の参考資料) ===== */
+  .pin-board { margin-top: 14px; }
+  .pin-board-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .pin-board-title { font-size: 12.5px; font-weight: 800; color: var(--sub); }
+  .pin-open-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #E60023; color: #fff; font-size: 11.5px; font-weight: 800;
+    padding: 7px 14px; border-radius: 999px; border: none;
+  }
+  .pin-open-btn:hover { background: #ad081b; }
+  .pin-masonry { column-count: 2; column-gap: 10px; }
+  @media (min-width: 1050px) { .pin-masonry { column-count: 3; } }
+  .pin-card {
+    break-inside: avoid; margin-bottom: 10px; border-radius: 14px; overflow: hidden;
+    background: #fff; border: 1px solid var(--line); position: relative;
+    box-shadow: 0 1px 2px rgba(20,30,70,.06);
+  }
+  .pin-card img { display: block; width: 100%; height: auto; background: #eef1f7; }
+  .pin-card .pin-overlay {
+    position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.55));
+    opacity: 0; transition: opacity .15s ease; display: flex; align-items: flex-end; padding: 10px;
+  }
+  .pin-card:hover .pin-overlay { opacity: 1; }
+  .pin-save-btn {
+    background: #E60023; color: #fff; font-size: 10.5px; font-weight: 800;
+    padding: 6px 12px; border-radius: 999px; border: none; margin-left: auto;
+  }
+  .pin-credit { font-size: 10px; color: var(--sub); padding: 6px 10px 8px; line-height: 1.5; }
+  .pin-credit b { color: #8a91ad; font-weight: 700; }
+  .pin-empty, .pin-loading {
+    font-size: 12px; color: var(--sub); padding: 22px 16px; text-align: center;
+    background: #f8f9fd; border-radius: 12px; border: 1px dashed var(--line);
+  }
+  .pin-note { font-size: 11px; color: var(--sub); margin-top: 8px; }
 
   /* ===== Marketing tab ===== */
   .timeline { position: relative; padding-left: 26px; }
@@ -406,7 +439,8 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、その商品に合うデザインの方向性を<b>画像</b>で提案し、<b>Pinterest・Behance・Dribbble・Qoo10</b>の実際の参考作品/商品を検索できます。</p>
+    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、Pinterestのようなマスonry(タイル状)レイアウトで<b>実際の参考写真</b>を並べます。イラストではなく実写真での参考資料としてご利用ください。各写真から出典元、または<b>Pinterest・Behance・Dribbble・Qoo10</b>の検索結果へ直接ジャンプできます。</p>
+    <p class="pin-note">📌 参考写真はPinterest本体の画像ではなく(Pinterestは外部提供用の画像検索APIを公開していないため)、著作権フリー/クリエイティブ・コモンズの実写真を検索できる <a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">Openverse</a> から取得しています。各写真には出典・ライセンスを表示し、「Pinterestで見る」ボタンから本家Pinterestでの検索結果も確認できます。</p>
 
     <div class="card">
       <div class="loader-tabs">
@@ -558,6 +592,51 @@
 // ================= 共通ユーティリティ =================
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ================= Pinterest風の実写真リファレンス(Openverse: CC0/CCライセンスの実写真を検索。APIキー不要) =================
+// Pinterest自体は外部サイトから画像を取得できる公開APIを提供していないため、
+// 著作権フリー/CCライセンスの実写真を検索できるOpenverse(https://openverse.org)から取得し、
+// Pinterestと同じマスonryレイアウトで表示します。各ボードからPinterest本体の検索結果にも遷移できます。
+async function fetchReferenceImages(query, count) {
+  try {
+    const res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${count}&mature=false`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || [])
+      .map(r => ({
+        thumb: r.thumbnail || r.url || "",
+        landingUrl: r.foreign_landing_url || r.url || "#",
+        title: r.title || "参考画像",
+        creator: r.creator || "",
+        license: (r.license || "").toUpperCase(),
+      }))
+      .filter(img => img.thumb)
+      .slice(0, count);
+  } catch (e) {
+    return [];
+  }
+}
+
+function renderPinBoard(containerId, query, count) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  fetchReferenceImages(query, count).then(images => {
+    const target = document.getElementById(containerId);
+    if (!target) return;
+    if (!images.length) {
+      target.innerHTML = `<div class="pin-empty">実写真の参考画像を取得できませんでした。上の「Pinterestで見る」から直接検索してください。</div>`;
+      return;
+    }
+    target.innerHTML = `<div class="pin-masonry">${images.map(img => `
+      <div class="pin-card">
+        <a href="${img.landingUrl}" target="_blank" rel="noopener">
+          <img src="${img.thumb}" alt="${escapeHtml(img.title)}" loading="lazy">
+          <div class="pin-overlay"><span class="pin-save-btn">元画像を見る</span></div>
+        </a>
+        <div class="pin-credit">${img.creator ? `📷 <b>${escapeHtml(img.creator)}</b> ・ ` : ""}${img.license ? escapeHtml(img.license) : "出典元サイトへ"}</div>
+      </div>`).join("")}</div>`;
+  });
 }
 
 // ================= サンプルデータ(トレンド分析) =================
@@ -852,10 +931,6 @@ const MOODS = [
   },
 ];
 
-function paletteFromSwatch(colors) {
-  return { bg1: colors[0], bg2: colors[1], body: colors[1], cap: colors[3], text: colors[4], mist: colors[2] };
-}
-
 function buildRefLinks(m) {
   const en = encodeURIComponent(m.refEn);
   const qooImg = encodeURIComponent(m.refJa + " site:qoo10.jp");
@@ -868,16 +943,21 @@ function buildRefLinks(m) {
 }
 
 document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
-  <div class="mood img-card">
-    <div class="mood-visual">${SVG_BY_CAT[m.cat]("_mood" + i, paletteFromSwatch(m.colors), { label: m.label, sub: m.sub, big: m.big })}</div>
+  <div class="mood">
     <div class="mood-body">
       <h4>${m.title}</h4>
       <p>${m.desc}</p>
       <div class="mini-swatch">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
       <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
-      <div class="ref-links">${buildRefLinks(m).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
+      <div class="pin-board-head">
+        <span class="pin-board-title">📌 実際の参考写真</span>
+        <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(m.refEn)}" target="_blank" rel="noopener">Pinterestで見る</a>
+      </div>
+      <div class="pin-board" id="pinboard-mood-${i}"><div class="pin-loading">画像を読み込んでいます…</div></div>
+      <div class="ref-links">${buildRefLinks(m).filter(l => !l.label.includes("Pinterest")).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
     </div>
   </div>`).join("");
+MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4));
 
 // ================= 商品を読み込んでデザインを探す =================
 document.querySelectorAll(".loader-tab").forEach(btn => {
@@ -955,34 +1035,33 @@ function normalizeDirections(cat, raw, keywords) {
 }
 
 function renderDesignSuggestions(cat, productName, directions, liveMode, errorNote) {
-  const catSub = { beauty: "PACKAGE CONCEPT", food: "PACKAGE CONCEPT", living: "PRODUCT CONCEPT" }[cat];
-  const pkg = { label: productName.slice(0, 14), sub: catSub };
   const links = d => ([
-    { label: "📌 Pinterestで見る", url: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}` },
     { label: "🎨 Behanceで見る", url: `https://www.behance.net/search/projects?search=${encodeURIComponent(d.enKeywords)}` },
     { label: "🏀 Dribbbleで見る", url: `https://dribbble.com/search/${encodeURIComponent(d.enKeywords)}` },
     { label: "🛍️ Qoo10の実商品を見る", url: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(d.jaKeywords + " site:qoo10.jp")}` },
   ]);
+  const boxId = i => "pinboard-ds-" + i;
 
   document.getElementById("designSuggestBox").innerHTML = `
     <div class="ds-head">
-      <span class="p-tag2">🖼「${escapeHtml(productName)}」のためのデザイン提案</span>
-      <span class="gen-badge light ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが生成" : "🧪 サンプルの方向性"}</span>
+      <span class="p-tag2">📌「${escapeHtml(productName)}」のためのデザイン提案</span>
+      <span class="gen-badge light ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが方向性を提案" : "🧪 サンプルの方向性"}</span>
     </div>
     ${errorNote ? `<div class="api-error">⚠️ Claude APIの呼び出しに失敗したため、サンプルの方向性を表示しています: ${escapeHtml(errorNote)}</div>` : ""}
-    <div class="grid g3">
-      ${directions.map((d, i) => `
-        <div class="img-card">
-          ${SVG_BY_CAT[cat]("_ds" + i + (liveMode ? "_live" : ""), d.colors, pkg)}
-          <div class="ic-body">
-            <span class="ai-badge">${liveMode ? "✨ AI GENERATED" : "🧪 SAMPLE"}</span>
-            <div class="ic-name">${escapeHtml(d.name)}</div>
-            <div class="ic-desc">${escapeHtml(d.desc)}</div>
-            <div class="mood-tags" style="margin-top:8px">${(d.tags || []).map((t, j) => `<span class="tag b${(j % 3) + 1}">${escapeHtml(t)}</span>`).join("")}</div>
-            <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
-          </div>
-        </div>`).join("")}
-    </div>`;
+    ${directions.map((d, i) => `
+      <div class="card mt">
+        <b style="font-size:14px">${escapeHtml(d.name)}</b>
+        <p style="font-size:12.5px;color:var(--sub);margin-top:4px">${escapeHtml(d.desc)}</p>
+        <div class="mood-tags" style="margin-top:8px">${(d.tags || []).map((t, j) => `<span class="tag b${(j % 3) + 1}">${escapeHtml(t)}</span>`).join("")}</div>
+        <div class="pin-board-head" style="margin-top:14px">
+          <span class="pin-board-title">📌 実際の参考写真</span>
+          <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}" target="_blank" rel="noopener">Pinterestで見る</a>
+        </div>
+        <div class="pin-board" id="${boxId(i)}"><div class="pin-loading">画像を読み込んでいます…</div></div>
+        <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
+      </div>`).join("")}`;
+
+  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6));
 }
 
 document.getElementById("designGenBtn").addEventListener("click", async () => {
