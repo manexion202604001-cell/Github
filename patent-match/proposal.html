@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatentBridge ご提案資料 — 大学・研究機関向け</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-2: #151c28;
+    --white: #ffffff;
+    --accent: #22b8a6;
+    --accent-2: #4f8ef7;
+    --amber: #f5b942;
+    --coral: #ff6b5d;
+    --violet: #8b7cf7;
+    --muted: #8b95a9;
+    --line: rgba(255,255,255,.1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
+    background: #05070d; color: var(--white); line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== スライド共通 ===== */
+  .deck { max-width: 1180px; margin: 0 auto; padding: 40px 20px 90px; }
+  .slide {
+    aspect-ratio: 16 / 9;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 34px;
+    padding: 54px 64px;
+    position: relative;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  }
+  .slide::after {
+    content: attr(data-page); position: absolute; bottom: 18px; right: 26px;
+    font-size: 11px; color: var(--muted); font-weight: 700;
+  }
+  .slide .brand {
+    position: absolute; bottom: 18px; left: 26px;
+    font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: .04em;
+  }
+  .s-label { font-size: 13px; font-weight: 800; letter-spacing: .14em; color: var(--accent); margin-bottom: 14px; }
+  .slide h2 { font-size: 30px; font-weight: 800; line-height: 1.4; margin-bottom: 10px; }
+  .slide .sub { font-size: 14.5px; color: #b9c2d4; margin-bottom: 26px; max-width: 800px; }
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+  /* 表紙 */
+  .cover { justify-content: center; background:
+    radial-gradient(700px 500px at 15% 10%, rgba(34,184,166,.16), transparent 60%),
+    radial-gradient(600px 450px at 85% 90%, rgba(139,124,247,.16), transparent 60%),
+    var(--bg);
+  }
+  .cover .badge {
+    display: inline-flex; width: fit-content; font-size: 13px; font-weight: 800; letter-spacing: .08em;
+    color: var(--violet); border: 1px solid rgba(139,124,247,.45); background: rgba(139,124,247,.1);
+    padding: 8px 18px; border-radius: 999px; margin-bottom: 30px;
+  }
+  .cover h1 { font-size: 46px; font-weight: 800; line-height: 1.4; }
+  .cover h1 .grad {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .cover .meta { margin-top: 34px; font-size: 14px; color: var(--muted); }
+  .cover .meta b { color: var(--white); }
+
+  /* 汎用パーツ */
+  .cols { display: grid; gap: 20px; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .box {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 22px;
+  }
+  .box .b-icon { font-size: 24px; margin-bottom: 10px; }
+  .box h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+  .box p { font-size: 12.5px; color: #b9c2d4; }
+  .box.bad { background: rgba(255,107,93,.06); border-color: rgba(255,107,93,.3); }
+  .box.good { background: rgba(34,184,166,.06); border-color: rgba(34,184,166,.35); }
+  .box.violet { background: rgba(139,124,247,.07); border-color: rgba(139,124,247,.35); }
+
+  .bignum { font-size: 40px; font-weight: 800; line-height: 1.2; }
+  .bignum.red { color: var(--coral); }
+  .bignum.green { color: var(--accent); }
+  .bignum small { font-size: 15px; font-weight: 700; color: var(--muted); }
+  .stat-caption { font-size: 12.5px; color: #b9c2d4; margin-top: 6px; }
+  .src { font-size: 10.5px; color: var(--muted); margin-top: 16px; }
+
+  .arrow-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: center; }
+  .arrow { color: var(--muted); font-size: 24px; text-align: center; }
+
+  ul.check { display: grid; gap: 10px; }
+  ul.check li { list-style: none; font-size: 13.5px; color: #d0d7e4; padding-left: 26px; position: relative; }
+  ul.check li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+  ul.check li b { color: var(--white); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-size: 11.5px; letter-spacing: .06em; color: var(--muted); font-weight: 800; }
+  td b { color: var(--accent); }
+  tr.hl td { background: rgba(34,184,166,.06); }
+
+  .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .tl-item { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 18px; position: relative; }
+  .tl-item .tl-when { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--accent-2); margin-bottom: 8px; }
+  .tl-item h4 { font-size: 14px; margin-bottom: 6px; }
+  .tl-item p { font-size: 11.5px; color: var(--muted); }
+
+  .quote-bar {
+    border-left: 4px solid var(--amber); background: rgba(245,185,66,.07);
+    padding: 16px 22px; border-radius: 0 12px 12px 0; font-size: 15px; color: #e6d9b8; margin-top: 22px;
+  }
+
+  /* ===== 操作バー ===== */
+  .toolbar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px; align-items: center; z-index: 50;
+    background: rgba(13,17,23,.9); backdrop-filter: blur(10px);
+    border: 1px solid var(--line); border-radius: 999px; padding: 9px 18px;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .toolbar button {
+    background: none; border: 1px solid rgba(255,255,255,.2); color: var(--white);
+    border-radius: 999px; padding: 6px 14px; font-family: inherit; font-size: 12.5px;
+    font-weight: 700; cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+  .toolbar a { color: var(--white); text-decoration: none; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 6px 14px; font-weight: 700; }
+  .toolbar a:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ===== 印刷(PDF化)対応 ===== */
+  @media print {
+    body { background: #fff; }
+    .deck { max-width: none; padding: 0; }
+    .toolbar { display: none; }
+    .slide {
+      aspect-ratio: auto;
+      width: 100%; height: 100vh;
+      margin: 0; border-radius: 0; border: none;
+      page-break-after: always; break-after: page;
+      box-shadow: none;
+    }
+    .slide:last-child { page-break-after: auto; }
+  }
+  @page { size: A4 landscape; margin: 0; }
+
+  @media (max-width: 900px) {
+    .slide { aspect-ratio: auto; padding: 34px 26px; }
+    .cols-2, .cols-3, .cols-4, .arrow-flow, .timeline { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); }
+    .cover h1 { font-size: 30px; }
+    .slide h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- ===== 1. 表紙 ===== -->
+  <section class="slide cover" data-page="1 / 12">
+    <span class="badge">🎓 大学・研究機関向け ご提案資料</span>
+    <h1>眠っている特許を、<br><span class="grad">収益を生む研究資産</span>に。</h1>
+    <p class="meta">
+      特許×企業マッチングプラットフォーム <b>PatentBridge</b><br>
+      〇〇大学 産学連携本部 御中 ／ PatentBridge運営事務局
+    </p>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 2. 本日のご提案 ===== -->
+  <section class="slide" data-page="2 / 12">
+    <div class="s-label">AGENDA</div>
+    <h2>本日のご提案</h2>
+    <div class="body">
+      <div class="cols cols-2">
+        <div class="box">
+          <div class="b-icon">🧭</div>
+          <h3>1. 現状の課題整理</h3>
+          <p>大学の保有特許がなぜ活用されないのか — 「翻訳」と「マッチング」の2つの断絶。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">💡</div>
+          <h3>2. ソリューション</h3>
+          <p>PatentBridgeのAI解析・企業マッチングが、TLOの実務をどう変えるか。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">📈</div>
+          <h3>3. 導入効果の試算</h3>
+          <p>貴学規模のモデルケースでの工数削減・引き合い・収入の見込み。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">🗓️</div>
+          <h3>4. 進め方のご提案</h3>
+          <p>PoC(3ヶ月・特許100件)から始めるスモールスタートのスケジュールと費用。</p>
+        </div>
+      </div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 3. 課題(数字) ===== -->
+  <section class="slide" data-page="3 / 12">
+    <div class="s-label">PROBLEM — 数字で見る現状</div>
+    <h2>優れた特許の多くが、活用されないまま維持費だけを消費しています</h2>
+    <div class="body">
+      <div class="cols cols-3">
+        <div class="box bad">
+          <div class="bignum red">約7割</div>
+          <div class="stat-caption">大学保有特許のうち、ライセンス等で活用されていない割合(モデルケース)</div>
+        </div>
+        <div class="box bad">
+          <div class="bignum red">6万円<small>/件・年</small></div>
+          <div class="stat-caption">特許1件あたりの平均維持コスト。1,000件なら年間6,000万円が流出</div>
+        </div>
+        <div class="box bad">
+          <div class="bignum red">数名</div>
+          <div class="stat-caption">数百〜数千件を担当する技術移転人材。1件ずつの売り込みは物理的に不可能</div>
+        </div>
+      </div>
+      <div class="quote-bar">「維持か放棄かの判断材料すらない特許が、毎年積み上がっていく」— 多くのTLOに共通する声</div>
+      <div class="src">※ 数値は公開統計・複数大学の公開情報をもとにしたデモ用のモデルケースです。ご提案時に貴学の実データで置き換えます。</div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 4. 原因 ===== -->
+  <section class="slide" data-page="4 / 12">
+    <div class="s-label">ROOT CAUSE</div>
+    <h2>原因は技術力ではなく、2つの「断絶」です</h2>
+    <div class="body">
+      <div class="cols cols-2">
+        <div class="box bad">
+          <div class="b-icon">🗣️</div>
+          <h3>断絶① 言葉の断絶</h3>
+          <p>特許明細書は権利を守るための法律文書。企業の事業部門・経営層には「結局、何ができる技術なのか」が伝わらない。<br><br>→ 伝わる資料を1件ずつ人手で作るのは、数百件規模では不可能。</p>
+        </div>
+        <div class="box bad">
+          <div class="b-icon">🔭</div>
+          <h3>断絶② 出会いの断絶</h3>
+          <p>発明者もTLOも、自分の分野の企業しか知らない。一方で技術を探す企業も、大学の特許を検索する術がない。<br><br>→ 売り込み先が「いつもの共同研究先」に偏り、異業種・海外に届かない。</p>
+        </div>
+      </div>
+      <div class="quote-bar">この2つは根性や増員では解決しません。<b>AIによる自動化が最も効く領域</b>です。</div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 5. ソリューション概要 ===== -->
+  <section class="slide" data-page="5 / 12">
+    <div class="s-label">SOLUTION</div>
+    <h2>PatentBridge — 特許を「翻訳」し、企業と「マッチング」するAIプラットフォーム</h2>
+    <div class="body">
+      <div class="arrow-flow">
+        <div class="box">
+          <div class="b-icon">📄</div>
+          <h3>特許(原文)</h3>
+          <p>「架橋構造中に動的共有結合を導入した自己修復性ポリマー組成物であって…」</p>
+        </div>
+        <div class="arrow">➜</div>
+        <div class="box good">
+          <div class="b-icon">💡</div>
+          <h3>AIかんたん解説</h3>
+          <p><b>「ひっかき傷が自然に治る塗料」</b>— 一言要約・たとえ話・従来比較・ビジネス価値に自動変換。</p>
+        </div>
+        <div class="arrow">➜</div>
+        <div class="box violet">
+          <div class="b-icon">🤝</div>
+          <h3>企業マッチング</h3>
+          <p>世界の企業ニーズと照合し、適合度スコア順に候補を提示。提案文もAIがドラフト。</p>
+        </div>
+      </div>
+      <div class="quote-bar">操作できるデモを本日ご用意しています → <b>dashboard.html(実際の画面でご覧いただけます)</b></div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 6. 機能① 翻訳 ===== -->
+  <section class="slide" data-page="6 / 12">
+    <div class="s-label">FEATURE 01 — 言葉の断絶を解消</div>
+    <h2>全保有特許を、一括で「伝わる資料」に変換</h2>
+    <div class="body">
+      <div class="cols cols-2">
+        <div>
+          <ul class="check">
+            <li><b>一言でいうと</b> — 技術の価値を1行で要約</li>
+            <li><b>中学生にも分かる解説</b> — たとえ話つきで専門知識ゼロでも理解</li>
+            <li><b>従来技術との比較</b> — 「これまで vs この特許」を図解</li>
+            <li><b>ビジネス視点の価値</b> — コスト・性能・環境・規制対応で整理</li>
+            <li><b>研究者シーズページ自動生成</b> — 先生の作業は確認のみ</li>
+          </ul>
+          <div class="quote-bar" style="margin-top:26px;">CSVで特許番号リストを頂くだけ。<b>1,000件でも約2営業日</b>で解析完了。</div>
+        </div>
+        <div class="box good">
+          <div class="s-label" style="color:var(--accent)">出力イメージ</div>
+          <h3 style="font-size:20px;margin-bottom:12px;">「ひっかき傷が"自然に治る"塗料・コーティング材。」</h3>
+          <p style="font-size:13px;">この特許は、プラスチックの分子どうしのつなぎ目が、切れてもまた自動でくっつき直す性質を利用した材料です。ふつうの塗料は一度傷がつくとそのままですが…(以下、たとえ話・従来比較・価値整理が続く)</p>
+        </div>
+      </div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 7. 機能② マッチング ===== -->
+  <section class="slide" data-page="7 / 12">
+    <div class="s-label">FEATURE 02 — 出会いの断絶を解消</div>
+    <h2>「誰が・どう使うか」をAIが探し、企業から引き合いが届く</h2>
+    <div class="body">
+      <div class="cols cols-3">
+        <div class="box">
+          <div class="b-icon">🧬</div>
+          <h3>本質機能の抽出</h3>
+          <p>特許から業界を問わない「本質機能」を分解。発明者が想定していない異業種の用途(⭐意外な用途)まで探索します。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">🎯</div>
+          <h3>適合度スコアリング</h3>
+          <p>世界の企業の事業内容・技術ニーズ登録・R&D動向と照合し、スコア順に候補企業を提示。「なぜマッチするか」の理由つき。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">✉️</div>
+          <h3>アプローチ支援</h3>
+          <p>企業ごとの活用シナリオと提案文(日/英)をAIがドラフト。企業側からの逆引き検索でインバウンド引き合いも発生します。</p>
+        </div>
+      </div>
+      <div class="quote-bar">交渉・契約の主体は<b>貴学(TLO)のまま</b>。PatentBridgeは出会いの量と質を最大化します。</div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 8. 大学向け機能 ===== -->
+  <section class="slide" data-page="8 / 12">
+    <div class="s-label">FOR UNIVERSITIES</div>
+    <h2>TLOの実務・学内手続きに合わせた運用機能</h2>
+    <div class="body">
+      <div class="cols cols-2">
+        <div class="box">
+          <div class="b-icon">📁</div>
+          <h3>ポートフォリオ棚卸し支援</h3>
+          <p>全件の有望度スコアと引き合い状況から、「動かす特許/手放す特許」の仕分けを支援。知財委員会向けの維持・放棄判断サマリーを自動生成します。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">📊</div>
+          <h3>報告レポート自動作成</h3>
+          <p>マッチング・引き合い・成約の実績を自動集計。文科省報告や学内委員会資料がワンクリックで整います。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">🤝</div>
+          <h3>共同出願(共有特許)対応</h3>
+          <p>共有者の同意状況をフラグ管理し、同意済み特許のみをマッチング対象に。同意取得用の説明テンプレートも提供。</p>
+        </div>
+        <div class="box">
+          <div class="b-icon">🔐</div>
+          <h3>セキュリティ・学内連携</h3>
+          <p>対象は公開済み特許情報のため機密データは不要。SSO(学認等)連携に対応予定、通信は全て暗号化。</p>
+        </div>
+      </div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 9. 導入効果 ===== -->
+  <section class="slide" data-page="9 / 12">
+    <div class="s-label">EXPECTED IMPACT — モデルケース試算</div>
+    <h2>保有特許1,000件・活用率20%・担当3名の大学の場合</h2>
+    <div class="body">
+      <table>
+        <tr><th>項目</th><th>従来(人手)</th><th>PatentBridge導入後</th></tr>
+        <tr><td>全件の紹介資料作成</td><td>約6,400時間(約46人月)= 事実上不可能</td><td><b>約2営業日</b>(AI一括解析+レビュー2週間)</td></tr>
+        <tr><td>売り込み先の探索</td><td>既存の共同研究先・地元企業中心</td><td><b>国内外・異業種を含むスコア順候補</b>+インバウンド引き合い</td></tr>
+        <tr class="hl"><td>年間の企業引き合い</td><td>数件〜十数件</td><td><b>約190件(期待値)</b></td></tr>
+        <tr class="hl"><td>期待ライセンス収入(年)</td><td>—</td><td><b>2,700万円〜4,500万円レンジ</b>(成約率5〜8%・平均単価300万円)</td></tr>
+        <tr><td>維持・放棄の判断材料</td><td>担当者の記憶と勘</td><td><b>全件のスコア+引き合いデータ</b>で機械的に仕分け</td></tr>
+      </table>
+      <div class="src">※ 資料作成8時間/件、維持年金6万円/件・年、マッチング率等は業界水準ベースのデモ用概算モデル。サイトのROIシミュレータで貴学の数値をその場で試算できます。</div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 10. 料金 ===== -->
+  <section class="slide" data-page="10 / 12">
+    <div class="s-label">PRICING</div>
+    <h2>スモールスタートできる料金設計</h2>
+    <div class="body">
+      <div class="cols cols-2">
+        <div class="box">
+          <h3 style="color:var(--muted)">STEP 1 — PoC(実証導入)</h3>
+          <div class="bignum" style="margin:10px 0;">50万円<small> /3ヶ月・一式</small></div>
+          <ul class="check">
+            <li>特許100件までの一括AI解析</li>
+            <li>有望上位20件で企業マッチングを実行</li>
+            <li>結果報告会+本導入の効果試算レポート</li>
+            <li>単年度・少額のため年度内執行に対応</li>
+          </ul>
+        </div>
+        <div class="box violet">
+          <h3 style="color:var(--violet)">STEP 2 — Academic(年間契約)</h3>
+          <div class="bignum" style="margin:10px 0;">月額15万円〜<small> +成果報酬(成約額の10%)</small></div>
+          <ul class="check">
+            <li>保有特許 全件の解析・常時マッチング</li>
+            <li>引き合い一元管理・提案文AIドラフト(日/英)</li>
+            <li>研究者シーズページ・報告レポート自動生成</li>
+            <li>専任カスタマーサクセスの伴走支援</li>
+          </ul>
+        </div>
+      </div>
+      <div class="quote-bar">成果報酬中心の設計のため、<b>成約が出なければ費用は最小限</b>。大学のリスクを抑えた導入が可能です。</div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 11. スケジュール ===== -->
+  <section class="slide" data-page="11 / 12">
+    <div class="s-label">SCHEDULE</div>
+    <h2>PoC開始から3ヶ月で、最初の企業引き合いまで</h2>
+    <div class="body">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-when">契約後 1週目</div>
+          <h4>📥 キックオフ・データ取り込み</h4>
+          <p>特許番号リスト(CSV)をご提供いただき、公報データを自動取得。対象100件を合意。</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-when">2〜3週目</div>
+          <h4>🤖 一括AI解析・レビュー会</h4>
+          <p>全件の平易化解説・有望度スコアを生成。TLOご担当者と上位20件を選定。</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-when">1〜2ヶ月目</div>
+          <h4>🤝 マッチング実行</h4>
+          <p>上位20件で企業マッチング・アプローチを実行。引き合いはプラットフォームに集約。</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-when">3ヶ月目</div>
+          <h4>📊 報告会・本導入判断</h4>
+          <p>引き合い実績と効果試算をご報告。知財委員会向け資料もご用意します。</p>
+        </div>
+      </div>
+      <div class="quote-bar">貴学側のご負担は、<b>特許リストのご提供と月1回のレビュー会</b>のみです。</div>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+  <!-- ===== 12. 次のステップ ===== -->
+  <section class="slide cover" data-page="12 / 12">
+    <span class="badge">NEXT STEP</span>
+    <h1 style="font-size:36px;">まずは貴学の特許<span class="grad">10件</span>で、<br>無償トライアル解析をご覧ください。</h1>
+    <div class="meta" style="margin-top:28px;">
+      <ul class="check" style="max-width:640px;">
+        <li>貴学の実際の特許10件を無償でAI解析し、次回打ち合わせでご覧いただきます</li>
+        <li>操作できるデモ: <b>dashboard.html</b> ／ 大学向けサイト: <b>universities.html</b></li>
+        <li>お問い合わせ: PatentBridge運営事務局(本資料はコンセプト提案用のサンプルです)</li>
+      </ul>
+    </div>
+    <div class="brand">PatentBridge</div>
+  </section>
+
+</div>
+
+<div class="toolbar">
+  <button id="prevBtn">← 前へ</button>
+  <span id="pageInfo">1 / 12</span>
+  <button id="nextBtn">次へ →</button>
+  <button onclick="window.print()">🖨️ PDFとして保存</button>
+  <a href="universities.html">🎓 大学向けサイトへ</a>
+</div>
+
+<script>
+// スライド送り(クリック/キーボード) — スクロール位置ベースの簡易ナビゲーション
+const slides = Array.from(document.querySelectorAll(".slide"));
+const pageInfo = document.getElementById("pageInfo");
+let idx = 0;
+
+function goTo(i) {
+  idx = Math.max(0, Math.min(slides.length - 1, i));
+  slides[idx].scrollIntoView({ behavior: "smooth", block: "center" });
+  pageInfo.textContent = (idx + 1) + " / " + slides.length;
+}
+document.getElementById("prevBtn").addEventListener("click", () => goTo(idx - 1));
+document.getElementById("nextBtn").addEventListener("click", () => goTo(idx + 1));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); goTo(idx + 1); }
+  if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); goTo(idx - 1); }
+});
+// スクロールで現在ページを追従
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (en.isIntersecting) {
+      idx = slides.indexOf(en.target);
+      pageInfo.textContent = (idx + 1) + " / " + slides.length;
+    }
+  });
+}, { threshold: 0.6 });
+slides.forEach(s => io.observe(s));
+</script>
+
+</body>
+</html>
