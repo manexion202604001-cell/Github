@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatentBridge — 眠っている特許を、世界の企業へ。</title>
+<meta name="description" content="難解な特許をAIが誰にでも分かる言葉に翻訳し、その技術を必要とする世界中の企業と自動マッチング。特許の社会実装を加速するプラットフォーム。">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-2: #151c28;
+    --ink: #1a2036;
+    --white: #ffffff;
+    --paper: #f6f8fb;
+    --accent: #22b8a6;
+    --accent-2: #4f8ef7;
+    --amber: #f5b942;
+    --coral: #ff6b5d;
+    --violet: #8b7cf7;
+    --muted: #8b95a9;
+    --line: rgba(255,255,255,.08);
+    --radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,17,23,.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+  .logo .mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; font-size: 14px;
+  }
+  .nav-links { display: flex; gap: 26px; font-size: 14px; color: var(--muted); }
+  .nav-links a:hover { color: var(--white); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 999px; font-weight: 700; font-size: 14px;
+    transition: transform .15s ease, box-shadow .15s ease;
+    cursor: pointer; border: none;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; box-shadow: 0 8px 24px rgba(34,184,166,.35);
+  }
+  .btn-ghost { border: 1px solid rgba(255,255,255,.22); color: var(--white); background: transparent; }
+  .btn-lg { padding: 15px 32px; font-size: 16px; }
+
+  .hero { position: relative; padding: 92px 0 84px; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(620px 420px at 12% 8%, rgba(34,184,166,.20), transparent 60%),
+      radial-gradient(520px 400px at 88% 28%, rgba(79,142,247,.20), transparent 60%),
+      radial-gradient(420px 320px at 55% 95%, rgba(139,124,247,.12), transparent 60%);
+    pointer-events: none;
+  }
+  .hero .wrap { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .06em;
+    color: var(--accent); border: 1px solid rgba(34,184,166,.4);
+    background: rgba(34,184,166,.08);
+    padding: 7px 14px; border-radius: 999px; margin-bottom: 22px;
+  }
+  h1 { font-size: 42px; line-height: 1.35; font-weight: 800; letter-spacing: .01em; }
+  h1 .grad {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.lead { margin: 20px 0 30px; color: #c3cbdb; font-size: 16.5px; max-width: 520px; }
+  .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+  .hero-stats { display: flex; gap: 34px; margin-top: 38px; }
+  .hero-stats .stat b { display: block; font-size: 26px; font-weight: 800; }
+  .hero-stats .stat span { font-size: 12.5px; color: var(--muted); }
+
+  .hero-visual {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px;
+    padding: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.4);
+  }
+  .hv-head { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .hv-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .hv-title { margin-left: 8px; font-size: 12px; color: var(--muted); }
+  .hv-flow { display: grid; gap: 12px; }
+  .hv-card {
+    background: rgba(255,255,255,.04); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px; font-size: 13px;
+  }
+  .hv-card .tag { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: var(--accent); }
+  .hv-card.b .tag { color: var(--accent-2); }
+  .hv-card.c .tag { color: var(--amber); }
+  .hv-arrow { text-align: center; color: var(--muted); font-size: 14px; line-height: 1; }
+  .hv-match { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .hv-score {
+    font-weight: 800; font-size: 15px; color: var(--accent);
+  }
+
+  section { padding: 80px 0; }
+  .sec-label { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--accent); margin-bottom: 12px; }
+  h2 { font-size: 30px; font-weight: 800; line-height: 1.4; margin-bottom: 14px; }
+  .sec-lead { color: #b9c2d4; max-width: 640px; }
+
+  .problems { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .prob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+  .prob-card {
+    background: rgba(255,93,93,.05); border: 1px solid rgba(255,107,93,.25);
+    border-radius: var(--radius); padding: 28px;
+  }
+  .prob-card .num {
+    display: inline-grid; place-items: center; width: 40px; height: 40px;
+    border-radius: 12px; background: rgba(255,107,93,.15); color: var(--coral);
+    font-weight: 800; font-size: 18px; margin-bottom: 16px;
+  }
+  .prob-card h3 { font-size: 19px; margin-bottom: 10px; }
+  .prob-card p { font-size: 14px; color: #c3cbdb; }
+  .prob-quote {
+    margin-top: 14px; padding: 12px 16px; border-left: 3px solid var(--coral);
+    background: rgba(255,255,255,.03); border-radius: 0 10px 10px 0;
+    font-size: 13px; color: var(--muted); font-style: italic;
+  }
+
+  .solution-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+  .sol-card {
+    background: var(--bg-2); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 30px;
+    transition: transform .2s ease, border-color .2s ease;
+  }
+  .sol-card:hover { transform: translateY(-3px); border-color: rgba(34,184,166,.4); }
+  .sol-card .icon {
+    width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+    font-size: 22px; margin-bottom: 18px;
+    background: linear-gradient(135deg, rgba(34,184,166,.2), rgba(79,142,247,.2));
+  }
+  .sol-card h3 { font-size: 19px; margin-bottom: 10px; }
+  .sol-card p { font-size: 14px; color: #b9c2d4; }
+  .sol-card ul { margin-top: 14px; display: grid; gap: 8px; }
+  .sol-card li {
+    list-style: none; font-size: 13.5px; color: #c3cbdb;
+    padding-left: 24px; position: relative;
+  }
+  .sol-card li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+
+  .flow { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .flow-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px; }
+  .flow-step {
+    background: rgba(255,255,255,.03); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 24px 20px; position: relative;
+  }
+  .flow-step .n {
+    font-size: 12px; font-weight: 800; letter-spacing: .1em; color: var(--accent-2); margin-bottom: 10px;
+  }
+  .flow-step h3 { font-size: 16px; margin-bottom: 8px; }
+  .flow-step p { font-size: 13px; color: var(--muted); }
+
+  .audience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+  .aud-card {
+    border-radius: var(--radius); padding: 30px; border: 1px solid var(--line);
+  }
+  .aud-card.holder { background: linear-gradient(160deg, rgba(34,184,166,.10), transparent 60%); }
+  .aud-card.seeker { background: linear-gradient(160deg, rgba(79,142,247,.10), transparent 60%); }
+  .aud-card .who { font-size: 12.5px; font-weight: 700; letter-spacing: .08em; margin-bottom: 10px; }
+  .aud-card.holder .who { color: var(--accent); }
+  .aud-card.seeker .who { color: var(--accent-2); }
+  .aud-card h3 { font-size: 20px; margin-bottom: 12px; }
+  .aud-card p { font-size: 14px; color: #b9c2d4; }
+
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 44px; }
+  .price-card {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 30px; display: flex; flex-direction: column;
+  }
+  .price-card.featured { border-color: var(--accent); position: relative; }
+  .price-card.featured::before {
+    content: "人気"; position: absolute; top: -12px; left: 24px;
+    background: var(--accent); color: #06251f; font-size: 11.5px; font-weight: 800;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .price-card .plan { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .price-card .price { font-size: 30px; font-weight: 800; margin: 12px 0 4px; }
+  .price-card .price small { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .price-card ul { margin: 20px 0 26px; display: grid; gap: 10px; flex: 1; }
+  .price-card li { list-style: none; font-size: 13.5px; color: #c3cbdb; padding-left: 22px; position: relative; }
+  .price-card li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+
+  .faq-list { margin-top: 40px; display: grid; gap: 14px; max-width: 780px; }
+  details {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px 24px;
+  }
+  summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; position: relative; padding-right: 30px; }
+  summary::after { content: "+"; position: absolute; right: 0; top: 0; color: var(--accent); font-size: 20px; }
+  details[open] summary::after { content: "−"; }
+  details p { margin-top: 14px; font-size: 14px; color: #b9c2d4; }
+
+  .cta-final { text-align: center; padding: 90px 0; }
+  .cta-final h2 { font-size: 32px; }
+  .cta-final p { color: #b9c2d4; margin: 16px 0 30px; }
+
+  footer { border-top: 1px solid var(--line); padding: 36px 0; }
+  .foot { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 860px) {
+    .hero .wrap { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    h1 { font-size: 32px; }
+    .prob-grid, .solution-grid, .audience-grid { grid-template-columns: 1fr; }
+    .flow-steps { grid-template-columns: 1fr 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#"><span class="mark">🔬</span>PatentBridge</a>
+    <nav class="nav-links">
+      <a href="#problems">課題</a>
+      <a href="#solution">ソリューション</a>
+      <a href="#flow">使い方</a>
+      <a href="#pricing">料金</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary" href="dashboard.html">デモを試す</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="badge">⚡ PATENT × BUSINESS MATCHING PLATFORM</span>
+      <h1>眠っている特許を、<br><span class="grad">世界の企業</span>へ届ける。</h1>
+      <p class="lead">
+        AIが難解な特許文書を「誰にでも分かる言葉」に翻訳し、その技術を本当に必要としている世界中の企業を自動で見つけ出します。研究成果の社会実装を、もっと速く、もっと簡単に。
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="dashboard.html">🚀 デモダッシュボードを見る</a>
+        <a class="btn btn-ghost btn-lg" href="#problems">課題と解決策を見る</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>約7割</b><span>活用されていない特許の割合*</span></div>
+        <div class="stat"><b>3分</b><span>特許のAI解説生成まで</span></div>
+        <div class="stat"><b>スコア順</b><span>企業マッチング候補を提示</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hv-head">
+        <span class="hv-dot" style="background:#ff5f57"></span>
+        <span class="hv-dot" style="background:#febc2e"></span>
+        <span class="hv-dot" style="background:#28c840"></span>
+        <span class="hv-title">PatentBridge — マッチングエンジン</span>
+      </div>
+      <div class="hv-flow">
+        <div class="hv-card">
+          <div class="tag">📄 特許(原文)</div>
+          「架橋構造中に動的共有結合を導入した自己修復性ポリマー組成物であって…」
+        </div>
+        <div class="hv-arrow">↓ AIが平易な言葉に翻訳</div>
+        <div class="hv-card b">
+          <div class="tag">💡 かんたん解説</div>
+          <b>ひっかき傷が自然に治る塗料。</b>スマホやクルマの表面に塗ると、細かい傷が数時間で消えます。
+        </div>
+        <div class="hv-arrow">↓ 用途と企業をマッチング</div>
+        <div class="hv-card c">
+          <div class="tag">🤝 マッチング候補</div>
+          <div class="hv-match"><span>🚗 Nordwind Automotive(独・自動車)</span><span class="hv-score">92%</span></div>
+          <div class="hv-match"><span>📱 Lumina Devices(米・電子機器)</span><span class="hv-score">88%</span></div>
+          <div class="hv-match"><span>🏠 Sakura Homes(日・住宅建材)</span><span class="hv-score">81%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="problems" id="problems">
+  <div class="wrap">
+    <div class="sec-label">PROBLEMS</div>
+    <h2>優れた特許が、使われないまま眠っている。</h2>
+    <p class="sec-lead">日本だけでも膨大な数の特許が「取得したまま活用されない」状態にあります。その原因は、技術力ではなくコミュニケーションの断絶にあります。</p>
+    <div class="prob-grid">
+      <div class="prob-card">
+        <div class="num">1</div>
+        <h3>特許文書が、専門家にしか読めない</h3>
+        <p>特許は権利範囲を守るための法律文書。研究結果と請求項の羅列で、「結局これは何ができる技術なのか」が事業担当者や経営者には伝わりません。</p>
+        <div class="prob-quote">「うちの事業に関係あるのか、読んでも判断できない」— 事業会社の新規事業担当</div>
+      </div>
+      <div class="prob-card">
+        <div class="num">2</div>
+        <h3>「誰が・どう使うか」が見つからない</h3>
+        <p>特許の持ち主は自分の分野しか知らず、意外な業界での用途に気づけません。逆に企業側も、自社の課題を解決する特許がどこにあるのか探す術がありません。</p>
+        <div class="prob-quote">「まさか化粧品の技術がうちの工場で使えるとは思わなかった」— 製造業の技術責任者</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="solution">
+  <div class="wrap">
+    <div class="sec-label">SOLUTION</div>
+    <h2>2つの断絶を、AIでつなぐ。</h2>
+    <p class="sec-lead">PatentBridgeは「翻訳」と「マッチング」の2つのエンジンで、特許と企業の出会いを生み出します。</p>
+    <div class="solution-grid">
+      <div class="sol-card">
+        <div class="icon">💡</div>
+        <h3>AI特許翻訳 — 誰にでも分かる言葉に</h3>
+        <p>特許の原文をAIが解析し、専門知識ゼロでも理解できる解説に変換します。</p>
+        <ul>
+          <li>「一言でいうと何か」を1行で要約</li>
+          <li>中学生にも分かる、たとえ話つきの解説</li>
+          <li>従来技術と比べて何がすごいのかを図解</li>
+          <li>ビジネス視点での価値(コスト・性能・環境)を整理</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <div class="icon">🧭</div>
+        <h3>用途展開エンジン — 意外な使い道を発見</h3>
+        <p>技術の本質を抽出し、発明者も想定していなかった業界横断の活用シナリオを提案します。</p>
+        <ul>
+          <li>技術の「本質機能」を分解して抽出</li>
+          <li>異業種への応用シナリオを自動生成</li>
+          <li>各用途の市場規模感と実現ハードルを提示</li>
+          <li>思いがけない業界とのセレンディピティを創出</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <div class="icon">🤝</div>
+        <h3>企業マッチング — スコアで候補を提示</h3>
+        <p>世界中の企業データ(業種・事業内容・技術ニーズ・R&D動向)と特許を照合し、適合度スコア順に候補企業を提示します。</p>
+        <ul>
+          <li>企業の公開情報・ニーズ登録との適合度を数値化</li>
+          <li>「なぜマッチするのか」の理由を明示</li>
+          <li>企業側からの技術ニーズ逆引き検索にも対応</li>
+        </ul>
+      </div>
+      <div class="sol-card">
+        <div class="icon">✉️</div>
+        <h3>アプローチ支援 — 出会いを商談に</h3>
+        <p>マッチングした企業への提案文をAIがドラフト。ライセンス・共同開発・譲渡など、最適な連携形態も提案します。</p>
+        <ul>
+          <li>相手企業の言葉に合わせた提案文の自動生成</li>
+          <li>ライセンス/譲渡/共同開発の形態別シミュレーション</li>
+          <li>NDA・交渉ステップのテンプレート提供</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="flow" id="flow">
+  <div class="wrap">
+    <div class="sec-label">HOW IT WORKS</div>
+    <h2>特許番号を入れるだけ。あとはAIが動きます。</h2>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="n">STEP 1</div>
+        <h3>📄 特許を登録</h3>
+        <p>特許番号を入力するか、明細書のテキストを貼り付けるだけ。</p>
+      </div>
+      <div class="flow-step">
+        <div class="n">STEP 2</div>
+        <h3>💡 AI解説を確認</h3>
+        <p>数分で「誰にでも分かる解説」と技術の本質分解が生成されます。</p>
+      </div>
+      <div class="flow-step">
+        <div class="n">STEP 3</div>
+        <h3>🧭 用途と企業を発見</h3>
+        <p>業界横断の活用シナリオと、適合度スコア付きの候補企業リストを受け取ります。</p>
+      </div>
+      <div class="flow-step">
+        <div class="n">STEP 4</div>
+        <h3>🤝 アプローチ</h3>
+        <p>AIがドラフトした提案文をベースに、プラットフォーム経由でコンタクト。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="audience">
+  <div class="wrap">
+    <div class="sec-label">FOR WHOM</div>
+    <h2>特許を持つ人にも、技術を探す企業にも。</h2>
+    <div class="audience-grid">
+      <div class="aud-card holder">
+        <div class="who">FOR PATENT HOLDERS</div>
+        <h3>特許を持っている方へ</h3>
+        <p>大学・研究機関・中小企業・個人発明家の皆さま。取得した特許を「伝わる形」に変え、想定外の業界も含めて活用先を見つけます。維持年金を払うだけの「塩漬け特許」を、収益を生む資産に変えましょう。</p>
+      </div>
+      <div class="aud-card seeker">
+        <div class="who">FOR COMPANIES</div>
+        <h3>技術を探している企業へ</h3>
+        <p>「こんな課題を解決したい」を登録するだけで、世界中の特許から使える技術を逆引きできます。自社開発より速く、安く、確実に。オープンイノベーションの入口としてご活用ください。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="flow" id="pricing">
+  <div class="wrap">
+    <div class="sec-label">PRICING</div>
+    <h2>シンプルな料金プラン</h2>
+    <p class="sec-lead">まずは無料で、お手持ちの特許1件のAI解説をお試しください。</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="plan">Free</div>
+        <div class="price">¥0<small> /月</small></div>
+        <ul>
+          <li>特許のAI解説 1件まで</li>
+          <li>用途展開シナリオ 3件表示</li>
+          <li>マッチング候補は社名非公開で表示</li>
+        </ul>
+        <a class="btn btn-ghost" href="dashboard.html">無料で始める</a>
+      </div>
+      <div class="price-card featured">
+        <div class="plan">Standard</div>
+        <div class="price">¥49,800<small> /月</small></div>
+        <ul>
+          <li>特許のAI解説 10件/月</li>
+          <li>用途展開シナリオ 無制限</li>
+          <li>企業マッチング(社名・理由・スコア開示)</li>
+          <li>提案文AIドラフト</li>
+          <li>企業へのコンタクト 月10件</li>
+        </ul>
+        <a class="btn btn-primary" href="dashboard.html">デモを試す</a>
+      </div>
+      <div class="price-card">
+        <div class="plan">Enterprise</div>
+        <div class="price">個別見積<small></small></div>
+        <ul>
+          <li>特許ポートフォリオ一括解析</li>
+          <li>技術ニーズの逆引き検索(企業向け)</li>
+          <li>専任コンシェルジュによる交渉支援</li>
+          <li>API連携・SSO対応</li>
+        </ul>
+        <a class="btn btn-ghost" href="#faq">問い合わせる</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-label">FAQ</div>
+    <h2>よくある質問</h2>
+    <div class="faq-list">
+      <details>
+        <summary>特許の内容を登録しても、秘密は守られますか?</summary>
+        <p>公開済み特許(公開公報・特許公報)を対象としているため、登録情報はすでに公知のものです。未公開の発明やノウハウについては登録前にご相談ください。マッチング相手との具体的な交渉に進む際は、プラットフォーム上でNDAテンプレートを利用できます。</p>
+      </details>
+      <details>
+        <summary>AIの解説やマッチングはどのくらい正確ですか?</summary>
+        <p>AI解説は特許明細書の記載に基づいて生成されますが、法的な権利範囲の解釈を保証するものではありません。重要な判断の際は弁理士等の専門家にご確認ください。マッチングスコアは企業の公開情報とニーズ登録に基づく参考値です。</p>
+      </details>
+      <details>
+        <summary>海外企業とのマッチングにも対応していますか?</summary>
+        <p>はい。企業データベースは世界の主要市場(北米・欧州・アジア)をカバーしており、提案文も英語で自動生成できます。海外ライセンス契約の際の注意点もガイドとして提供します。</p>
+      </details>
+      <details>
+        <summary>企業側として「技術を探す」使い方はできますか?</summary>
+        <p>できます。自社の課題や欲しい技術を登録すると、条件に合う特許が見つかり次第通知されます。Enterpriseプランでは担当コンシェルジュが候補を精査してお届けします。</p>
+      </details>
+      <details>
+        <summary>マッチング後の交渉や契約もサポートしてもらえますか?</summary>
+        <p>交渉ステップのガイド、契約形態(ライセンス/譲渡/共同開発)ごとのテンプレート、想定ロイヤリティのシミュレーションを提供します。Enterpriseプランでは専任コンシェルジュが交渉に同席します。</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <div class="wrap">
+    <h2>その特許、世界のどこかの企業が待っています。</h2>
+    <p>まずはデモダッシュボードで、AI解説とマッチングの流れを体験してください。</p>
+    <a class="btn btn-primary btn-lg" href="dashboard.html">🚀 デモダッシュボードを開く</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>© 2026 PatentBridge — 特許×企業マッチングプラットフォーム(コンセプトサイト)</div>
+    <div>* 特許庁「知的財産活動調査」等をもとにした推計イメージ。本サイトの数値・企業名はすべてデモ用のサンプルです。</div>
+  </div>
+</footer>
+
+</body>
+</html>

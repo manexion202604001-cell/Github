@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatentBridge — デモダッシュボード</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-2: #151c28;
+    --panel: #1a2332;
+    --white: #ffffff;
+    --accent: #22b8a6;
+    --accent-2: #4f8ef7;
+    --amber: #f5b942;
+    --coral: #ff6b5d;
+    --violet: #8b7cf7;
+    --muted: #8b95a9;
+    --line: rgba(255,255,255,.08);
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
+    background: var(--bg); color: var(--white); line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,17,23,.88); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
+  .logo .mark {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; font-size: 13px;
+  }
+  .demo-badge {
+    font-size: 11px; font-weight: 700; color: var(--amber);
+    border: 1px solid rgba(245,185,66,.4); background: rgba(245,185,66,.08);
+    padding: 3px 10px; border-radius: 999px; margin-left: 10px;
+  }
+  .back-link { font-size: 13px; color: var(--muted); }
+  .back-link:hover { color: var(--white); }
+
+  /* ===== 特許セレクタ ===== */
+  .selector { padding: 30px 0 10px; }
+  .selector h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .selector .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .patent-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .pcard {
+    background: var(--bg-2); border: 2px solid var(--line); border-radius: var(--radius);
+    padding: 18px; cursor: pointer; transition: all .18s ease; text-align: left;
+    color: var(--white); font-family: inherit;
+  }
+  .pcard:hover { border-color: rgba(34,184,166,.5); transform: translateY(-2px); }
+  .pcard.active { border-color: var(--accent); background: rgba(34,184,166,.08); }
+  .pcard .cat { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--accent-2); }
+  .pcard h3 { font-size: 14.5px; margin: 6px 0 6px; line-height: 1.5; }
+  .pcard .no { font-size: 11.5px; color: var(--muted); }
+  .paste-row { margin-top: 14px; display: flex; gap: 10px; }
+  .paste-row textarea {
+    flex: 1; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+    color: var(--white); font-family: inherit; font-size: 13px; padding: 12px 14px;
+    resize: vertical; min-height: 44px; height: 44px;
+  }
+  .paste-row textarea:focus { outline: none; border-color: var(--accent); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border-radius: 999px; font-weight: 700; font-size: 13.5px;
+    cursor: pointer; border: none; font-family: inherit; transition: transform .15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+  .btn-ghost { border: 1px solid rgba(255,255,255,.22); color: var(--white); background: transparent; }
+  .btn-sm { padding: 7px 14px; font-size: 12.5px; }
+
+  /* ===== ローディング ===== */
+  .loading { display: none; padding: 60px 0; text-align: center; }
+  .loading.show { display: block; }
+  .spinner {
+    width: 44px; height: 44px; margin: 0 auto 18px; border-radius: 50%;
+    border: 4px solid rgba(34,184,166,.2); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading .step { font-size: 14px; color: var(--muted); min-height: 24px; }
+
+  /* ===== タブ ===== */
+  .tabs-area { display: none; padding-bottom: 80px; }
+  .tabs-area.show { display: block; }
+  .tabs {
+    display: flex; gap: 6px; margin: 26px 0 22px; border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 20px; font-size: 14px; font-weight: 700; color: var(--muted);
+    cursor: pointer; border: none; background: none; font-family: inherit;
+    border-bottom: 3px solid transparent; white-space: nowrap;
+  }
+  .tab:hover { color: var(--white); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .pane { display: none; }
+  .pane.active { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px; margin-bottom: 18px;
+  }
+  .card h3 { font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  /* ===== かんたん解説 ===== */
+  .oneliner {
+    background: linear-gradient(135deg, rgba(34,184,166,.15), rgba(79,142,247,.12));
+    border: 1px solid rgba(34,184,166,.35); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 18px;
+  }
+  .oneliner .label { font-size: 12px; font-weight: 800; letter-spacing: .1em; color: var(--accent); margin-bottom: 8px; }
+  .oneliner .text { font-size: 24px; font-weight: 800; line-height: 1.5; }
+  .explain-body { font-size: 14.5px; color: #cdd5e3; }
+  .explain-body b { color: var(--white); }
+  .analogy {
+    margin-top: 14px; padding: 14px 18px; border-left: 3px solid var(--amber);
+    background: rgba(245,185,66,.06); border-radius: 0 10px 10px 0; font-size: 13.5px; color: #d9dfeb;
+  }
+  .analogy .a-label { font-size: 11px; font-weight: 800; color: var(--amber); letter-spacing: .08em; margin-bottom: 4px; }
+  .compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; }
+  .cmp-box { border-radius: 12px; padding: 18px; font-size: 13px; }
+  .cmp-box.before { background: rgba(255,107,93,.07); border: 1px solid rgba(255,107,93,.25); }
+  .cmp-box.after { background: rgba(34,184,166,.07); border: 1px solid rgba(34,184,166,.3); }
+  .cmp-box .c-label { font-size: 11px; font-weight: 800; letter-spacing: .08em; margin-bottom: 8px; }
+  .cmp-box.before .c-label { color: var(--coral); }
+  .cmp-box.after .c-label { color: var(--accent); }
+  .cmp-arrow { display: grid; place-items: center; color: var(--muted); font-size: 22px; }
+  .value-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .value-item {
+    background: rgba(255,255,255,.03); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .value-item .v-icon { font-size: 20px; margin-bottom: 6px; }
+  .value-item .v-title { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+  .value-item .v-desc { font-size: 12.5px; color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag-chip {
+    font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+    background: rgba(139,124,247,.12); border: 1px solid rgba(139,124,247,.35); color: #c3b8ff;
+  }
+
+  /* ===== 用途展開 ===== */
+  .use-card {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px 22px; margin-bottom: 14px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: start;
+  }
+  .use-card .u-icon {
+    width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+    font-size: 22px; background: rgba(79,142,247,.12); border: 1px solid rgba(79,142,247,.25);
+  }
+  .use-card h4 { font-size: 15px; margin-bottom: 4px; }
+  .use-card .u-ind { font-size: 11.5px; font-weight: 700; color: var(--accent-2); }
+  .use-card p { font-size: 13px; color: #b9c2d4; margin-top: 4px; }
+  .u-meta { text-align: right; min-width: 130px; }
+  .u-meta .m-row { font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+  .u-meta .m-val { font-size: 13px; font-weight: 800; color: var(--white); }
+  .hurdle { display: inline-flex; gap: 3px; }
+  .hurdle span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.12); }
+  .hurdle span.on { background: var(--amber); }
+  .serendipity {
+    border: 1px dashed rgba(245,185,66,.45); background: rgba(245,185,66,.05);
+  }
+  .serendipity .u-icon { background: rgba(245,185,66,.12); border-color: rgba(245,185,66,.3); }
+  .sd-badge {
+    font-size: 10.5px; font-weight: 800; color: #06251f; background: var(--amber);
+    padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle;
+  }
+
+  /* ===== 企業マッチング ===== */
+  .match-note { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
+  .company-card {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px 22px; margin-bottom: 14px; cursor: pointer; transition: border-color .15s ease;
+  }
+  .company-card:hover { border-color: rgba(34,184,166,.45); }
+  .cc-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .cc-name { font-size: 16px; font-weight: 800; }
+  .cc-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cc-score { text-align: right; }
+  .cc-score .num { font-size: 24px; font-weight: 800; color: var(--accent); }
+  .cc-score .lbl { font-size: 10.5px; color: var(--muted); }
+  .score-bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.08); margin: 12px 0; overflow: hidden; }
+  .score-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .cc-reasons { display: grid; gap: 6px; margin-top: 4px; }
+  .cc-reason { font-size: 12.5px; color: #c3cbdb; padding-left: 22px; position: relative; }
+  .cc-reason::before { content: "◎"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+  .cc-detail { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); }
+  .company-card.open .cc-detail { display: block; animation: fadeIn .25s ease; }
+  .cc-detail .d-label { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; color: var(--accent-2); margin-bottom: 6px; }
+  .cc-detail p { font-size: 13px; color: #c3cbdb; margin-bottom: 12px; }
+  .cc-toggle-hint { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+
+  /* ===== アプローチ ===== */
+  .approach-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .field select {
+    width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    color: var(--white); font-family: inherit; font-size: 13.5px; padding: 10px 12px;
+  }
+  .field select:focus { outline: none; border-color: var(--accent); }
+  .letter {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 22px; font-size: 13.5px; color: #d5dceb; white-space: pre-wrap; line-height: 1.9;
+  }
+  .letter-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .license-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .lic-card {
+    background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 12px; padding: 18px;
+  }
+  .lic-card.rec { border-color: rgba(34,184,166,.5); background: rgba(34,184,166,.06); position: relative; }
+  .lic-card.rec::before {
+    content: "AI推奨"; position: absolute; top: -10px; left: 14px;
+    background: var(--accent); color: #06251f; font-size: 10.5px; font-weight: 800;
+    padding: 2px 10px; border-radius: 999px;
+  }
+  .lic-card h4 { font-size: 14px; margin-bottom: 8px; }
+  .lic-card .l-money { font-size: 13px; font-weight: 800; color: var(--amber); margin-bottom: 8px; }
+  .lic-card p { font-size: 12px; color: var(--muted); }
+
+  .disclaimer {
+    margin-top: 30px; padding: 14px 18px; border-radius: 10px;
+    background: rgba(245,185,66,.06); border: 1px solid rgba(245,185,66,.25);
+    font-size: 12px; color: #d9c9a0;
+  }
+
+  @media (max-width: 860px) {
+    .patent-cards { grid-template-columns: 1fr; }
+    .grid-2, .grid-3, .value-grid, .license-grid, .approach-form { grid-template-columns: 1fr; }
+    .compare { grid-template-columns: 1fr; }
+    .cmp-arrow { transform: rotate(90deg); }
+    .use-card { grid-template-columns: auto 1fr; }
+    .u-meta { grid-column: 2; text-align: left; display: flex; gap: 20px; }
+    .oneliner .text { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="index.html"><span class="mark">🔬</span>PatentBridge<span class="demo-badge">DEMO</span></a>
+    <a class="back-link" href="index.html">← サービス紹介に戻る</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===== 特許セレクタ ===== -->
+  <section class="selector">
+    <h1>特許を選んで、AI解析を開始</h1>
+    <p class="sub">サンプル特許を選ぶか、お手持ちの特許のテキストを貼り付けてください(デモ版はサンプル特許で全機能を体験できます)。</p>
+    <div class="patent-cards" id="patentCards"></div>
+    <div class="paste-row">
+      <textarea id="pasteArea" placeholder="ここに特許の要約・請求項テキストを貼り付け(デモ版では内容に近いサンプル解析を表示します)"></textarea>
+      <button class="btn btn-primary" id="analyzeBtn">🔍 AI解析する</button>
+    </div>
+  </section>
+
+  <!-- ===== ローディング ===== -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="step" id="loadingStep">特許文書を読み込んでいます…</div>
+  </div>
+
+  <!-- ===== 結果タブ ===== -->
+  <div class="tabs-area" id="tabsArea">
+    <div class="tabs">
+      <button class="tab active" data-pane="explain">💡 かんたん解説</button>
+      <button class="tab" data-pane="uses">🧭 用途展開</button>
+      <button class="tab" data-pane="match">🤝 企業マッチング</button>
+      <button class="tab" data-pane="approach">✉️ アプローチ</button>
+    </div>
+
+    <!-- 💡 かんたん解説 -->
+    <div class="pane active" id="pane-explain">
+      <div class="oneliner">
+        <div class="label">一言でいうと</div>
+        <div class="text" id="exOneliner"></div>
+      </div>
+      <div class="card">
+        <h3>📖 中学生にも分かる解説</h3>
+        <div class="explain-body" id="exBody"></div>
+        <div class="analogy">
+          <div class="a-label">たとえるなら</div>
+          <span id="exAnalogy"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>⚖️ 従来技術と何が違うのか</h3>
+        <div class="compare">
+          <div class="cmp-box before">
+            <div class="c-label">これまで</div>
+            <div id="exBefore"></div>
+          </div>
+          <div class="cmp-arrow">➜</div>
+          <div class="cmp-box after">
+            <div class="c-label">この特許</div>
+            <div id="exAfter"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>💰 ビジネス視点での価値</h3>
+        <div class="value-grid" id="exValues"></div>
+      </div>
+      <div class="card">
+        <h3>🧬 この技術の「本質機能」(用途展開のタネ)</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">AIが特許から抽出した、業界を問わず通用する機能要素です。これをもとに異業種への用途を探索します。</p>
+        <div class="tags" id="exTags"></div>
+      </div>
+    </div>
+
+    <!-- 🧭 用途展開 -->
+    <div class="pane" id="pane-uses">
+      <p class="match-note">本質機能をもとに、AIが業界横断で活用シナリオを生成しました。⭐マークは発明者が想定していなかった「意外な用途」です。</p>
+      <div id="usesList"></div>
+    </div>
+
+    <!-- 🤝 企業マッチング -->
+    <div class="pane" id="pane-match">
+      <p class="match-note">世界の企業データベース(業種・事業内容・技術ニーズ登録・R&D動向)と照合した適合度スコア順の候補です。カードをクリックすると詳細と活用シナリオが開きます。※企業名はデモ用の架空企業です。</p>
+      <div id="matchList"></div>
+    </div>
+
+    <!-- ✉️ アプローチ -->
+    <div class="pane" id="pane-approach">
+      <div class="card">
+        <h3>✉️ 提案文AIドラフト</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">送付先の企業と言語を選ぶと、相手の事業に合わせた提案文をAIがドラフトします。</p>
+        <div class="approach-form">
+          <div class="field">
+            <label>送付先企業</label>
+            <select id="letterCompany"></select>
+          </div>
+          <div class="field">
+            <label>言語</label>
+            <select id="letterLang">
+              <option value="ja">日本語</option>
+              <option value="en">英語</option>
+            </select>
+          </div>
+        </div>
+        <div class="letter" id="letterBody"></div>
+        <div class="letter-actions">
+          <button class="btn btn-primary btn-sm" id="copyLetter">📋 コピーする</button>
+          <button class="btn btn-ghost btn-sm" onclick="alert('デモ版のため送信機能は無効です。実サービスではプラットフォーム経由で企業の技術窓口に届きます。')">📨 プラットフォーム経由で送る</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🧾 連携形態のシミュレーション</h3>
+        <div class="license-grid" id="licenseGrid"></div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      ⚠️ このダッシュボードはコンセプト実証用のデモです。特許・企業・スコア・金額はすべて架空のサンプルデータであり、実在の特許・企業とは関係ありません。実サービスではLLM(Claude API等)と特許DB・企業DBの実データ連携を行う想定です。
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =====================================================
+// サンプルデータ(すべて架空)
+// =====================================================
+const PATENTS = [
+  {
+    id: "polymer",
+    cat: "化学・材料",
+    icon: "🧪",
+    no: "特願2025-XXXXXX(サンプル)",
+    title: "動的共有結合を導入した自己修復性ポリマー組成物",
+    raw: "架橋構造中に動的共有結合を導入した自己修復性ポリマー組成物であって、常温域において結合交換反応により微細亀裂を自律的に修復し…",
+    oneliner: "ひっかき傷が「自然に治る」塗料・コーティング材。",
+    body: "この特許は、<b>プラスチックの分子どうしのつなぎ目(結合)が、切れてもまた自動でくっつき直す</b>という性質を利用した材料です。ふつうの塗料は一度傷がつくとそのままですが、この材料は分子レベルで手をつなぎ直すので、<b>細かい傷なら数時間で見た目が元どおり</b>になります。しかも特別な加熱装置は不要で、日常の室温で修復が進むのがポイントです。",
+    analogy: "切っても切ってもくっつく「スライム」の性質を、硬くて丈夫な塗料に閉じ込めたようなもの。傷 = 分子の手が離れた状態なので、手をつなぎ直せば傷が消えます。",
+    before: "傷がつくと再塗装や部品交換が必要。修理コストと廃棄物が発生し、外観品質の維持に人手がかかっていた。",
+    after: "微細な傷は室温で自己修復。再塗装・交換の頻度が激減し、製品寿命が延びて廃棄物も削減できる。",
+    values: [
+      { icon: "💴", title: "コスト削減", desc: "再塗装・部品交換・クレーム対応の費用を大幅圧縮" },
+      { icon: "⏱️", title: "寿命延長", desc: "外観劣化が遅く、製品の使用年数・下取り価値が向上" },
+      { icon: "🌱", title: "環境価値", desc: "廃棄・再塗装が減りCO2排出と廃棄物を削減。ESG訴求に" },
+    ],
+    tags: ["表面の傷を自律修復", "室温で機能する", "塗料・フィルムに加工可能", "透明性を維持", "既存塗装ラインで施工可"],
+    uses: [
+      { icon: "🚗", ind: "自動車", title: "車体クリアコートの自己修復化", desc: "洗車傷・飛び石の微細傷が自然回復。高級車の外観品質保持や中古車価値の維持に直結。", market: "大", hurdle: 2, sd: false },
+      { icon: "📱", ind: "電子機器", title: "スマホ・ウェアラブルの背面/画面保護", desc: "日常のスレ傷が消えるデバイス外装。「ずっと新品の見た目」を製品の差別化ポイントに。", market: "大", hurdle: 2, sd: false },
+      { icon: "🏠", ind: "住宅・建材", title: "フローリング・キッチン天板コート", desc: "生活傷が目立たない住まい。賃貸の原状回復コスト削減にも波及。", market: "中", hurdle: 3, sd: false },
+      { icon: "🚄", ind: "鉄道・航空", title: "車両・機体の外装メンテ削減", desc: "再塗装サイクルの延長で整備費と運休時間を削減。", market: "中", hurdle: 4, sd: false },
+      { icon: "🎨", ind: "美術・文化財", title: "美術品・文化財の保護コート", desc: "展示什器や額装ガラスの代替コートに。修復頻度を減らし作品を守る。", market: "小", hurdle: 3, sd: true },
+      { icon: "🦽", ind: "医療・福祉", title: "義肢・福祉機器の外装", desc: "毎日使う機器の傷・劣化を抑え、衛生面と心理的満足度を向上。", market: "小", hurdle: 3, sd: true },
+    ],
+    companies: [
+      { name: "Nordwind Automotive", country: "🇩🇪 ドイツ", ind: "自動車(プレミアムEV)", size: "従業員 4.2万人", score: 92,
+        reasons: ["技術ニーズ登録に「外装の経年劣化対策」を明記", "R&D発表で自己修復材料の共同研究先を公募中", "プレミアム路線で外観品質が購買決定要因"],
+        scenario: "新型EVのクリアコート層に採用し、「10年、新車の輝き」をブランド訴求に。まず北米向け旗艦モデルで実証し、量産ラインへ展開するステップを提案。" },
+      { name: "Lumina Devices", country: "🇺🇸 アメリカ", ind: "コンシューマー電子機器", size: "従業員 1.8万人", score: 88,
+        reasons: ["フラッグシップ機の「外装傷クレーム」が課題と公表", "素材スタートアップへの出資実績が多数", "デザイン差別化への投資意欲が高い"],
+        scenario: "次期スマートウォッチの筐体コートとして採用。「セルフヒーリング・ボディ」を新機能として打ち出すマーケティング連携まで視野に。" },
+      { name: "Sakura Homes", country: "🇯🇵 日本", ind: "住宅・建材", size: "従業員 9,500人", score: 81,
+        reasons: ["高耐久フローリングの新製品ラインを計画中", "「メンテナンスフリー住宅」がブランド戦略", "国内特許のライセンス導入に前向きな実績"],
+        scenario: "主力フローリング製品の表面コートに採用し、「傷が消える床」として住宅展示場で体験型プロモーションを展開。" },
+      { name: "Meridian Rail Group", country: "🇬🇧 イギリス", ind: "鉄道車両・保守", size: "従業員 2.6万人", score: 74,
+        reasons: ["車両再塗装コストの削減目標を中期計画に記載", "保守事業の利益率改善が経営課題"],
+        scenario: "都市間車両の外装保守契約に組み込み、再塗装サイクルを1.5倍に延長する実証プロジェクトから開始。" },
+      { name: "Hanul Beauty Lab", country: "🇰🇷 韓国", ind: "化粧品容器・パッケージ", size: "従業員 3,200人", score: 68,
+        reasons: ["高級コスメ容器の「使用中も美しい」ニーズに合致", "サステナブル容器(詰め替え・長寿命)を強化中"],
+        scenario: "詰め替え前提の高級コンパクト容器に採用。長く使っても傷まない容器としてリフィル経済圏の訴求を強化。" },
+    ],
+    license: { upfront: "300〜800万円", royalty: "売上の2〜4%", rec: 1 },
+  },
+  {
+    id: "radar",
+    cat: "エレクトロニクス・ヘルスケア",
+    icon: "📡",
+    no: "特願2025-YYYYYY(サンプル)",
+    title: "ミリ波レーダーによる非接触バイタルサイン推定方法",
+    raw: "ミリ波帯レーダー信号の位相変動から呼吸および心拍に由来する体表微小変位を分離抽出し、機械学習モデルにより…",
+    oneliner: "触れずに、離れた場所から呼吸と心拍を測れるセンサー技術。",
+    body: "この特許は、<b>電波(ミリ波)を人に当てて、その跳ね返りのわずかな揺れから呼吸や心拍を読み取る</b>技術です。呼吸で胸はミリ単位、心拍では髪の毛の太さほどしか動きませんが、電波の「位相」という性質を使うとこの極小の動きが検出できます。カメラと違って<b>映像を撮らないためプライバシーが守られ</b>、暗闇でも布団越しでも測定できます。",
+    analogy: "コウモリが超音波の反響で獲物の羽ばたきを感じ取るように、電波の反響で人の胸のかすかな上下を感じ取るイメージです。",
+    before: "心拍・呼吸の測定は装着型センサーが必要で、つけ忘れ・不快感・かぶれが課題。カメラ監視はプライバシー懸念が大きい。",
+    after: "天井や壁のセンサー1つで、何も身につけずに測定。映像を撮らないので寝室・浴室・病室でも導入できる。",
+    values: [
+      { icon: "🛡️", title: "プライバシー", desc: "カメラ不要。映像を撮らずに見守りができる" },
+      { icon: "😊", title: "ゼロ負担", desc: "装着物なし。高齢者や乳児でもストレスフリー" },
+      { icon: "🌙", title: "24時間・全環境", desc: "暗闇・布団越し・浴室でも安定して測定可能" },
+    ],
+    tags: ["非接触で生体情報を取得", "映像を使わない(プライバシー保護)", "遮蔽物越しに測定可", "小型・低消費電力", "複数人の同時検知に拡張可"],
+    uses: [
+      { icon: "🏥", ind: "医療・介護", title: "病室・介護施設の見守り", desc: "夜間の呼吸異常や離床をカメラなしで検知。看護・介護の巡回負担を削減。", market: "大", hurdle: 3, sd: false },
+      { icon: "🚗", ind: "自動車", title: "車内置き去り検知・ドライバー監視", desc: "後席の乳児置き去りやドライバーの体調急変を検知。各国の安全規制対応にも。", market: "大", hurdle: 2, sd: false },
+      { icon: "🛏️", ind: "スリープテック", title: "睡眠の質モニタリング", desc: "ベッドサイドに置くだけで睡眠中の呼吸・心拍を記録。装着型が苦手な層に届く。", market: "中", hurdle: 1, sd: false },
+      { icon: "🏨", ind: "ホテル・不動産", title: "客室・単身住宅の安否確認", desc: "プライバシーを守りながら孤独死リスクや急病を検知するスマートビル設備。", market: "中", hurdle: 2, sd: false },
+      { icon: "🐄", ind: "畜産・ペット", title: "家畜・ペットの健康モニタリング", desc: "装着ストレスなしで牛や犬の呼吸・心拍を常時把握。分娩兆候の検知にも。", market: "小", hurdle: 2, sd: true },
+      { icon: "🧘", ind: "フィットネス", title: "サウナ・ヨガ空間の安全見守り", desc: "高温環境や瞑想空間での体調急変をさりげなく検知。ウェルネス施設の安心価値に。", market: "小", hurdle: 2, sd: true },
+    ],
+    companies: [
+      { name: "CareNest Solutions", country: "🇯🇵 日本", ind: "介護テック", size: "従業員 1,100人", score: 94,
+        reasons: ["技術ニーズ登録:「カメラを使わない夜間見守り」", "介護施設2,400拠点への導入チャネルを保有", "現行の装着型センサーの解約率が課題と公表"],
+        scenario: "既存の見守りプラットフォームにレーダーセンサーを統合し、装着型からの置き換えを提案。施設向けサブスクの目玉機能に。" },
+      { name: "Aurora Mobility", country: "🇸🇪 スウェーデン", ind: "自動車部品(車内センシング)", size: "従業員 3.4万人", score: 90,
+        reasons: ["欧州の車内置き去り検知規制への対応を急いでいる", "車内レーダーモジュールの量産ラインを保有", "OEM3社に車内センシングを供給中"],
+        scenario: "既存モジュールに本特許のバイタル推定アルゴリズムをライセンス搭載し、規制対応+ヘルスケア機能で差別化。" },
+      { name: "Somnia Health", country: "🇺🇸 アメリカ", ind: "スリープテック", size: "従業員 800人", score: 84,
+        reasons: ["非装着型の睡眠計測デバイスを開発中と発表", "アルゴリズムの外部調達に積極的"],
+        scenario: "開発中デバイスのコア計測エンジンとしてライセンス供与。臨床データの共同取得まで踏み込んだ共同開発も選択肢。" },
+      { name: "Grand Horizon Hotels", country: "🇸🇬 シンガポール", ind: "ホテルチェーン", size: "従業員 5.6万人", score: 72,
+        reasons: ["客室内の急病対応遅れが経営リスクとして浮上", "スマートルーム化投資を中期計画に記載"],
+        scenario: "旗艦ホテルでの実証導入から開始し、「世界一安心な客室」ブランディングとして全チェーン展開へ。" },
+      { name: "MooWatch AgriTech", country: "🇳🇿 ニュージーランド", ind: "畜産テック", size: "従業員 240人", score: 66,
+        reasons: ["乳牛の分娩監視サービスを展開中", "装着型タグのコストと脱落が課題と公表"],
+        scenario: "牛舎天井への設置型センサーとして共同開発。分娩兆候検知の精度実証から始める小規模PoCを提案。" },
+    ],
+    license: { upfront: "500〜1,200万円", royalty: "売上の3〜5%", rec: 2 },
+  },
+  {
+    id: "biofilm",
+    cat: "バイオ・環境",
+    icon: "🌿",
+    no: "特願2025-ZZZZZZ(サンプル)",
+    title: "食品残渣由来セルロースナノファイバーを用いた高強度生分解性フィルム",
+    raw: "食品加工残渣から抽出したセルロースナノファイバーを配向積層し、引張強度を汎用プラスチック同等以上としつつ土中生分解性を…",
+    oneliner: "野菜くずから作れる、土に還る「強いフィルム」。",
+    body: "この特許は、<b>野菜の皮や搾りかすなどの食品加工で出るゴミから、プラスチック並みに丈夫なフィルムを作る</b>技術です。植物の繊維をナノメートル(髪の毛の10万分の1)レベルまでほぐし、向きをそろえて重ねることで、薄くても破れにくいシートになります。使い終わったら<b>土の中の微生物が数ヶ月で分解</b>してくれるので、ゴミになりません。原料がゴミ、行き先も土。<b>ゴミからゴミが出ない循環</b>を実現します。",
+    analogy: "バラバラのストローを束ねて向きをそろえると1本より遥かに折れにくくなるように、ナノ繊維の向きをそろえて「紙よりも強く、ラップのように薄い」シートを作るイメージです。",
+    before: "生分解性プラスチックは「強度が弱い」「原料(トウモロコシ等)が食料と競合する」「高コスト」が普及の壁だった。",
+    after: "原料は廃棄物なので低コスト&食料と競合しない。強度は汎用プラ同等以上で、包装・農業資材に実用レベル。",
+    values: [
+      { icon: "♻️", title: "循環経済", desc: "廃棄物が原料。処理費がかかっていたゴミが収益源に" },
+      { icon: "📜", title: "規制対応", desc: "各国のプラ規制・脱プラ要請への切り札に" },
+      { icon: "💴", title: "コスト競争力", desc: "原料費が実質マイナスで、生分解プラの価格の壁を突破" },
+    ],
+    tags: ["廃棄物を原料化", "高強度×生分解性の両立", "フィルム・シートに成形可", "食品接触の安全性", "既存製膜設備を転用可"],
+    uses: [
+      { icon: "🛍️", ind: "包装・小売", title: "食品包装フィルム・レジ袋", desc: "脱プラ規制に対応した包装材。「食品廃棄物から作った包装」のストーリー性も武器に。", market: "大", hurdle: 2, sd: false },
+      { icon: "🌾", ind: "農業", title: "農業用マルチフィルム", desc: "使用後に土にすき込むだけ。回収・廃棄コストをゼロにする農家直結の価値。", market: "大", hurdle: 1, sd: false },
+      { icon: "🥤", ind: "食品・外食", title: "自社残渣の自社包装化", desc: "食品メーカーが自社工場の残渣から自社製品の包装を作る「工場内循環」モデル。", market: "中", hurdle: 3, sd: false },
+      { icon: "⚰️", ind: "葬祭・宗教", title: "自然葬・散骨用の資材", desc: "土に還る納体袋や自然葬資材。エコ葬儀という成長ニッチに適合。", market: "小", hurdle: 2, sd: true },
+      { icon: "🎣", ind: "水産・アウトドア", title: "釣り・レジャー用品", desc: "海に流出しても分解される釣り餌袋・ルアーパーツ。海洋プラ問題への直接回答。", market: "小", hurdle: 3, sd: true },
+      { icon: "🏗️", ind: "建設", title: "土木養生シート", desc: "工事後に回収不要な法面養生・緑化シート。人手不足の現場で回収工程を丸ごと削減。", market: "中", hurdle: 3, sd: true },
+    ],
+    companies: [
+      { name: "GreenWrap Industries", country: "🇩🇪 ドイツ", ind: "包装材メーカー", size: "従業員 8,900人", score: 93,
+        reasons: ["EU包装規制(PPWR)対応の新素材を緊急調達中", "技術ニーズ登録:「強度のある生分解フィルム」", "食品大手3社と共同で脱プラ包装を開発中"],
+        scenario: "欧州の食品包装ラインへの供給を前提に、原料供給網(食品工場残渣)の構築とセットで独占的ライセンスを提案。" },
+      { name: "Terra Agri Supply", country: "🇯🇵 日本", ind: "農業資材", size: "従業員 2,700人", score: 89,
+        reasons: ["生分解マルチの強度不足クレームが課題と公表", "全国のJAルートに販売網を保有", "「回収不要マルチ」を次期主力に育てる計画"],
+        scenario: "現行品の置き換えとして共同でフィールド実証を実施し、来期作付けシーズンに合わせて商品化。" },
+      { name: "Pacific Foods Group", country: "🇺🇸 アメリカ", ind: "食品メーカー", size: "従業員 4.1万人", score: 82,
+        reasons: ["工場残渣の処理費削減が全社目標", "自社ブランドのサステナブル包装宣言を発表済み"],
+        scenario: "同社工場の野菜残渣を原料に自社製品の包装を作る「クローズドループ」実証。ESGレポートの目玉施策として提案。" },
+      { name: "Ocean Bloom Fisheries", country: "🇳🇴 ノルウェー", ind: "水産・養殖", size: "従業員 1,900人", score: 71,
+        reasons: ["養殖資材の海洋流出が規制リスクに", "生分解資材への切り替え予算を確保済み"],
+        scenario: "養殖用ネット周辺資材・給餌袋からの置き換え実証。海洋分解性の追加試験を共同で実施。" },
+      { name: "Kizuna Ceremony", country: "🇯🇵 日本", ind: "葬祭サービス", size: "従業員 1,400人", score: 63,
+        reasons: ["樹木葬・自然葬プランの拡充を発表", "「土に還る」コンセプトの資材を探索中"],
+        scenario: "自然葬プラン専用資材として小ロットのOEM供給から開始。ニッチだが高単価・高粗利の市場。" },
+    ],
+    license: { upfront: "200〜600万円", royalty: "売上の2〜3%", rec: 0 },
+  },
+];
+
+const MARKET_LABEL = { "大": "市場規模: 大", "中": "市場規模: 中", "小": "市場規模: ニッチ" };
+const LICENSE_TYPES = [
+  { key: 0, name: "通常実施権ライセンス", icon: "🔑", desc: "複数社に許諾しロイヤリティを積み上げる。リスク分散型で最初の一歩に最適。" },
+  { key: 1, name: "独占的ライセンス", icon: "👑", desc: "1社に独占許諾し、高い一時金+ロイヤリティ。相手の本気度とスピードを引き出せる。" },
+  { key: 2, name: "共同開発+ライセンス", icon: "🤝", desc: "実用化に開発が必要な場合に。開発費を相手が負担し、成果は共同で事業化。" },
+];
+
+// =====================================================
+// 状態
+// =====================================================
+let current = null;
+
+// =====================================================
+// 特許セレクタ描画
+// =====================================================
+const cardsEl = document.getElementById("patentCards");
+PATENTS.forEach((p) => {
+  const btn = document.createElement("button");
+  btn.className = "pcard";
+  btn.innerHTML = `
+    <div class="cat">${p.icon} ${p.cat}</div>
+    <h3>${p.title}</h3>
+    <div class="no">${p.no}</div>
+  `;
+  btn.addEventListener("click", () => selectPatent(p.id, btn));
+  cardsEl.appendChild(btn);
+});
+
+document.getElementById("analyzeBtn").addEventListener("click", () => {
+  const text = document.getElementById("pasteArea").value.trim();
+  if (!text) { alert("テキストを貼り付けるか、上のサンプル特許を選んでください。"); return; }
+  // デモ版: 貼り付け内容のキーワードから最も近いサンプルを選ぶ
+  let id = "polymer";
+  if (/レーダー|radar|心拍|呼吸|バイタル|センサ/i.test(text)) id = "radar";
+  else if (/セルロース|生分解|フィルム|残渣|バイオ|環境/i.test(text)) id = "biofilm";
+  else if (/ポリマー|自己修復|塗料|コーティング/i.test(text)) id = "polymer";
+  const idx = PATENTS.findIndex(p => p.id === id);
+  selectPatent(id, cardsEl.children[idx]);
+});
+
+function selectPatent(id, btnEl) {
+  document.querySelectorAll(".pcard").forEach(c => c.classList.remove("active"));
+  if (btnEl) btnEl.classList.add("active");
+  current = PATENTS.find(p => p.id === id);
+  runAnalysis();
+}
+
+// =====================================================
+// 解析アニメーション → 結果描画
+// =====================================================
+const LOADING_STEPS = [
+  "特許文書を読み込んでいます…",
+  "請求項と実施例を解析しています…",
+  "誰にでも分かる言葉に翻訳しています…",
+  "本質機能を抽出し、用途を探索しています…",
+  "世界の企業データベースと照合しています…",
+];
+
+function runAnalysis() {
+  const loading = document.getElementById("loading");
+  const tabsArea = document.getElementById("tabsArea");
+  const stepEl = document.getElementById("loadingStep");
+  tabsArea.classList.remove("show");
+  loading.classList.add("show");
+  let i = 0;
+  stepEl.textContent = LOADING_STEPS[0];
+  const timer = setInterval(() => {
+    i++;
+    if (i >= LOADING_STEPS.length) {
+      clearInterval(timer);
+      loading.classList.remove("show");
+      renderAll();
+      tabsArea.classList.add("show");
+      switchPane("explain");
+      tabsArea.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    stepEl.textContent = LOADING_STEPS[i];
+  }, 450);
+}
+
+// =====================================================
+// タブ
+// =====================================================
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => switchPane(tab.dataset.pane));
+});
+function switchPane(name) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.pane === name));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("active", p.id === "pane-" + name));
+}
+
+// =====================================================
+// 描画
+// =====================================================
+function renderAll() {
+  const p = current;
+
+  // --- かんたん解説 ---
+  document.getElementById("exOneliner").textContent = p.oneliner;
+  document.getElementById("exBody").innerHTML = p.body;
+  document.getElementById("exAnalogy").textContent = p.analogy;
+  document.getElementById("exBefore").textContent = p.before;
+  document.getElementById("exAfter").textContent = p.after;
+  document.getElementById("exValues").innerHTML = p.values.map(v => `
+    <div class="value-item">
+      <div class="v-icon">${v.icon}</div>
+      <div class="v-title">${v.title}</div>
+      <div class="v-desc">${v.desc}</div>
+    </div>`).join("");
+  document.getElementById("exTags").innerHTML = p.tags.map(t => `<span class="tag-chip">${t}</span>`).join("");
+
+  // --- 用途展開 ---
+  document.getElementById("usesList").innerHTML = p.uses.map(u => `
+    <div class="use-card ${u.sd ? "serendipity" : ""}">
+      <div class="u-icon">${u.icon}</div>
+      <div>
+        <div class="u-ind">${u.ind}</div>
+        <h4>${u.title}${u.sd ? '<span class="sd-badge">⭐ 意外な用途</span>' : ""}</h4>
+        <p>${u.desc}</p>
+      </div>
+      <div class="u-meta">
+        <div class="m-row">${MARKET_LABEL[u.market]}</div>
+        <div class="m-row">実現ハードル
+          <span class="hurdle">${[1,2,3,4,5].map(n => `<span class="${n <= u.hurdle ? "on" : ""}"></span>`).join("")}</span>
+        </div>
+      </div>
+    </div>`).join("");
+
+  // --- 企業マッチング ---
+  document.getElementById("matchList").innerHTML = p.companies.map((c, i) => `
+    <div class="company-card" data-idx="${i}">
+      <div class="cc-head">
+        <div>
+          <div class="cc-name">${i + 1}. ${c.name}</div>
+          <div class="cc-meta">${c.country} ・ ${c.ind} ・ ${c.size}</div>
+        </div>
+        <div class="cc-score"><span class="num">${c.score}%</span><div class="lbl">適合度スコア</div></div>
+      </div>
+      <div class="score-bar"><i style="width:${c.score}%"></i></div>
+      <div class="cc-reasons">${c.reasons.map(r => `<div class="cc-reason">${r}</div>`).join("")}</div>
+      <div class="cc-detail">
+        <div class="d-label">💼 AI提案:この企業での活用シナリオ</div>
+        <p>${c.scenario}</p>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); goApproach(${i})">✉️ この企業への提案文を作る</button>
+      </div>
+      <div class="cc-toggle-hint">クリックで活用シナリオを表示 ▾</div>
+    </div>`).join("");
+  document.querySelectorAll(".company-card").forEach(card => {
+    card.addEventListener("click", () => card.classList.toggle("open"));
+  });
+
+  // --- アプローチ ---
+  const sel = document.getElementById("letterCompany");
+  sel.innerHTML = p.companies.map((c, i) => `<option value="${i}">${c.name}(${c.country.replace(/^\S+\s/, "")})</option>`).join("");
+  renderLetter();
+  renderLicense();
+}
+
+function goApproach(idx) {
+  document.getElementById("letterCompany").value = String(idx);
+  renderLetter();
+  switchPane("approach");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// =====================================================
+// 提案文生成(テンプレート合成)
+// =====================================================
+function renderLetter() {
+  const p = current;
+  const idx = Number(document.getElementById("letterCompany").value || 0);
+  const c = p.companies[idx];
+  const lang = document.getElementById("letterLang").value;
+  let text;
+  if (lang === "ja") {
+    text =
+`${c.name} 技術企画ご担当者様
+
+はじめまして。特許「${p.title}」の権利者です。
+PatentBridgeのマッチング分析にて、貴社と当技術の適合度が高い(スコア ${c.score}%)と判定されたため、ご連絡いたしました。
+
+■ 技術の概要(一言でいうと)
+${p.oneliner}
+
+■ 貴社にとっての価値
+${c.reasons.map(r => "・" + r).join("\n")}
+
+■ ご提案したい活用シナリオ
+${c.scenario}
+
+まずは30分程度のオンラインでの技術説明の機会をいただけないでしょうか。
+NDA締結のうえ、実施例データ・サンプル評価のご相談も可能です。
+
+何卒ご検討のほどよろしくお願いいたします。`;
+  } else {
+    text =
+`Dear Technology Planning Team at ${c.name},
+
+I am the holder of the patent "${p.title}".
+PatentBridge's matching analysis identified a strong fit between your company and this technology (match score: ${c.score}%), which is why I am reaching out.
+
+■ What this technology is, in one line
+${p.oneliner}
+
+■ Why it matters to your business
+${c.reasons.map(r => "- " + r).join("\n")}
+
+■ Proposed use case
+${c.scenario}
+
+Would you be open to a 30-minute online session for a technical introduction?
+Under NDA, we can also discuss experimental data and sample evaluation.
+
+Thank you for your consideration.`;
+  }
+  document.getElementById("letterBody").textContent = text;
+}
+document.getElementById("letterCompany").addEventListener("change", renderLetter);
+document.getElementById("letterLang").addEventListener("change", renderLetter);
+document.getElementById("copyLetter").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(document.getElementById("letterBody").textContent);
+    alert("提案文をコピーしました。");
+  } catch {
+    alert("コピーに失敗しました。テキストを選択して手動でコピーしてください。");
+  }
+});
+
+// =====================================================
+// 連携形態シミュレーション
+// =====================================================
+function renderLicense() {
+  const p = current;
+  document.getElementById("licenseGrid").innerHTML = LICENSE_TYPES.map(l => `
+    <div class="lic-card ${p.license.rec === l.key ? "rec" : ""}">
+      <h4>${l.icon} ${l.name}</h4>
+      <div class="l-money">一時金 ${p.license.upfront} / ロイヤリティ ${p.license.royalty}</div>
+      <p>${l.desc}</p>
+    </div>`).join("");
+}
+
+// 初期状態: 1件目を自動選択して体験開始
+selectPatent(PATENTS[0].id, cardsEl.children[0]);
+</script>
+
+</body>
+</html>
