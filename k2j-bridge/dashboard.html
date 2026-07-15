@@ -165,6 +165,21 @@
   .factory .f-name { font-weight: 800; font-size: 13.5px; }
   .factory .f-meta { font-size: 11.5px; color: var(--sub); }
   .match { margin-left: auto; font-size: 12px; font-weight: 900; color: var(--mint); white-space: nowrap; }
+  /* Generated product images */
+  .img-note { font-size: 12px; color: var(--sub); margin: 2px 0 12px; }
+  .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .img-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; transition: transform .15s ease, box-shadow .15s ease; }
+  .img-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(20,30,70,.12); }
+  .img-card svg { display: block; width: 100%; height: auto; }
+  .img-card .ic-body { padding: 11px 13px; border-top: 1px solid var(--line); }
+  .img-card .ic-name { font-size: 12.5px; font-weight: 800; }
+  .img-card .ic-desc { font-size: 11px; color: var(--sub); margin-top: 2px; }
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    background: linear-gradient(135deg, #eef1fd, #f3edff); color: var(--accent-2);
+    border: 1px solid #ded5ff; padding: 2px 9px; border-radius: 999px; margin-bottom: 6px;
+  }
   .loading { display: none; margin-top: 22px; text-align: center; padding: 36px; color: var(--sub); font-size: 13.5px; font-weight: 700; }
   .loading.show { display: block; }
   .spinner { width: 34px; height: 34px; margin: 0 auto 12px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
@@ -214,7 +229,7 @@
     .form-row { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 620px) {
-    .g2, .g3, .g4, .prop-grid, .form-row { grid-template-columns: 1fr; }
+    .g2, .g3, .g4, .prop-grid, .form-row, .img-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -238,8 +253,8 @@
 
   <!-- ================= Trend ================= -->
   <section class="panel active" id="panel-trend">
-    <h2 class="page-title">日本トレンドレーダー</h2>
-    <p class="page-sub">楽天・Amazon・Qoo10・@cosme・SNSの公開データを毎日分析(このデモではサンプルデータを表示しています)</p>
+    <h2 class="page-title">Qoo10トレンドレーダー</h2>
+    <p class="page-sub">日本市場の参考データは <b>Qoo10(日本)</b> を中心に毎日分析。ランキング・メガ割・レビューから「いま売れているもの」を抽出します(このデモではサンプルデータを表示しています)</p>
 
     <div class="cat-row" id="catRow">
       <button class="cat-btn active" data-cat="beauty">💄 美容・コスメ</button>
@@ -251,9 +266,9 @@
 
     <div class="grid g2 mt">
       <div class="card">
-        <h3>🔥 急上昇ランキング(直近7日)</h3>
+        <h3>🔥 Qoo10 急上昇ランキング(直近7日)</h3>
         <table>
-          <thead><tr><th></th><th>商品ジャンル</th><th>主な出所</th><th>検索/売上成長</th></tr></thead>
+          <thead><tr><th></th><th>商品ジャンル</th><th>Qoo10での位置づけ</th><th>検索/売上成長</th></tr></thead>
           <tbody id="rankBody"></tbody>
         </table>
       </div>
@@ -273,7 +288,7 @@
   <!-- ================= Planner ================= -->
   <section class="panel" id="panel-plan">
     <h2 class="page-title">AI商品企画ジェネレーター</h2>
-    <p class="page-sub">条件を選ぶと、トレンドデータに基づくOEM商品コンセプトを生成します(デモではあらかじめ用意した企画案を表示します)</p>
+    <p class="page-sub">条件を選ぶと、Qoo10のトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します(デモではあらかじめ用意した企画案・モック画像を表示します)</p>
 
     <div class="card">
       <div class="form-row">
@@ -307,7 +322,7 @@
 
     <div class="loading" id="genLoading">
       <div class="spinner"></div>
-      トレンドデータを分析して商品コンセプトを生成しています…
+      Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…
     </div>
 
     <div class="proposal" id="proposal"></div>
@@ -426,17 +441,17 @@
 const TREND = {
   beauty: {
     kpi: [
-      { label: "追跡中の商品数", value: "12,480", delta: "+320 / 週", up: true },
-      { label: "急上昇キーワード", value: "シカミスト", delta: "検索 +218%", up: true },
-      { label: "平均売れ筋価格帯", value: "¥1,980", delta: "前月 ¥2,180", up: false },
-      { label: "レビュー分析件数", value: "48,200", delta: "+8,400 / 週", up: true },
+      { label: "Qoo10 追跡商品数", value: "12,480", delta: "+320 / 週", up: true },
+      { label: "急上昇キーワード", value: "シカミスト", delta: "Qoo10検索 +218%", up: true },
+      { label: "売れ筋価格帯(Qoo10)", value: "¥1,980", delta: "前月 ¥2,180", up: false },
+      { label: "Qoo10 レビュー分析件数", value: "48,200", delta: "+8,400 / 週", up: true },
     ],
     rank: [
-      { name: "シカ成分スキンケアミスト", src: "Qoo10 / @cosme", growth: "+218%", tags: ["敏感肌", "携帯用"], hot: true },
-      { name: "クッションファンデ(ツヤ肌系)", src: "Qoo10 / LIPS", growth: "+142%", tags: ["メガ割", "崩れにくい"], hot: true },
-      { name: "レチノール アイクリーム", src: "Amazon / 楽天", growth: "+118%", tags: ["エイジング"], hot: false },
-      { name: "弱酸性 頭皮ケアシャンプー", src: "楽天 / SNS", growth: "+96%", tags: ["ヘアケア"], hot: false },
-      { name: "リップスリーピングマスク", src: "@cosme / TikTok", growth: "+87%", tags: ["ナイトケア"], hot: false },
+      { name: "シカ成分スキンケアミスト", src: "Qoo10 ビューティー 1位", growth: "+218%", tags: ["敏感肌", "携帯用"], hot: true },
+      { name: "クッションファンデ(ツヤ肌系)", src: "Qoo10 メガ割 上位", growth: "+142%", tags: ["メガ割", "崩れにくい"], hot: true },
+      { name: "レチノール アイクリーム", src: "Qoo10 スキンケア", growth: "+118%", tags: ["エイジング"], hot: false },
+      { name: "弱酸性 頭皮ケアシャンプー", src: "Qoo10 ヘアケア", growth: "+96%", tags: ["ヘアケア"], hot: false },
+      { name: "リップスリーピングマスク", src: "Qoo10 × SNS言及", growth: "+87%", tags: ["ナイトケア"], hot: false },
     ],
     bars: [
       { label: "スキンケア", val: 34 }, { label: "ベースメイク", val: 26 },
@@ -449,17 +464,17 @@ const TREND = {
   },
   food: {
     kpi: [
-      { label: "追跡中の商品数", value: "8,940", delta: "+210 / 週", up: true },
-      { label: "急上昇キーワード", value: "高タンパク", delta: "検索 +164%", up: true },
-      { label: "平均売れ筋価格帯", value: "¥1,280", delta: "前月 ¥1,150", up: true },
-      { label: "レビュー分析件数", value: "31,600", delta: "+5,100 / 週", up: true },
+      { label: "Qoo10 追跡商品数", value: "8,940", delta: "+210 / 週", up: true },
+      { label: "急上昇キーワード", value: "高タンパク", delta: "Qoo10検索 +164%", up: true },
+      { label: "売れ筋価格帯(Qoo10)", value: "¥1,280", delta: "前月 ¥1,150", up: true },
+      { label: "Qoo10 レビュー分析件数", value: "31,600", delta: "+5,100 / 週", up: true },
     ],
     rank: [
-      { name: "高タンパク グラノーラバー", src: "Amazon / 楽天", growth: "+164%", tags: ["プロテイン", "個包装"], hot: true },
-      { name: "冷凍キンパ(韓国海苔巻き)", src: "楽天 / TikTok", growth: "+139%", tags: ["時短", "冷凍"], hot: true },
-      { name: "ゼロシュガー韓国スナック", src: "Qoo10 / Amazon", growth: "+104%", tags: ["低糖質"], hot: false },
-      { name: "トゥンカロン(太っちょマカロン)", src: "SNS / 通販", growth: "+92%", tags: ["映え", "ギフト"], hot: false },
-      { name: "コンブチャ(炭酸飲料タイプ)", src: "楽天 / Yahoo!", growth: "+78%", tags: ["健康飲料"], hot: false },
+      { name: "高タンパク グラノーラバー", src: "Qoo10 フード 1位", growth: "+164%", tags: ["プロテイン", "個包装"], hot: true },
+      { name: "冷凍キンパ(韓国海苔巻き)", src: "Qoo10 × TikTok言及", growth: "+139%", tags: ["時短", "冷凍"], hot: true },
+      { name: "ゼロシュガー韓国スナック", src: "Qoo10 韓国食品", growth: "+104%", tags: ["低糖質"], hot: false },
+      { name: "トゥンカロン(太っちょマカロン)", src: "Qoo10 スイーツ", growth: "+92%", tags: ["映え", "ギフト"], hot: false },
+      { name: "コンブチャ(炭酸飲料タイプ)", src: "Qoo10 ドリンク", growth: "+78%", tags: ["健康飲料"], hot: false },
     ],
     bars: [
       { label: "健康食品", val: 31 }, { label: "冷凍食品", val: 27 },
@@ -472,17 +487,17 @@ const TREND = {
   },
   living: {
     kpi: [
-      { label: "追跡中の商品数", value: "15,220", delta: "+410 / 週", up: true },
-      { label: "急上昇キーワード", value: "卓上加湿器", delta: "検索 +121%", up: true },
-      { label: "平均売れ筋価格帯", value: "¥3,480", delta: "前月 ¥3,900", up: false },
-      { label: "レビュー分析件数", value: "52,900", delta: "+9,200 / 週", up: true },
+      { label: "Qoo10 追跡商品数", value: "15,220", delta: "+410 / 週", up: true },
+      { label: "急上昇キーワード", value: "卓上加湿器", delta: "Qoo10検索 +121%", up: true },
+      { label: "売れ筋価格帯(Qoo10)", value: "¥3,480", delta: "前月 ¥3,900", up: false },
+      { label: "Qoo10 レビュー分析件数", value: "52,900", delta: "+9,200 / 週", up: true },
     ],
     rank: [
-      { name: "卓上加湿器(アロマ対応)", src: "楽天 / Yahoo!", growth: "+121%", tags: ["在宅ワーク", "静音"], hot: true },
-      { name: "姿勢サポートクッション", src: "楽天 / SNS", growth: "+97%", tags: ["デスクワーク"], hot: true },
-      { name: "折りたたみ ドライヤースタンド", src: "Amazon", growth: "+85%", tags: ["時短", "省スペース"], hot: false },
-      { name: "珪藻土 キッチン水切りマット", src: "楽天 / Instagram", growth: "+73%", tags: ["キッチン"], hot: false },
-      { name: "LEDデスクライト(調色機能)", src: "Amazon / 楽天", growth: "+66%", tags: ["目に優しい"], hot: false },
+      { name: "卓上加湿器(アロマ対応)", src: "Qoo10 生活/家電 1位", growth: "+121%", tags: ["在宅ワーク", "静音"], hot: true },
+      { name: "姿勢サポートクッション", src: "Qoo10 × SNS言及", growth: "+97%", tags: ["デスクワーク"], hot: true },
+      { name: "折りたたみ ドライヤースタンド", src: "Qoo10 生活雑貨", growth: "+85%", tags: ["時短", "省スペース"], hot: false },
+      { name: "珪藻土 キッチン水切りマット", src: "Qoo10 キッチン", growth: "+73%", tags: ["キッチン"], hot: false },
+      { name: "LEDデスクライト(調色機能)", src: "Qoo10 家電", growth: "+66%", tags: ["目に優しい"], hot: false },
     ],
     bars: [
       { label: "デスク周り", val: 33 }, { label: "キッチン", val: 24 },
@@ -542,6 +557,99 @@ const PROPOSALS = {
     ],
   },
 };
+
+// ================= 商品イメージ画像(AI生成のデモ:SVGで描画) =================
+const CONCEPT_IMAGES = {
+  beauty: [
+    { name: "A案 ナチュラルグリーン", desc: "成分の誠実さを打ち出す低彩度グリーン", pal: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
+    { name: "B案 ソフトピンク", desc: "Qoo10メガ割で強いK-Beautyらしい柔らかさ", pal: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
+    { name: "C案 クリーンブルー", desc: "皮膚科学系ブランドを想起する清潔感", pal: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
+  ],
+  food: [
+    { name: "A案 パフォーマンスブラック", desc: "数値ドーンの日本プロテイン市場の定石", pal: { bg1: "#f3f4f6", bg2: "#d3d7de", body: "#1f2937", cap: "#f5b942", text: "#ffffff", mist: "#f5b942" } },
+    { name: "B案 コリアンレッド", desc: "韓国グルメ好きに刺さる旨辛トーン", pal: { bg1: "#fdf2ef", bg2: "#f5cfc4", body: "#c0392b", cap: "#f7e8c8", text: "#ffffff", mist: "#e67e22" } },
+    { name: "C案 ヘルシーグリーン", desc: "低糖質・オフィス間食層向けの軽さ", pal: { bg1: "#f2f8f0", bg2: "#d4e6cf", body: "#f7fbf3", cap: "#4a7c43", text: "#3c6636", mist: "#7aa872" } },
+  ],
+  living: [
+    { name: "A案 グレージュ", desc: "インテリアに馴染む日本で人気のくすみ色", pal: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
+    { name: "B案 ブルーグレー", desc: "デスク家電らしいミニマル・テック", pal: { bg1: "#eef2f7", bg2: "#c9d6e4", body: "#dfe7f0", cap: "#5b7897", text: "#47607c", mist: "#8aa3c0" } },
+    { name: "C案 ピンクベージュ", desc: "「デスクに置けるかわいい家電」ニーズ向け", pal: { bg1: "#fbf2f1", bg2: "#ecd2cd", body: "#f6e4e0", cap: "#c98b80", text: "#a56d62", mist: "#dbaaa0" } },
+  ],
+};
+
+function svgDefs(id, p) {
+  return `<defs>
+    <radialGradient id="bg${id}" cx="50%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="${p.bg1}"/><stop offset="100%" stop-color="${p.bg2}"/>
+    </radialGradient>
+    <linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".55"/><stop offset="35%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>`;
+}
+
+function svgBeauty(id, p) {
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ミストボトルのコンセプト画像">
+    ${svgDefs(id, p)}
+    <rect width="300" height="220" fill="url(#bg${id})"/>
+    <ellipse cx="150" cy="199" rx="66" ry="9" fill="rgba(0,0,0,.09)"/>
+    <g opacity=".85">
+      <circle cx="196" cy="42" r="3.2" fill="${p.mist}"/><circle cx="208" cy="34" r="2.4" fill="${p.mist}" opacity=".7"/>
+      <circle cx="218" cy="46" r="1.8" fill="${p.mist}" opacity=".5"/><circle cx="204" cy="54" r="1.6" fill="${p.mist}" opacity=".4"/>
+    </g>
+    <rect x="114" y="72" width="72" height="126" rx="17" fill="${p.body}" stroke="rgba(0,0,0,.07)"/>
+    <rect x="114" y="72" width="72" height="126" rx="17" fill="url(#sh${id})"/>
+    <rect x="131" y="48" width="38" height="26" rx="6" fill="${p.cap}"/>
+    <rect x="144" y="36" width="12" height="14" rx="3" fill="${p.cap}"/>
+    <rect x="156" y="39" width="10" height="5" rx="2.5" fill="${p.cap}"/>
+    <rect x="122" y="106" width="56" height="56" rx="9" fill="#ffffff" opacity=".93"/>
+    <text x="150" y="128" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">CICA</text>
+    <text x="150" y="143" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">VEIL</text>
+    <text x="150" y="155" text-anchor="middle" font-family="sans-serif" font-size="6" fill="${p.text}" opacity=".65" letter-spacing=".5">SOOTHING MIST 50mL</text>
+    <path d="M150 96 q6 -9 0 -14 q-6 5 0 14z" fill="${p.cap}" opacity=".8"/>
+  </svg>`;
+}
+
+function svgFood(id, p) {
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="スナックパウチのコンセプト画像">
+    ${svgDefs(id, p)}
+    <rect width="300" height="220" fill="url(#bg${id})"/>
+    <ellipse cx="150" cy="200" rx="74" ry="9" fill="rgba(0,0,0,.09)"/>
+    <path d="M97 60 L203 60 L212 190 Q150 202 88 190 Z" fill="${p.body}" stroke="rgba(0,0,0,.08)"/>
+    <path d="M97 60 L203 60 L212 190 Q150 202 88 190 Z" fill="url(#sh${id})"/>
+    <rect x="94" y="46" width="112" height="16" rx="3" fill="${p.body}" stroke="rgba(0,0,0,.1)"/>
+    <g stroke="rgba(0,0,0,.18)" stroke-width="1">${[0,1,2,3,4,5,6,7,8,9].map(i => `<line x1="${100 + i * 11}" y1="48" x2="${100 + i * 11}" y2="60"/>`).join("")}</g>
+    <text x="150" y="102" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="800" fill="${p.text}" letter-spacing="1">PROTE-K</text>
+    <text x="150" y="140" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="900" fill="${p.cap}">15g</text>
+    <text x="150" y="156" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="${p.text}" opacity=".85" letter-spacing="2">PROTEIN SNACK</text>
+    <rect x="118" y="166" width="64" height="14" rx="7" fill="${p.cap}"/>
+    <text x="150" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="800" fill="${p.body}">マイルド / 旨辛</text>
+  </svg>`;
+}
+
+function svgLiving(id, p) {
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="卓上加湿器のコンセプト画像">
+    ${svgDefs(id, p)}
+    <rect width="300" height="220" fill="url(#bg${id})"/>
+    <ellipse cx="150" cy="199" rx="62" ry="9" fill="rgba(0,0,0,.09)"/>
+    <g opacity=".9">
+      <circle cx="150" cy="52" r="4" fill="${p.cap}" opacity=".35"/>
+      <circle cx="162" cy="40" r="3" fill="${p.cap}" opacity=".28"/>
+      <circle cx="140" cy="34" r="2.4" fill="${p.cap}" opacity=".2"/>
+    </g>
+    <rect x="108" y="78" width="84" height="118" rx="30" fill="${p.body}" stroke="rgba(0,0,0,.07)"/>
+    <rect x="108" y="78" width="84" height="118" rx="30" fill="url(#sh${id})"/>
+    <ellipse cx="150" cy="80" rx="34" ry="8" fill="${p.cap}" opacity=".35"/>
+    <circle cx="150" cy="72" r="7" fill="${p.cap}"/>
+    <circle cx="150" cy="72" r="3" fill="#ffffff" opacity=".8"/>
+    <rect x="128" y="128" width="44" height="20" rx="10" fill="#ffffff" opacity=".8"/>
+    <text x="150" y="142" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="800" fill="${p.text}">MOIST</text>
+    <circle cx="150" cy="168" r="4.5" fill="${p.cap}" opacity=".9"/>
+    <text x="150" y="186" text-anchor="middle" font-family="sans-serif" font-size="5.5" fill="${p.text}" opacity=".6" letter-spacing="1">AROMA HUMIDIFIER</text>
+  </svg>`;
+}
+
+const SVG_BY_CAT = { beauty: svgBeauty, food: svgFood, living: svgLiving };
 
 const MOODS = [
   {
@@ -666,6 +774,19 @@ document.getElementById("genBtn").addEventListener("click", () => {
             <div class="prop-item">
               <b>${it.icon} ${it.title}</b>
               <ul>${it.list.map(li => `<li>${li}</li>`).join("")}</ul>
+            </div>`).join("")}
+        </div>
+        <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(AI生成・3案)</h3>
+        <p class="img-note">トレンド分析とデザインリファレンスを反映したコンセプト画像を自動生成します。※デモでは簡易モックを表示(実サービスではAI画像生成モデルで写真品質のパッケージ/商品カット・Qoo10商品ページ用画像まで生成)</p>
+        <div class="img-grid">
+          ${CONCEPT_IMAGES[cat].map((img, i) => `
+            <div class="img-card">
+              ${SVG_BY_CAT[cat]("_" + cat + i, img.pal)}
+              <div class="ic-body">
+                <span class="ai-badge">✨ AI GENERATED</span>
+                <div class="ic-name">${img.name}</div>
+                <div class="ic-desc">${img.desc}</div>
+              </div>
             </div>`).join("")}
         </div>
         <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 マッチするOEM/ODM工場(サンプル)</h3>
