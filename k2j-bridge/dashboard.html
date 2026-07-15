@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K2J Bridge — デモダッシュボード</title>
+<meta name="description" content="日本市場トレンド分析からOEM商品企画・デザイン提案・マーケティングまでのデモダッシュボード。">
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #1a2036;
+    --sub: #667090;
+    --line: #e5e9f2;
+    --accent: #4f6ef7;
+    --accent-2: #7c5cff;
+    --coral: #ff5d73;
+    --mint: #13b98c;
+    --gold: #e8a422;
+    --navy: #0b1026;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "Noto Sans KR", Meiryo, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ===== Top bar ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--navy); color: #fff;
+    display: flex; align-items: center; gap: 18px;
+    padding: 0 20px; height: 56px;
+  }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 15px; }
+  .logo .mark {
+    width: 26px; height: 26px; border-radius: 8px; font-size: 11px; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+  }
+  .demo-pill {
+    font-size: 11px; font-weight: 800; letter-spacing: .05em;
+    background: rgba(245,185,66,.2); color: #f5b942;
+    border: 1px solid rgba(245,185,66,.45);
+    padding: 3px 12px; border-radius: 999px;
+  }
+  .topbar .spacer { flex: 1; }
+  .back-link { font-size: 12.5px; color: #aab1cf; }
+  .back-link:hover { color: #fff; }
+
+  /* ===== Tabs ===== */
+  .tabs {
+    position: sticky; top: 56px; z-index: 49;
+    background: #fff; border-bottom: 1px solid var(--line);
+    display: flex; gap: 4px; padding: 0 20px; overflow-x: auto;
+  }
+  .tab {
+    border: none; background: none; padding: 15px 18px;
+    font-size: 14px; font-weight: 700; color: var(--sub);
+    border-bottom: 3px solid transparent; white-space: nowrap;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover { color: var(--ink); }
+
+  .page { max-width: 1160px; margin: 0 auto; padding: 28px 20px 80px; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h2.page-title { font-size: 22px; font-weight: 900; }
+  .page-sub { font-size: 13px; color: var(--sub); margin-top: 4px; margin-bottom: 24px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; box-shadow: 0 1px 3px rgba(20,30,70,.05);
+  }
+  .card h3 { font-size: 15px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+
+  /* KPI */
+  .kpi { padding: 18px 20px; }
+  .kpi .k-label { font-size: 12px; font-weight: 700; color: var(--sub); }
+  .kpi .k-value { font-size: 26px; font-weight: 900; margin-top: 4px; }
+  .kpi .k-delta { font-size: 12px; font-weight: 800; margin-top: 2px; }
+  .up { color: var(--mint); } .down { color: var(--coral); }
+
+  /* Category selector */
+  .cat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cat-btn {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px;
+    padding: 8px 18px; font-size: 13px; font-weight: 700; color: var(--sub);
+    transition: all .15s ease;
+  }
+  .cat-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cat-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+  /* Ranking table */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 11.5px; color: var(--sub); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 12px 10px; border-bottom: 1px solid #f0f2f8; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .rk { width: 26px; height: 26px; border-radius: 8px; display: inline-grid; place-items: center; font-size: 12px; font-weight: 800; background: #eef1fd; color: var(--accent); }
+  .rk.hot { background: #ffe9ec; color: var(--coral); }
+  .pname { font-weight: 800; }
+  .psub { font-size: 11.5px; color: var(--sub); }
+  .growth { font-weight: 800; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px; margin-right: 4px; }
+  .tag.b1 { background: #eef1fd; color: var(--accent); }
+  .tag.b2 { background: #e7f8f2; color: var(--mint); }
+  .tag.b3 { background: #fdf3e0; color: var(--gold); }
+
+  /* Bars (chart) */
+  .bars { display: flex; align-items: flex-end; gap: 10px; height: 150px; padding-top: 10px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; max-width: 44px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, var(--accent), var(--accent-2)); transition: height .4s ease; min-height: 4px; }
+  .bar-label { font-size: 10.5px; color: var(--sub); font-weight: 700; text-align: center; }
+  .bar-val { font-size: 11px; font-weight: 800; color: var(--ink); }
+
+  /* Review insights */
+  .insight { padding: 13px 15px; border-radius: 12px; background: #f8f9fd; border: 1px solid var(--line); margin-top: 10px; font-size: 13px; }
+  .insight b { display: block; font-size: 13px; margin-bottom: 3px; }
+  .insight.neg b { color: var(--coral); }
+  .insight.pos b { color: var(--mint); }
+  .insight .cnt { font-size: 11px; color: var(--sub); }
+
+  /* ===== Planner ===== */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+  label.fld { display: block; font-size: 12px; font-weight: 800; color: var(--sub); }
+  select, input[type="text"] {
+    width: 100%; margin-top: 6px; padding: 11px 12px; font-size: 14px; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+  }
+  .gen-btn {
+    padding: 12px 26px; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 6px 16px rgba(79,110,247,.3);
+  }
+  .gen-btn:hover { transform: translateY(-1px); }
+  .gen-btn:disabled { opacity: .6; transform: none; cursor: wait; }
+
+  .proposal { margin-top: 22px; display: none; }
+  .proposal.show { display: block; animation: fadeIn .3s ease; }
+  .prop-head {
+    background: linear-gradient(135deg, #1a2036, #2b3468); color: #fff;
+    border-radius: var(--radius) var(--radius) 0 0; padding: 24px;
+  }
+  .prop-head .p-tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #9db0ff; }
+  .prop-head h3 { font-size: 21px; font-weight: 900; margin: 6px 0 4px; }
+  .prop-head p { font-size: 13px; color: #c3c8dd; }
+  .prop-body { border: 1px solid var(--line); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: #fff; padding: 24px; }
+  .prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .prop-item { background: #f8f9fd; border: 1px solid var(--line); border-radius: 12px; padding: 16px; font-size: 13px; }
+  .prop-item b { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; color: var(--ink); }
+  .prop-item ul { margin: 4px 0 0 18px; color: #444d6e; }
+  .prop-item li { margin-top: 3px; }
+  .factory { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; }
+  .factory .f-logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: #eef1fd; flex-shrink: 0; }
+  .factory .f-name { font-weight: 800; font-size: 13.5px; }
+  .factory .f-meta { font-size: 11.5px; color: var(--sub); }
+  .match { margin-left: auto; font-size: 12px; font-weight: 900; color: var(--mint); white-space: nowrap; }
+  /* Generated product images */
+  .img-note { font-size: 12px; color: var(--sub); margin: 2px 0 12px; }
+  .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .img-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; transition: transform .15s ease, box-shadow .15s ease; }
+  .img-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(20,30,70,.12); }
+  .img-card svg { display: block; width: 100%; height: auto; }
+  .img-card .ic-body { padding: 11px 13px; border-top: 1px solid var(--line); }
+  .img-card .ic-name { font-size: 12.5px; font-weight: 800; }
+  .img-card .ic-desc { font-size: 11px; color: var(--sub); margin-top: 2px; }
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    background: linear-gradient(135deg, #eef1fd, #f3edff); color: var(--accent-2);
+    border: 1px solid #ded5ff; padding: 2px 9px; border-radius: 999px; margin-bottom: 6px;
+  }
+  .loading { display: none; margin-top: 22px; text-align: center; padding: 36px; color: var(--sub); font-size: 13.5px; font-weight: 700; }
+  .loading.show { display: block; }
+  .spinner { width: 34px; height: 34px; margin: 0 auto 12px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== Design tab ===== */
+  .mood { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff; }
+  .swatches { display: flex; height: 84px; }
+  .swatches i { flex: 1; }
+  .mood-body { padding: 18px; }
+  .mood-body h4 { font-size: 15px; font-weight: 800; }
+  .mood-body p { font-size: 12.5px; color: var(--sub); margin-top: 6px; }
+  .mood-tags { margin-top: 10px; }
+  .ref-list { list-style: none; font-size: 13px; margin-top: 8px; }
+  .ref-list li { padding: 9px 0 9px 24px; position: relative; border-top: 1px dashed var(--line); color: #444d6e; }
+  .ref-list li::before { content: "🔖"; position: absolute; left: 0; font-size: 12px; }
+
+  /* ===== Marketing tab ===== */
+  .timeline { position: relative; padding-left: 26px; }
+  .timeline::before { content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+  .tl-item { position: relative; padding: 0 0 22px; }
+  .tl-item::before {
+    content: ""; position: absolute; left: -24px; top: 5px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); border: 3px solid #dfe5fd;
+  }
+  .tl-item .tl-when { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: .05em; }
+  .tl-item h4 { font-size: 14.5px; font-weight: 800; margin: 3px 0; }
+  .tl-item p { font-size: 12.5px; color: var(--sub); }
+  .channel { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid #f0f2f8; }
+  .channel:last-child { border-bottom: none; }
+  .ch-icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 17px; background: #f0f2fb; flex-shrink: 0; }
+  .ch-name { font-weight: 800; font-size: 13.5px; }
+  .ch-desc { font-size: 11.5px; color: var(--sub); }
+  .ch-fit { margin-left: auto; text-align: right; }
+  .ch-fit b { font-size: 15px; font-weight: 900; color: var(--accent); }
+  .ch-fit span { display: block; font-size: 10px; color: var(--sub); }
+
+  .note {
+    margin-top: 26px; font-size: 12px; color: var(--sub);
+    background: #fdf7e8; border: 1px solid #f0e2b8; border-radius: 10px; padding: 12px 16px;
+  }
+
+  .mt { margin-top: 18px; }
+  @media (max-width: 920px) {
+    .g2, .g3, .g4, .prop-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 620px) {
+    .g2, .g3, .g4, .prop-grid, .form-row, .img-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="index.html"><span class="mark">K2</span>K2J Bridge</a>
+  <span class="demo-pill">DEMO — サンプルデータで動作中</span>
+  <span class="spacer"></span>
+  <a class="back-link" href="index.html">← サービス紹介へ戻る</a>
+</div>
+
+<nav class="tabs">
+  <button class="tab active" data-panel="trend">📊 トレンド分析</button>
+  <button class="tab" data-panel="plan">💡 AI商品企画</button>
+  <button class="tab" data-panel="design">🎨 デザイン提案</button>
+  <button class="tab" data-panel="marketing">🚀 マーケティング</button>
+</nav>
+
+<main class="page">
+
+  <!-- ================= Trend ================= -->
+  <section class="panel active" id="panel-trend">
+    <h2 class="page-title">Qoo10トレンドレーダー</h2>
+    <p class="page-sub">日本市場の参考データは <b>Qoo10(日本)</b> を中心に毎日分析。ランキング・メガ割・レビューから「いま売れているもの」を抽出します(このデモではサンプルデータを表示しています)</p>
+
+    <div class="cat-row" id="catRow">
+      <button class="cat-btn active" data-cat="beauty">💄 美容・コスメ</button>
+      <button class="cat-btn" data-cat="food">🍱 食品</button>
+      <button class="cat-btn" data-cat="living">🏠 生活雑貨・家電</button>
+    </div>
+
+    <div class="grid g4" id="kpiRow"></div>
+
+    <div class="grid g2 mt">
+      <div class="card">
+        <h3>🔥 Qoo10 急上昇ランキング(直近7日)</h3>
+        <table>
+          <thead><tr><th></th><th>商品ジャンル</th><th>Qoo10での位置づけ</th><th>検索/売上成長</th></tr></thead>
+          <tbody id="rankBody"></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="card">
+          <h3>📈 カテゴリー成長率(前月比)</h3>
+          <div class="bars" id="barChart"></div>
+        </div>
+        <div class="card mt">
+          <h3>💬 レビューAIインサイト</h3>
+          <div id="insights"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Planner ================= -->
+  <section class="panel" id="panel-plan">
+    <h2 class="page-title">AI商品企画ジェネレーター</h2>
+    <p class="page-sub">条件を選ぶと、Qoo10のトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します(デモではあらかじめ用意した企画案・モック画像を表示します)</p>
+
+    <div class="card">
+      <div class="form-row">
+        <div>
+          <label class="fld">ターゲットカテゴリー</label>
+          <select id="planCat">
+            <option value="beauty">美容・コスメ</option>
+            <option value="food">食品</option>
+            <option value="living">生活雑貨・家電</option>
+          </select>
+        </div>
+        <div>
+          <label class="fld">想定価格帯</label>
+          <select id="planPrice">
+            <option>〜1,500円(トライアル)</option>
+            <option selected>1,500〜3,000円(ボリューム)</option>
+            <option>3,000円〜(プレミアム)</option>
+          </select>
+        </div>
+        <div>
+          <label class="fld">主な販路</label>
+          <select id="planChannel">
+            <option selected>ECモール(楽天・Amazon・Qoo10)</option>
+            <option>クラウドファンディング(Makuake)</option>
+            <option>卸・小売(バラエティショップ等)</option>
+          </select>
+        </div>
+        <button class="gen-btn" id="genBtn">✨ 企画を生成</button>
+      </div>
+    </div>
+
+    <div class="loading" id="genLoading">
+      <div class="spinner"></div>
+      Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…
+    </div>
+
+    <div class="proposal" id="proposal"></div>
+  </section>
+
+  <!-- ================= Design ================= -->
+  <section class="panel" id="panel-design">
+    <h2 class="page-title">デザインリファレンス</h2>
+    <p class="page-sub">日本で売れている商品のパッケージ・LP・広告のトンマナを分析し、方向性をムードボードとして提案します</p>
+
+    <div class="grid g3" id="moodGrid"></div>
+
+    <div class="grid g2 mt">
+      <div class="card">
+        <h3>✍️ 日本語コピーの傾向(美容カテゴリー例)</h3>
+        <ul class="ref-list">
+          <li>「肌荒れを防ぐ」「うるおいを守る」など<b>効能は控えめ・具体的</b>に(薬機法対応の言い回しが主流)</li>
+          <li>数字訴求が効く:「92%が保湿力を実感」「1本で7役」</li>
+          <li>ひらがな多めの柔らかい語感:「ゆらぎ肌に、そっと。」</li>
+          <li>成分名を前面に:「シカ」「レチノール」「セラミド」などの指名検索が増加中</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>📐 パッケージ設計チェックリスト</h3>
+        <ul class="ref-list">
+          <li>日本語表記(全成分・使用方法・注意書き)のスペース確保</li>
+          <li>ドラッグストア棚を想定した正面フェイスの視認性</li>
+          <li>EC商品画像1枚目のレギュレーション(楽天・Amazonで異なる)</li>
+          <li>リサイクル識別表示マーク・バーコード位置</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Marketing ================= -->
+  <section class="panel" id="panel-marketing">
+    <h2 class="page-title">マーケティングプラン</h2>
+    <p class="page-sub">発売前のテストマーケティングから発売後のグロースまで、日本市場向けの標準プレイブック(デモ表示)</p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h3>🗓 発売までのロードマップ(標準6ヶ月)</h3>
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-when">MONTH 1-2</span>
+            <h4>トレンド分析・商品企画の確定</h4>
+            <p>ターゲットカテゴリーの売れ筋・レビュー分析 → コンセプト決定 → OEM工場選定・見積</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">MONTH 2-4</span>
+            <h4>試作・規制対応・デザイン制作</h4>
+            <p>サンプル評価、日本の薬機法/食品表示法チェック、パッケージ&EC画像制作</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">MONTH 4-5</span>
+            <h4>テストマーケティング</h4>
+            <p>Makuakeやサンプリング施策で需要検証。レビュー・CVRデータで価格と訴求を調整</p>
+          </div>
+          <div class="tl-item">
+            <span class="tl-when">MONTH 5-6</span>
+            <h4>本格ローンチ</h4>
+            <p>ECモール同時展開、インフルエンサー施策、広告運用開始。週次でKPIレビュー</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h3>📣 チャネル適合度(美容カテゴリー例)</h3>
+          <div class="channel">
+            <span class="ch-icon">🛒</span>
+            <div><div class="ch-name">Qoo10(メガ割)</div><div class="ch-desc">K-Beautyの主戦場。メガ割期間の集中投下が定石</div></div>
+            <div class="ch-fit"><b>95</b><span>適合度</span></div>
+          </div>
+          <div class="channel">
+            <span class="ch-icon">📱</span>
+            <div><div class="ch-name">TikTok / Instagram Reels</div><div class="ch-desc">使用感の動画レビューが購買に直結</div></div>
+            <div class="ch-fit"><b>90</b><span>適合度</span></div>
+          </div>
+          <div class="channel">
+            <span class="ch-icon">🅰️</span>
+            <div><div class="ch-name">Amazon.co.jp</div><div class="ch-desc">指名検索の受け皿。レビュー獲得を最優先</div></div>
+            <div class="ch-fit"><b>82</b><span>適合度</span></div>
+          </div>
+          <div class="channel">
+            <span class="ch-icon">🏪</span>
+            <div><div class="ch-name">バラエティショップ卸</div><div class="ch-desc">LOFT・PLAZA等。EC実績を持って商談へ</div></div>
+            <div class="ch-fit"><b>74</b><span>適合度</span></div>
+          </div>
+        </div>
+        <div class="card mt">
+          <h3>🎯 ローンチKPIの目安(初月)</h3>
+          <div class="grid g3">
+            <div class="kpi" style="padding:8px 4px">
+              <div class="k-label">EC転換率</div>
+              <div class="k-value" style="font-size:21px">3.5%+</div>
+            </div>
+            <div class="kpi" style="padding:8px 4px">
+              <div class="k-label">レビュー件数</div>
+              <div class="k-value" style="font-size:21px">50件</div>
+            </div>
+            <div class="kpi" style="padding:8px 4px">
+              <div class="k-label">広告ROAS</div>
+              <div class="k-value" style="font-size:21px">300%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="note">⚠️ このページはプロダクトのデモです。表示されているランキング・数値・企画案・工場情報はすべて説明用のサンプルデータであり、実際の市場データではありません。</p>
+</main>
+
+<script>
+// ================= サンプルデータ =================
+const TREND = {
+  beauty: {
+    kpi: [
+      { label: "Qoo10 追跡商品数", value: "12,480", delta: "+320 / 週", up: true },
+      { label: "急上昇キーワード", value: "シカミスト", delta: "Qoo10検索 +218%", up: true },
+      { label: "売れ筋価格帯(Qoo10)", value: "¥1,980", delta: "前月 ¥2,180", up: false },
+      { label: "Qoo10 レビュー分析件数", value: "48,200", delta: "+8,400 / 週", up: true },
+    ],
+    rank: [
+      { name: "シカ成分スキンケアミスト", src: "Qoo10 ビューティー 1位", growth: "+218%", tags: ["敏感肌", "携帯用"], hot: true },
+      { name: "クッションファンデ(ツヤ肌系)", src: "Qoo10 メガ割 上位", growth: "+142%", tags: ["メガ割", "崩れにくい"], hot: true },
+      { name: "レチノール アイクリーム", src: "Qoo10 スキンケア", growth: "+118%", tags: ["エイジング"], hot: false },
+      { name: "弱酸性 頭皮ケアシャンプー", src: "Qoo10 ヘアケア", growth: "+96%", tags: ["ヘアケア"], hot: false },
+      { name: "リップスリーピングマスク", src: "Qoo10 × SNS言及", growth: "+87%", tags: ["ナイトケア"], hot: false },
+    ],
+    bars: [
+      { label: "スキンケア", val: 34 }, { label: "ベースメイク", val: 26 },
+      { label: "ヘアケア", val: 19 }, { label: "リップ", val: 15 }, { label: "香水", val: 8 },
+    ],
+    insights: [
+      { type: "neg", title: "不満点 = 商品機会", body: "「ミストの粒子が粗く、メイクの上から使えない」という不満が1,240件。微粒子ノズル採用で差別化余地。", cnt: "対象レビュー 1,240件" },
+      { type: "pos", title: "支持されている点", body: "「成分がシンプルで敏感肌でも安心」への言及が急増。処方の透明性(全成分の見せ方)が購入の決め手に。", cnt: "対象レビュー 3,080件" },
+    ],
+  },
+  food: {
+    kpi: [
+      { label: "Qoo10 追跡商品数", value: "8,940", delta: "+210 / 週", up: true },
+      { label: "急上昇キーワード", value: "高タンパク", delta: "Qoo10検索 +164%", up: true },
+      { label: "売れ筋価格帯(Qoo10)", value: "¥1,280", delta: "前月 ¥1,150", up: true },
+      { label: "Qoo10 レビュー分析件数", value: "31,600", delta: "+5,100 / 週", up: true },
+    ],
+    rank: [
+      { name: "高タンパク グラノーラバー", src: "Qoo10 フード 1位", growth: "+164%", tags: ["プロテイン", "個包装"], hot: true },
+      { name: "冷凍キンパ(韓国海苔巻き)", src: "Qoo10 × TikTok言及", growth: "+139%", tags: ["時短", "冷凍"], hot: true },
+      { name: "ゼロシュガー韓国スナック", src: "Qoo10 韓国食品", growth: "+104%", tags: ["低糖質"], hot: false },
+      { name: "トゥンカロン(太っちょマカロン)", src: "Qoo10 スイーツ", growth: "+92%", tags: ["映え", "ギフト"], hot: false },
+      { name: "コンブチャ(炭酸飲料タイプ)", src: "Qoo10 ドリンク", growth: "+78%", tags: ["健康飲料"], hot: false },
+    ],
+    bars: [
+      { label: "健康食品", val: 31 }, { label: "冷凍食品", val: 27 },
+      { label: "菓子", val: 22 }, { label: "飲料", val: 14 }, { label: "調味料", val: 9 },
+    ],
+    insights: [
+      { type: "neg", title: "不満点 = 商品機会", body: "「輸入韓国菓子は辛すぎる/量が多い」の声が多数。日本向けに辛さ調整+小容量パックの需要が明確。", cnt: "対象レビュー 890件" },
+      { type: "pos", title: "支持されている点", body: "「タンパク質○g」の明記と個包装が高評価。オフィス間食・筋トレ層の定期購入が伸びている。", cnt: "対象レビュー 2,140件" },
+    ],
+  },
+  living: {
+    kpi: [
+      { label: "Qoo10 追跡商品数", value: "15,220", delta: "+410 / 週", up: true },
+      { label: "急上昇キーワード", value: "卓上加湿器", delta: "Qoo10検索 +121%", up: true },
+      { label: "売れ筋価格帯(Qoo10)", value: "¥3,480", delta: "前月 ¥3,900", up: false },
+      { label: "Qoo10 レビュー分析件数", value: "52,900", delta: "+9,200 / 週", up: true },
+    ],
+    rank: [
+      { name: "卓上加湿器(アロマ対応)", src: "Qoo10 生活/家電 1位", growth: "+121%", tags: ["在宅ワーク", "静音"], hot: true },
+      { name: "姿勢サポートクッション", src: "Qoo10 × SNS言及", growth: "+97%", tags: ["デスクワーク"], hot: true },
+      { name: "折りたたみ ドライヤースタンド", src: "Qoo10 生活雑貨", growth: "+85%", tags: ["時短", "省スペース"], hot: false },
+      { name: "珪藻土 キッチン水切りマット", src: "Qoo10 キッチン", growth: "+73%", tags: ["キッチン"], hot: false },
+      { name: "LEDデスクライト(調色機能)", src: "Qoo10 家電", growth: "+66%", tags: ["目に優しい"], hot: false },
+    ],
+    bars: [
+      { label: "デスク周り", val: 33 }, { label: "キッチン", val: 24 },
+      { label: "収納", val: 18 }, { label: "美容家電", val: 16 }, { label: "掃除", val: 9 },
+    ],
+    insights: [
+      { type: "neg", title: "不満点 = 商品機会", body: "「加湿器の給水が面倒/カビが心配」が最多。上部給水+抗菌カートリッジ構造で解決余地が大きい。", cnt: "対象レビュー 1,560件" },
+      { type: "pos", title: "支持されている点", body: "「デスクに置いても可愛い」デザイン言及が多く、くすみカラー・ミニマル形状が支持されている。", cnt: "対象レビュー 2,760件" },
+    ],
+  },
+};
+
+const PROPOSALS = {
+  beauty: {
+    tag: "PROPOSAL — 美容・コスメ",
+    title: "メイクの上から使える微粒子シカミスト「CICA VEIL(仮)」",
+    lead: "レビュー分析で判明した「粒子が粗くメイクの上から使えない」という不満を解決する、超微粒子ノズル採用の携帯用シカミスト。",
+    items: [
+      { icon: "🎯", title: "ターゲット", list: ["25〜39歳・オフィスワーカーの敏感肌層", "Qoo10メガ割でK-Beautyを購入する層", "「メイク直しの時短」ニーズ"] },
+      { icon: "⚗️", title: "処方・仕様", list: ["シカ(ツボクサエキス)+セラミド配合", "超微粒子ノズル(メイクの上からOK)", "50mL携帯サイズ+150mL詰替の2SKU"] },
+      { icon: "💰", title: "価格・原価計画", list: ["想定売価 ¥1,980(税込)", "目標原価率 28%(1st lot 5,000個)", "Qoo10メガ割時 ¥1,680 の値付け余地"] },
+      { icon: "⚖️", title: "規制チェック", list: ["化粧品輸入:製造販売業者経由の届出が必要", "「肌荒れを防ぐ」は医薬部外品でのみ訴求可", "全成分表示ラベル(日本語)必須"] },
+    ],
+    factories: [
+      { emoji: "🏭", name: "Hansol Cosmetics(京畿道)", meta: "スキンケアOEM / 最小ロット3,000 / ISO22716", match: "適合 94%" },
+      { emoji: "🏭", name: "Seoul Beauty Lab(ソウル)", meta: "ミスト・スプレー充填が得意 / 最小ロット5,000", match: "適合 89%" },
+    ],
+  },
+  food: {
+    tag: "PROPOSAL — 食品",
+    title: "日本人向け辛さ調整の高タンパク韓国スナック「PROTE-K(仮)」",
+    lead: "「韓国スナックは辛すぎる・量が多い」という日本のレビュー不満と、高タンパク市場の急成長を掛け合わせた個包装スナック。",
+    items: [
+      { icon: "🎯", title: "ターゲット", list: ["20〜40代の筋トレ・ボディメイク層", "オフィス間食のヘルシー志向層", "韓国グルメ好きのライト層"] },
+      { icon: "⚗️", title: "レシピ・仕様", list: ["1袋あたりタンパク質15g・糖質10g以下", "辛さは日本向けに2段階(マイルド/旨辛)", "個包装×7袋入り(持ち歩き前提)"] },
+      { icon: "💰", title: "価格・原価計画", list: ["想定売価 ¥1,280(7袋入り・税込)", "定期購入(サブスク)で ¥1,080", "目標原価率 32%(1st lot 10,000袋)"] },
+      { icon: "⚖️", title: "規制チェック", list: ["食品表示法:栄養成分表示(日本語)必須", "輸入時の検疫・添加物リスト適合確認", "「たんぱく質摂取に」等の機能性表示は要届出"] },
+    ],
+    factories: [
+      { emoji: "🏭", name: "K-Food Partners(忠清道)", meta: "スナックOEM / HACCP / 対日輸出実績あり", match: "適合 92%" },
+      { emoji: "🏭", name: "Daehan Foods(京畿道)", meta: "高タンパク食品が得意 / 最小ロット8,000", match: "適合 86%" },
+    ],
+  },
+  living: {
+    tag: "PROPOSAL — 生活雑貨・家電",
+    title: "上部給水&抗菌構造の卓上アロマ加湿器「MOIST DESK(仮)」",
+    lead: "「給水が面倒・カビが心配」というレビュー最多の不満を、上部給水+抗菌カートリッジで解決するデスク向け加湿器。",
+    items: [
+      { icon: "🎯", title: "ターゲット", list: ["在宅ワーク・オフィスのデスク利用者", "乾燥・肌ケアに関心の高い20〜40代女性", "「デスクに置けるかわいい家電」ニーズ"] },
+      { icon: "⚙️", title: "仕様", list: ["上部給水式(タンク取り外し不要)", "抗菌カートリッジ+週1洗いでOK設計", "くすみカラー3色 / 静音25dB / USB-C給電"] },
+      { icon: "💰", title: "価格・原価計画", list: ["想定売価 ¥3,480(税込)", "Makuake先行価格 ¥2,780(20%オフ)", "目標原価率 35%(1st lot 3,000台)"] },
+      { icon: "⚖️", title: "規制チェック", list: ["電気用品安全法(PSE)対象部品の確認", "USB給電機器の技適・表示要件", "取扱説明書(日本語)とPL保険の手配"] },
+    ],
+    factories: [
+      { emoji: "🏭", name: "Inno Electronics(仁川)", meta: "小型家電OEM / PSE対応実績 / 最小ロット2,000", match: "適合 91%" },
+      { emoji: "🏭", name: "Hue Living Tech(ソウル)", meta: "デザイン家電が得意 / 金型流用で初期費圧縮", match: "適合 84%" },
+    ],
+  },
+};
+
+// ================= 商品イメージ画像(AI生成のデモ:SVGで描画) =================
+const CONCEPT_IMAGES = {
+  beauty: [
+    { name: "A案 ナチュラルグリーン", desc: "成分の誠実さを打ち出す低彩度グリーン", pal: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
+    { name: "B案 ソフトピンク", desc: "Qoo10メガ割で強いK-Beautyらしい柔らかさ", pal: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
+    { name: "C案 クリーンブルー", desc: "皮膚科学系ブランドを想起する清潔感", pal: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
+  ],
+  food: [
+    { name: "A案 パフォーマンスブラック", desc: "数値ドーンの日本プロテイン市場の定石", pal: { bg1: "#f3f4f6", bg2: "#d3d7de", body: "#1f2937", cap: "#f5b942", text: "#ffffff", mist: "#f5b942" } },
+    { name: "B案 コリアンレッド", desc: "韓国グルメ好きに刺さる旨辛トーン", pal: { bg1: "#fdf2ef", bg2: "#f5cfc4", body: "#c0392b", cap: "#f7e8c8", text: "#ffffff", mist: "#e67e22" } },
+    { name: "C案 ヘルシーグリーン", desc: "低糖質・オフィス間食層向けの軽さ", pal: { bg1: "#f2f8f0", bg2: "#d4e6cf", body: "#f7fbf3", cap: "#4a7c43", text: "#3c6636", mist: "#7aa872" } },
+  ],
+  living: [
+    { name: "A案 グレージュ", desc: "インテリアに馴染む日本で人気のくすみ色", pal: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
+    { name: "B案 ブルーグレー", desc: "デスク家電らしいミニマル・テック", pal: { bg1: "#eef2f7", bg2: "#c9d6e4", body: "#dfe7f0", cap: "#5b7897", text: "#47607c", mist: "#8aa3c0" } },
+    { name: "C案 ピンクベージュ", desc: "「デスクに置けるかわいい家電」ニーズ向け", pal: { bg1: "#fbf2f1", bg2: "#ecd2cd", body: "#f6e4e0", cap: "#c98b80", text: "#a56d62", mist: "#dbaaa0" } },
+  ],
+};
+
+function svgDefs(id, p) {
+  return `<defs>
+    <radialGradient id="bg${id}" cx="50%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="${p.bg1}"/><stop offset="100%" stop-color="${p.bg2}"/>
+    </radialGradient>
+    <linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".55"/><stop offset="35%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>`;
+}
+
+function svgBeauty(id, p) {
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ミストボトルのコンセプト画像">
+    ${svgDefs(id, p)}
+    <rect width="300" height="220" fill="url(#bg${id})"/>
+    <ellipse cx="150" cy="199" rx="66" ry="9" fill="rgba(0,0,0,.09)"/>
+    <g opacity=".85">
+      <circle cx="196" cy="42" r="3.2" fill="${p.mist}"/><circle cx="208" cy="34" r="2.4" fill="${p.mist}" opacity=".7"/>
+      <circle cx="218" cy="46" r="1.8" fill="${p.mist}" opacity=".5"/><circle cx="204" cy="54" r="1.6" fill="${p.mist}" opacity=".4"/>
+    </g>
+    <rect x="114" y="72" width="72" height="126" rx="17" fill="${p.body}" stroke="rgba(0,0,0,.07)"/>
+    <rect x="114" y="72" width="72" height="126" rx="17" fill="url(#sh${id})"/>
+    <rect x="131" y="48" width="38" height="26" rx="6" fill="${p.cap}"/>
+    <rect x="144" y="36" width="12" height="14" rx="3" fill="${p.cap}"/>
+    <rect x="156" y="39" width="10" height="5" rx="2.5" fill="${p.cap}"/>
+    <rect x="122" y="106" width="56" height="56" rx="9" fill="#ffffff" opacity=".93"/>
+    <text x="150" y="128" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">CICA</text>
+    <text x="150" y="143" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">VEIL</text>
+    <text x="150" y="155" text-anchor="middle" font-family="sans-serif" font-size="6" fill="${p.text}" opacity=".65" letter-spacing=".5">SOOTHING MIST 50mL</text>
+    <path d="M150 96 q6 -9 0 -14 q-6 5 0 14z" fill="${p.cap}" opacity=".8"/>
+  </svg>`;
+}
+
+function svgFood(id, p) {
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="スナックパウチのコンセプト画像">
+    ${svgDefs(id, p)}
+    <rect width="300" height="220" fill="url(#bg${id})"/>
+    <ellipse cx="150" cy="200" rx="74" ry="9" fill="rgba(0,0,0,.09)"/>
+    <path d="M97 60 L203 60 L212 190 Q150 202 88 190 Z" fill="${p.body}" stroke="rgba(0,0,0,.08)"/>
+    <path d="M97 60 L203 60 L212 190 Q150 202 88 190 Z" fill="url(#sh${id})"/>
+    <rect x="94" y="46" width="112" height="16" rx="3" fill="${p.body}" stroke="rgba(0,0,0,.1)"/>
+    <g stroke="rgba(0,0,0,.18)" stroke-width="1">${[0,1,2,3,4,5,6,7,8,9].map(i => `<line x1="${100 + i * 11}" y1="48" x2="${100 + i * 11}" y2="60"/>`).join("")}</g>
+    <text x="150" y="102" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="800" fill="${p.text}" letter-spacing="1">PROTE-K</text>
+    <text x="150" y="140" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="900" fill="${p.cap}">15g</text>
+    <text x="150" y="156" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="${p.text}" opacity=".85" letter-spacing="2">PROTEIN SNACK</text>
+    <rect x="118" y="166" width="64" height="14" rx="7" fill="${p.cap}"/>
+    <text x="150" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="800" fill="${p.body}">マイルド / 旨辛</text>
+  </svg>`;
+}
+
+function svgLiving(id, p) {
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="卓上加湿器のコンセプト画像">
+    ${svgDefs(id, p)}
+    <rect width="300" height="220" fill="url(#bg${id})"/>
+    <ellipse cx="150" cy="199" rx="62" ry="9" fill="rgba(0,0,0,.09)"/>
+    <g opacity=".9">
+      <circle cx="150" cy="52" r="4" fill="${p.cap}" opacity=".35"/>
+      <circle cx="162" cy="40" r="3" fill="${p.cap}" opacity=".28"/>
+      <circle cx="140" cy="34" r="2.4" fill="${p.cap}" opacity=".2"/>
+    </g>
+    <rect x="108" y="78" width="84" height="118" rx="30" fill="${p.body}" stroke="rgba(0,0,0,.07)"/>
+    <rect x="108" y="78" width="84" height="118" rx="30" fill="url(#sh${id})"/>
+    <ellipse cx="150" cy="80" rx="34" ry="8" fill="${p.cap}" opacity=".35"/>
+    <circle cx="150" cy="72" r="7" fill="${p.cap}"/>
+    <circle cx="150" cy="72" r="3" fill="#ffffff" opacity=".8"/>
+    <rect x="128" y="128" width="44" height="20" rx="10" fill="#ffffff" opacity=".8"/>
+    <text x="150" y="142" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="800" fill="${p.text}">MOIST</text>
+    <circle cx="150" cy="168" r="4.5" fill="${p.cap}" opacity=".9"/>
+    <text x="150" y="186" text-anchor="middle" font-family="sans-serif" font-size="5.5" fill="${p.text}" opacity=".6" letter-spacing="1">AROMA HUMIDIFIER</text>
+  </svg>`;
+}
+
+const SVG_BY_CAT = { beauty: svgBeauty, food: svgFood, living: svgLiving };
+
+const MOODS = [
+  {
+    colors: ["#e8f0e4", "#f7f3ea", "#c9d8c5", "#8fae8b", "#5c7a58"],
+    title: "ナチュラル・クリーン(スキンケア向け)",
+    desc: "無印良品的な引き算の美学。低彩度グリーン×生成りで「成分の誠実さ」を伝える。日本のセンシティブスキン市場で最も支持されるトンマナ。",
+    tags: ["余白多め", "細めのゴシック体", "成分名を主役に"],
+  },
+  {
+    colors: ["#fde8ec", "#fff5f7", "#f9c8d4", "#e88aa0", "#c25b76"],
+    title: "ソフト・フェミニン(メイク・リップ向け)",
+    desc: "くすみピンク基調。K-Beautyらしさを残しつつ、日本では原色より1〜2トーン落とした配色がドラッグストア棚で強い。",
+    tags: ["丸ゴシック", "手書き風アクセント", "ツヤ感の写真"],
+  },
+  {
+    colors: ["#1f2937", "#111827", "#f59e0b", "#fbbf24", "#f3f4f6"],
+    title: "パフォーマンス(高タンパク食品向け)",
+    desc: "ダーク×イエローの高コントラスト。「タンパク質15g」など数値を最大サイズで配置するのが日本のプロテイン市場の定石。",
+    tags: ["極太ゴシック", "数値ドーン", "黒背景"],
+  },
+  {
+    colors: ["#eef2f7", "#dfe7f0", "#b8c9dd", "#8aa3c0", "#5b7897"],
+    title: "ミニマル・テック(デスク家電向け)",
+    desc: "ニュアンスブルーグレー。BALMUDA以降の日本市場では「家電=白物」から「インテリアに馴染む低彩度」へ移行。",
+    tags: ["余白と直線", "小さめロゴ", "ライフスタイル写真"],
+  },
+  {
+    colors: ["#fdf6e3", "#f5e6c8", "#e8c87e", "#d4a24c", "#8b6a2e"],
+    title: "プレミアム・ギフト(高価格帯向け)",
+    desc: "生成り×ゴールド。日本の贈答文化(お中元・お歳暮・自分へのご褒美)を狙うなら箔押し・上質紙の質感表現が必須。",
+    tags: ["明朝体", "箔押し表現", "化粧箱"],
+  },
+  {
+    colors: ["#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"],
+    title: "フレッシュ・ポップ(SNS拡散狙い)",
+    desc: "彩度高めのブルー系。TikTok/リールで映える「開封動画向け」パッケージ。Z世代向けトライアル商品で有効。",
+    tags: ["大胆な色面", "絵文字的アイコン", "開封体験"],
+  },
+];
+
+// ================= タブ切替 =================
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
+  });
+});
+
+// ================= トレンドタブ描画 =================
+function renderTrend(cat) {
+  const d = TREND[cat];
+
+  document.getElementById("kpiRow").innerHTML = d.kpi.map(k => `
+    <div class="card kpi">
+      <div class="k-label">${k.label}</div>
+      <div class="k-value">${k.value}</div>
+      <div class="k-delta ${k.up ? "up" : "down"}">${k.up ? "▲" : "▼"} ${k.delta}</div>
+    </div>`).join("");
+
+  document.getElementById("rankBody").innerHTML = d.rank.map((r, i) => `
+    <tr>
+      <td><span class="rk ${r.hot ? "hot" : ""}">${i + 1}</span></td>
+      <td>
+        <div class="pname">${r.name}</div>
+        <div>${r.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
+      </td>
+      <td class="psub">${r.src}</td>
+      <td><span class="growth up">${r.growth}</span></td>
+    </tr>`).join("");
+
+  const max = Math.max(...d.bars.map(b => b.val));
+  document.getElementById("barChart").innerHTML = d.bars.map(b => `
+    <div class="bar-col">
+      <span class="bar-val">+${b.val}%</span>
+      <div class="bar" style="height:${Math.round((b.val / max) * 100)}%"></div>
+      <span class="bar-label">${b.label}</span>
+    </div>`).join("");
+
+  document.getElementById("insights").innerHTML = d.insights.map(ins => `
+    <div class="insight ${ins.type}">
+      <b>${ins.type === "neg" ? "⚠️ " : "💚 "}${ins.title}</b>
+      ${ins.body}
+      <div class="cnt">${ins.cnt}</div>
+    </div>`).join("");
+}
+
+document.querySelectorAll(".cat-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTrend(btn.dataset.cat);
+  });
+});
+renderTrend("beauty");
+
+// ================= 企画ジェネレーター =================
+document.getElementById("genBtn").addEventListener("click", () => {
+  const btn = document.getElementById("genBtn");
+  const loading = document.getElementById("genLoading");
+  const box = document.getElementById("proposal");
+  const cat = document.getElementById("planCat").value;
+  const price = document.getElementById("planPrice").value;
+  const channel = document.getElementById("planChannel").value;
+
+  btn.disabled = true;
+  box.classList.remove("show");
+  loading.classList.add("show");
+
+  setTimeout(() => {
+    const p = PROPOSALS[cat];
+    box.innerHTML = `
+      <div class="prop-head">
+        <span class="p-tag">${p.tag} ・ ${price} ・ ${channel}</span>
+        <h3>${p.title}</h3>
+        <p>${p.lead}</p>
+      </div>
+      <div class="prop-body">
+        <div class="prop-grid">
+          ${p.items.map(it => `
+            <div class="prop-item">
+              <b>${it.icon} ${it.title}</b>
+              <ul>${it.list.map(li => `<li>${li}</li>`).join("")}</ul>
+            </div>`).join("")}
+        </div>
+        <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(AI生成・3案)</h3>
+        <p class="img-note">トレンド分析とデザインリファレンスを反映したコンセプト画像を自動生成します。※デモでは簡易モックを表示(実サービスではAI画像生成モデルで写真品質のパッケージ/商品カット・Qoo10商品ページ用画像まで生成)</p>
+        <div class="img-grid">
+          ${CONCEPT_IMAGES[cat].map((img, i) => `
+            <div class="img-card">
+              ${SVG_BY_CAT[cat]("_" + cat + i, img.pal)}
+              <div class="ic-body">
+                <span class="ai-badge">✨ AI GENERATED</span>
+                <div class="ic-name">${img.name}</div>
+                <div class="ic-desc">${img.desc}</div>
+              </div>
+            </div>`).join("")}
+        </div>
+        <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 マッチするOEM/ODM工場(サンプル)</h3>
+        ${p.factories.map(f => `
+          <div class="factory">
+            <span class="f-logo">${f.emoji}</span>
+            <div>
+              <div class="f-name">${f.name}</div>
+              <div class="f-meta">${f.meta}</div>
+            </div>
+            <span class="match">${f.match}</span>
+          </div>`).join("")}
+      </div>`;
+    loading.classList.remove("show");
+    box.classList.add("show");
+    btn.disabled = false;
+  }, 1400);
+});
+
+// ================= ムードボード =================
+document.getElementById("moodGrid").innerHTML = MOODS.map(m => `
+  <div class="mood">
+    <div class="swatches">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
+    <div class="mood-body">
+      <h4>${m.title}</h4>
+      <p>${m.desc}</p>
+      <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
+    </div>
+  </div>`).join("");
+</script>
+
+</body>
+</html>
