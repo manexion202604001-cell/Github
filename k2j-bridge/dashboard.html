@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>K2J Bridge — デモダッシュボード</title>
-<meta name="description" content="日本市場トレンド分析からOEM商品企画・デザイン提案・マーケティングまでのデモダッシュボード。">
+<meta name="description" content="日本市場トレンド分析からOEM商品企画・デザイン提案・マーケティングまでのデモダッシュボード。Claude APIキーを設定すると実際にAIが商品企画を生成します。">
 <style>
   :root {
     --bg: #f4f6fb;
@@ -145,6 +145,27 @@
   .gen-btn:hover { transform: translateY(-1px); }
   .gen-btn:disabled { opacity: .6; transform: none; cursor: wait; }
 
+  /* ===== Claude API settings ===== */
+  .api-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .api-status { font-size: 12.5px; font-weight: 700; color: var(--sub); }
+  .api-status.on { color: var(--mint); }
+  .api-toggle {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px;
+    padding: 7px 16px; font-size: 12.5px; font-weight: 700; color: var(--ink);
+  }
+  .api-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .api-panel { display: none; background: #f8f9fd; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .api-panel.show { display: block; animation: fadeIn .2s ease; }
+  .api-desc { font-size: 12px; color: var(--sub); line-height: 1.8; margin-bottom: 10px; }
+  .api-desc a { color: var(--accent); font-weight: 700; }
+  .api-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .api-row input { flex: 1; min-width: 220px; margin-top: 0; font-family: monospace; font-size: 13px; }
+  .btn-save, .btn-clear {
+    border: none; border-radius: 10px; padding: 0 18px; font-size: 13px; font-weight: 800; height: 42px;
+  }
+  .btn-save { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+  .btn-clear { background: #fff; border: 1px solid var(--line); color: var(--sub); }
+
   .proposal { margin-top: 22px; display: none; }
   .proposal.show { display: block; animation: fadeIn .3s ease; }
   .prop-head {
@@ -154,7 +175,16 @@
   .prop-head .p-tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #9db0ff; }
   .prop-head h3 { font-size: 21px; font-weight: 900; margin: 6px 0 4px; }
   .prop-head p { font-size: 13px; color: #c3c8dd; }
+  .gen-badge {
+    display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 800;
+    padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.12); color: #d7dcf5;
+  }
+  .gen-badge.live { background: rgba(45,212,168,.22); color: #7ff0cf; }
   .prop-body { border: 1px solid var(--line); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: #fff; padding: 24px; }
+  .api-error {
+    font-size: 12.5px; color: #b23348; background: #fdeef1; border: 1px solid #f5c6d0;
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;
+  }
   .prop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .prop-item { background: #f8f9fd; border: 1px solid var(--line); border-radius: 12px; padding: 16px; font-size: 13px; }
   .prop-item b { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; color: var(--ink); }
@@ -197,6 +227,14 @@
   .ref-list li { padding: 9px 0 9px 24px; position: relative; border-top: 1px dashed var(--line); color: #444d6e; }
   .ref-list li::before { content: "🔖"; position: absolute; left: 0; font-size: 12px; }
 
+  /* Design references (Pinterest / Behance / Dribbble / Qoo10) */
+  .ref-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .ref-btn {
+    font-size: 11px; font-weight: 700; padding: 6px 11px; border-radius: 999px;
+    background: #f0f2fb; color: var(--accent); border: 1px solid var(--line);
+  }
+  .ref-btn:hover { background: #e4e9fb; border-color: var(--accent); }
+
   /* ===== Marketing tab ===== */
   .timeline { position: relative; padding-left: 26px; }
   .timeline::before { content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
@@ -237,7 +275,7 @@
 
 <div class="topbar">
   <a class="logo" href="index.html"><span class="mark">K2</span>K2J Bridge</a>
-  <span class="demo-pill">DEMO — サンプルデータで動作中</span>
+  <span class="demo-pill">DEMO — Claude APIキー設定でライブ生成も可能</span>
   <span class="spacer"></span>
   <a class="back-link" href="index.html">← サービス紹介へ戻る</a>
 </div>
@@ -288,7 +326,25 @@
   <!-- ================= Planner ================= -->
   <section class="panel" id="panel-plan">
     <h2 class="page-title">AI商品企画ジェネレーター</h2>
-    <p class="page-sub">条件を選ぶと、Qoo10のトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します(デモではあらかじめ用意した企画案・モック画像を表示します)</p>
+    <p class="page-sub">条件を選ぶと、Qoo10のトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>Claude APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
+
+    <div class="api-bar">
+      <span class="api-status" id="apiStatus">🧪 サンプルモードで動作中(Claude APIキー未設定)</span>
+      <button class="api-toggle" id="apiToggleBtn" type="button">⚙️ Claude API設定</button>
+    </div>
+    <div class="api-panel" id="apiPanel">
+      <p class="api-desc">
+        お持ちの Anthropic APIキーを入力すると、「企画を生成」ボタンで実際に Claude が Qoo10トレンドデータをもとにOEM商品コンセプトを生成します。<br>
+        <b>キーはこのブラウザ(localStorage)にのみ保存され、Anthropic社のAPIへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
+        API利用料はご自身のAnthropicアカウントに発生します。共有PCでは使用しないでください。<br>
+        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">APIキーの取得はこちら →</a>
+      </p>
+      <div class="api-row">
+        <input type="text" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+        <button class="btn-save" id="apiSaveBtn" type="button">保存</button>
+        <button class="btn-clear" id="apiClearBtn" type="button">削除</button>
+      </div>
+    </div>
 
     <div class="card">
       <div class="form-row">
@@ -311,7 +367,7 @@
         <div>
           <label class="fld">主な販路</label>
           <select id="planChannel">
-            <option selected>ECモール(楽天・Amazon・Qoo10)</option>
+            <option selected>ECモール(Qoo10・楽天・Amazon)</option>
             <option>クラウドファンディング(Makuake)</option>
             <option>卸・小売(バラエティショップ等)</option>
           </select>
@@ -322,7 +378,7 @@
 
     <div class="loading" id="genLoading">
       <div class="spinner"></div>
-      Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…
+      <span id="genLoadingText">Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…</span>
     </div>
 
     <div class="proposal" id="proposal"></div>
@@ -331,7 +387,7 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">日本で売れている商品のパッケージ・LP・広告のトンマナを分析し、方向性をムードボードとして提案します</p>
+    <p class="page-sub">日本で売れている商品のパッケージ・LP・広告のトンマナを分析し、方向性をムードボードとして提案します。各カードから<b>Pinterest・Behance・Dribbble・Qoo10の実際の商品/作品</b>を参照できます。</p>
 
     <div class="grid g3" id="moodGrid"></div>
 
@@ -350,7 +406,7 @@
         <ul class="ref-list">
           <li>日本語表記(全成分・使用方法・注意書き)のスペース確保</li>
           <li>ドラッグストア棚を想定した正面フェイスの視認性</li>
-          <li>EC商品画像1枚目のレギュレーション(楽天・Amazonで異なる)</li>
+          <li>EC商品画像1枚目のレギュレーション(モールごとに異なる)</li>
           <li>リサイクル識別表示マーク・バーコード位置</li>
         </ul>
       </div>
@@ -433,11 +489,16 @@
     </div>
   </section>
 
-  <p class="note">⚠️ このページはプロダクトのデモです。表示されているランキング・数値・企画案・工場情報はすべて説明用のサンプルデータであり、実際の市場データではありません。</p>
+  <p class="note">⚠️ このページはプロダクトのデモです。トレンド数値・工場情報は説明用のサンプルデータです。「AI商品企画」タブでClaude APIキーを設定した場合のみ、実際にAIが商品コンセプトを生成します(API利用料はお客様のAnthropicアカウントに発生します)。生成される商品画像はイメージモックアップであり、実際の商品写真ではありません。</p>
 </main>
 
 <script>
-// ================= サンプルデータ =================
+// ================= 共通ユーティリティ =================
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ================= サンプルデータ(トレンド分析) =================
 const TREND = {
   beauty: {
     kpi: [
@@ -510,16 +571,23 @@ const TREND = {
   },
 };
 
+// ================= サンプル商品企画(オリジナル新規ブランド名) =================
+// ここに登場するブランド名・商品名は、実在するブランド・商品とは無関係の完全な創作名です。
 const PROPOSALS = {
   beauty: {
-    tag: "PROPOSAL — 美容・コスメ",
-    title: "メイクの上から使える微粒子シカミスト「CICA VEIL(仮)」",
-    lead: "レビュー分析で判明した「粒子が粗くメイクの上から使えない」という不満を解決する、超微粒子ノズル採用の携帯用シカミスト。",
-    items: [
-      { icon: "🎯", title: "ターゲット", list: ["25〜39歳・オフィスワーカーの敏感肌層", "Qoo10メガ割でK-Beautyを購入する層", "「メイク直しの時短」ニーズ"] },
-      { icon: "⚗️", title: "処方・仕様", list: ["シカ(ツボクサエキス)+セラミド配合", "超微粒子ノズル(メイクの上からOK)", "50mL携帯サイズ+150mL詰替の2SKU"] },
-      { icon: "💰", title: "価格・原価計画", list: ["想定売価 ¥1,980(税込)", "目標原価率 28%(1st lot 5,000個)", "Qoo10メガ割時 ¥1,680 の値付け余地"] },
-      { icon: "⚖️", title: "規制チェック", list: ["化粧品輸入:製造販売業者経由の届出が必要", "「肌荒れを防ぐ」は医薬部外品でのみ訴求可", "全成分表示ラベル(日本語)必須"] },
+    brandName: "VEILMER(ヴェイルメール)",
+    productName: "ヴェイルメール しずくミスト",
+    packageLabel: "VEIL MER",
+    packageSub: "SOOTHING MIST 50mL",
+    lead: "レビュー分析で判明した「粒子が粗くメイクの上から使えない」という不満を解決する、超微粒子ノズル採用の携帯用ミスト。",
+    target: ["25〜39歳・オフィスワーカーの敏感肌層", "Qoo10メガ割でK-Beautyを購入する層", "「メイク直しの時短」ニーズ"],
+    spec: ["センテラアジアティカ+セラミド配合", "超微粒子ノズル(メイクの上からOK)", "50mL携帯サイズ+150mL詰替の2SKU"],
+    price: ["想定売価 ¥1,980(税込)", "目標原価率 28%(1st lot 5,000個)", "Qoo10メガ割時 ¥1,680 の値付け余地"],
+    regulatory: ["化粧品輸入:製造販売業者経由の届出が必要", "「肌荒れを防ぐ」は医薬部外品でのみ訴求可", "全成分表示ラベル(日本語)必須"],
+    images: [
+      { name: "A案 ナチュラルグリーン", desc: "成分の誠実さを打ち出す低彩度グリーン", colors: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
+      { name: "B案 ソフトピンク", desc: "Qoo10メガ割で強いK-Beautyらしい柔らかさ", colors: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
+      { name: "C案 クリーンブルー", desc: "皮膚科学系ブランドを想起する清潔感", colors: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
     ],
     factories: [
       { emoji: "🏭", name: "Hansol Cosmetics(京畿道)", meta: "スキンケアOEM / 最小ロット3,000 / ISO22716", match: "適合 94%" },
@@ -527,14 +595,20 @@ const PROPOSALS = {
     ],
   },
   food: {
-    tag: "PROPOSAL — 食品",
-    title: "日本人向け辛さ調整の高タンパク韓国スナック「PROTE-K(仮)」",
+    brandName: "HANMAEK(ハンメク)",
+    productName: "ハンメク プロテインスナック",
+    packageLabel: "HAN MAEK",
+    packageSub: "PROTEIN SNACK",
+    statBig: "15g",
     lead: "「韓国スナックは辛すぎる・量が多い」という日本のレビュー不満と、高タンパク市場の急成長を掛け合わせた個包装スナック。",
-    items: [
-      { icon: "🎯", title: "ターゲット", list: ["20〜40代の筋トレ・ボディメイク層", "オフィス間食のヘルシー志向層", "韓国グルメ好きのライト層"] },
-      { icon: "⚗️", title: "レシピ・仕様", list: ["1袋あたりタンパク質15g・糖質10g以下", "辛さは日本向けに2段階(マイルド/旨辛)", "個包装×7袋入り(持ち歩き前提)"] },
-      { icon: "💰", title: "価格・原価計画", list: ["想定売価 ¥1,280(7袋入り・税込)", "定期購入(サブスク)で ¥1,080", "目標原価率 32%(1st lot 10,000袋)"] },
-      { icon: "⚖️", title: "規制チェック", list: ["食品表示法:栄養成分表示(日本語)必須", "輸入時の検疫・添加物リスト適合確認", "「たんぱく質摂取に」等の機能性表示は要届出"] },
+    target: ["20〜40代の筋トレ・ボディメイク層", "オフィス間食のヘルシー志向層", "韓国グルメ好きのライト層"],
+    spec: ["1袋あたりタンパク質15g・糖質10g以下", "辛さは日本向けに2段階(マイルド/旨辛)", "個包装×7袋入り(持ち歩き前提)"],
+    price: ["想定売価 ¥1,280(7袋入り・税込)", "定期購入(サブスク)で ¥1,080", "目標原価率 32%(1st lot 10,000袋)"],
+    regulatory: ["食品表示法:栄養成分表示(日本語)必須", "輸入時の検疫・添加物リスト適合確認", "「たんぱく質摂取に」等の機能性表示は要届出"],
+    images: [
+      { name: "A案 パフォーマンスブラック", desc: "数値ドーンの日本プロテイン市場の定石", colors: { bg1: "#f3f4f6", bg2: "#d3d7de", body: "#1f2937", cap: "#f5b942", text: "#ffffff", mist: "#f5b942" } },
+      { name: "B案 コリアンレッド", desc: "韓国グルメ好きに刺さる旨辛トーン", colors: { bg1: "#fdf2ef", bg2: "#f5cfc4", body: "#c0392b", cap: "#f7e8c8", text: "#ffffff", mist: "#e67e22" } },
+      { name: "C案 ヘルシーグリーン", desc: "低糖質・オフィス間食層向けの軽さ", colors: { bg1: "#f2f8f0", bg2: "#d4e6cf", body: "#f7fbf3", cap: "#4a7c43", text: "#3c6636", mist: "#7aa872" } },
     ],
     factories: [
       { emoji: "🏭", name: "K-Food Partners(忠清道)", meta: "スナックOEM / HACCP / 対日輸出実績あり", match: "適合 92%" },
@@ -542,14 +616,19 @@ const PROPOSALS = {
     ],
   },
   living: {
-    tag: "PROPOSAL — 生活雑貨・家電",
-    title: "上部給水&抗菌構造の卓上アロマ加湿器「MOIST DESK(仮)」",
+    brandName: "BREEZO(ブリーゾ)",
+    productName: "ブリーゾ デスク加湿器",
+    packageLabel: "BREEZO",
+    packageSub: "AROMA HUMIDIFIER",
     lead: "「給水が面倒・カビが心配」というレビュー最多の不満を、上部給水+抗菌カートリッジで解決するデスク向け加湿器。",
-    items: [
-      { icon: "🎯", title: "ターゲット", list: ["在宅ワーク・オフィスのデスク利用者", "乾燥・肌ケアに関心の高い20〜40代女性", "「デスクに置けるかわいい家電」ニーズ"] },
-      { icon: "⚙️", title: "仕様", list: ["上部給水式(タンク取り外し不要)", "抗菌カートリッジ+週1洗いでOK設計", "くすみカラー3色 / 静音25dB / USB-C給電"] },
-      { icon: "💰", title: "価格・原価計画", list: ["想定売価 ¥3,480(税込)", "Makuake先行価格 ¥2,780(20%オフ)", "目標原価率 35%(1st lot 3,000台)"] },
-      { icon: "⚖️", title: "規制チェック", list: ["電気用品安全法(PSE)対象部品の確認", "USB給電機器の技適・表示要件", "取扱説明書(日本語)とPL保険の手配"] },
+    target: ["在宅ワーク・オフィスのデスク利用者", "乾燥・肌ケアに関心の高い20〜40代女性", "「デスクに置けるかわいい家電」ニーズ"],
+    spec: ["上部給水式(タンク取り外し不要)", "抗菌カートリッジ+週1洗いでOK設計", "くすみカラー3色 / 静音25dB / USB-C給電"],
+    price: ["想定売価 ¥3,480(税込)", "Makuake先行価格 ¥2,780(20%オフ)", "目標原価率 35%(1st lot 3,000台)"],
+    regulatory: ["電気用品安全法(PSE)対象部品の確認", "USB給電機器の技適・表示要件", "取扱説明書(日本語)とPL保険の手配"],
+    images: [
+      { name: "A案 グレージュ", desc: "インテリアに馴染む日本で人気のくすみ色", colors: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
+      { name: "B案 ブルーグレー", desc: "デスク家電らしいミニマル・テック", colors: { bg1: "#eef2f7", bg2: "#c9d6e4", body: "#dfe7f0", cap: "#5b7897", text: "#47607c", mist: "#8aa3c0" } },
+      { name: "C案 ピンクベージュ", desc: "「デスクに置けるかわいい家電」ニーズ向け", colors: { bg1: "#fbf2f1", bg2: "#ecd2cd", body: "#f6e4e0", cap: "#c98b80", text: "#a56d62", mist: "#dbaaa0" } },
     ],
     factories: [
       { emoji: "🏭", name: "Inno Electronics(仁川)", meta: "小型家電OEM / PSE対応実績 / 最小ロット2,000", match: "適合 91%" },
@@ -558,25 +637,7 @@ const PROPOSALS = {
   },
 };
 
-// ================= 商品イメージ画像(AI生成のデモ:SVGで描画) =================
-const CONCEPT_IMAGES = {
-  beauty: [
-    { name: "A案 ナチュラルグリーン", desc: "成分の誠実さを打ち出す低彩度グリーン", pal: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
-    { name: "B案 ソフトピンク", desc: "Qoo10メガ割で強いK-Beautyらしい柔らかさ", pal: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
-    { name: "C案 クリーンブルー", desc: "皮膚科学系ブランドを想起する清潔感", pal: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
-  ],
-  food: [
-    { name: "A案 パフォーマンスブラック", desc: "数値ドーンの日本プロテイン市場の定石", pal: { bg1: "#f3f4f6", bg2: "#d3d7de", body: "#1f2937", cap: "#f5b942", text: "#ffffff", mist: "#f5b942" } },
-    { name: "B案 コリアンレッド", desc: "韓国グルメ好きに刺さる旨辛トーン", pal: { bg1: "#fdf2ef", bg2: "#f5cfc4", body: "#c0392b", cap: "#f7e8c8", text: "#ffffff", mist: "#e67e22" } },
-    { name: "C案 ヘルシーグリーン", desc: "低糖質・オフィス間食層向けの軽さ", pal: { bg1: "#f2f8f0", bg2: "#d4e6cf", body: "#f7fbf3", cap: "#4a7c43", text: "#3c6636", mist: "#7aa872" } },
-  ],
-  living: [
-    { name: "A案 グレージュ", desc: "インテリアに馴染む日本で人気のくすみ色", pal: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
-    { name: "B案 ブルーグレー", desc: "デスク家電らしいミニマル・テック", pal: { bg1: "#eef2f7", bg2: "#c9d6e4", body: "#dfe7f0", cap: "#5b7897", text: "#47607c", mist: "#8aa3c0" } },
-    { name: "C案 ピンクベージュ", desc: "「デスクに置けるかわいい家電」ニーズ向け", pal: { bg1: "#fbf2f1", bg2: "#ecd2cd", body: "#f6e4e0", cap: "#c98b80", text: "#a56d62", mist: "#dbaaa0" } },
-  ],
-};
-
+// ================= 商品イメージ画像:SVGモックアップ生成 =================
 function svgDefs(id, p) {
   return `<defs>
     <radialGradient id="bg${id}" cx="50%" cy="30%" r="85%">
@@ -588,7 +649,19 @@ function svgDefs(id, p) {
   </defs>`;
 }
 
-function svgBeauty(id, p) {
+function wrapLabel(raw, maxLen) {
+  const label = (raw || "BRAND").toString().toUpperCase().trim();
+  if (label.length <= maxLen) return [label, ""];
+  const spaceIdx = label.indexOf(" ");
+  if (spaceIdx > 0 && spaceIdx <= maxLen + 2) {
+    return [label.slice(0, spaceIdx), label.slice(spaceIdx + 1).slice(0, maxLen)];
+  }
+  return [label.slice(0, maxLen), label.slice(maxLen, maxLen * 2)];
+}
+
+function svgBeauty(id, p, pkg) {
+  const [l1, l2] = wrapLabel(pkg.label, 6);
+  const sub = escapeHtml((pkg.sub || "SOOTHING MIST").toUpperCase());
   return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ミストボトルのコンセプト画像">
     ${svgDefs(id, p)}
     <rect width="300" height="220" fill="url(#bg${id})"/>
@@ -603,14 +676,18 @@ function svgBeauty(id, p) {
     <rect x="144" y="36" width="12" height="14" rx="3" fill="${p.cap}"/>
     <rect x="156" y="39" width="10" height="5" rx="2.5" fill="${p.cap}"/>
     <rect x="122" y="106" width="56" height="56" rx="9" fill="#ffffff" opacity=".93"/>
-    <text x="150" y="128" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">CICA</text>
-    <text x="150" y="143" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">VEIL</text>
-    <text x="150" y="155" text-anchor="middle" font-family="sans-serif" font-size="6" fill="${p.text}" opacity=".65" letter-spacing=".5">SOOTHING MIST 50mL</text>
+    <text x="150" y="${l2 ? 128 : 133}" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">${escapeHtml(l1)}</text>
+    ${l2 ? `<text x="150" y="143" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="${p.text}" letter-spacing="1">${escapeHtml(l2)}</text>` : ""}
+    <text x="150" y="155" text-anchor="middle" font-family="sans-serif" font-size="6" fill="${p.text}" opacity=".65" letter-spacing=".5">${sub}</text>
     <path d="M150 96 q6 -9 0 -14 q-6 5 0 14z" fill="${p.cap}" opacity=".8"/>
   </svg>`;
 }
 
-function svgFood(id, p) {
+function svgFood(id, p, pkg) {
+  const label = escapeHtml((pkg.label || "BRAND").toUpperCase());
+  const fontSize = label.length > 9 ? 14 : 19;
+  const big = escapeHtml(pkg.big || "");
+  const sub = escapeHtml((pkg.sub || "PROTEIN SNACK").toUpperCase());
   return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="スナックパウチのコンセプト画像">
     ${svgDefs(id, p)}
     <rect width="300" height="220" fill="url(#bg${id})"/>
@@ -619,15 +696,18 @@ function svgFood(id, p) {
     <path d="M97 60 L203 60 L212 190 Q150 202 88 190 Z" fill="url(#sh${id})"/>
     <rect x="94" y="46" width="112" height="16" rx="3" fill="${p.body}" stroke="rgba(0,0,0,.1)"/>
     <g stroke="rgba(0,0,0,.18)" stroke-width="1">${[0,1,2,3,4,5,6,7,8,9].map(i => `<line x1="${100 + i * 11}" y1="48" x2="${100 + i * 11}" y2="60"/>`).join("")}</g>
-    <text x="150" y="102" text-anchor="middle" font-family="sans-serif" font-size="19" font-weight="800" fill="${p.text}" letter-spacing="1">PROTE-K</text>
-    <text x="150" y="140" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="900" fill="${p.cap}">15g</text>
-    <text x="150" y="156" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="${p.text}" opacity=".85" letter-spacing="2">PROTEIN SNACK</text>
+    <text x="150" y="102" text-anchor="middle" font-family="sans-serif" font-size="${fontSize}" font-weight="800" fill="${p.text}" letter-spacing="1">${label}</text>
+    ${big ? `<text x="150" y="140" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="900" fill="${p.cap}">${big}</text>` : ""}
+    <text x="150" y="${big ? 156 : 130}" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="${p.text}" opacity=".85" letter-spacing="2">${sub}</text>
     <rect x="118" y="166" width="64" height="14" rx="7" fill="${p.cap}"/>
     <text x="150" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="800" fill="${p.body}">マイルド / 旨辛</text>
   </svg>`;
 }
 
-function svgLiving(id, p) {
+function svgLiving(id, p, pkg) {
+  const label = escapeHtml((pkg.label || "BRAND").toUpperCase());
+  const fontSize = label.length > 8 ? 7 : 8.5;
+  const sub = escapeHtml((pkg.sub || "AROMA HUMIDIFIER").toUpperCase());
   return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="卓上加湿器のコンセプト画像">
     ${svgDefs(id, p)}
     <rect width="300" height="220" fill="url(#bg${id})"/>
@@ -643,52 +723,87 @@ function svgLiving(id, p) {
     <circle cx="150" cy="72" r="7" fill="${p.cap}"/>
     <circle cx="150" cy="72" r="3" fill="#ffffff" opacity=".8"/>
     <rect x="128" y="128" width="44" height="20" rx="10" fill="#ffffff" opacity=".8"/>
-    <text x="150" y="142" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="800" fill="${p.text}">MOIST</text>
+    <text x="150" y="142" text-anchor="middle" font-family="sans-serif" font-size="${fontSize}" font-weight="800" fill="${p.text}">${label}</text>
     <circle cx="150" cy="168" r="4.5" fill="${p.cap}" opacity=".9"/>
-    <text x="150" y="186" text-anchor="middle" font-family="sans-serif" font-size="5.5" fill="${p.text}" opacity=".6" letter-spacing="1">AROMA HUMIDIFIER</text>
+    <text x="150" y="186" text-anchor="middle" font-family="sans-serif" font-size="5.5" fill="${p.text}" opacity=".6" letter-spacing="1">${sub}</text>
   </svg>`;
 }
 
 const SVG_BY_CAT = { beauty: svgBeauty, food: svgFood, living: svgLiving };
 
+// ================= デザインムードボード + 実例参照リンク =================
 const MOODS = [
   {
     colors: ["#e8f0e4", "#f7f3ea", "#c9d8c5", "#8fae8b", "#5c7a58"],
     title: "ナチュラル・クリーン(スキンケア向け)",
     desc: "無印良品的な引き算の美学。低彩度グリーン×生成りで「成分の誠実さ」を伝える。日本のセンシティブスキン市場で最も支持されるトンマナ。",
     tags: ["余白多め", "細めのゴシック体", "成分名を主役に"],
+    refEn: "skincare packaging natural minimal design",
+    refJa: "スキンケア ナチュラル パッケージ",
   },
   {
     colors: ["#fde8ec", "#fff5f7", "#f9c8d4", "#e88aa0", "#c25b76"],
     title: "ソフト・フェミニン(メイク・リップ向け)",
     desc: "くすみピンク基調。K-Beautyらしさを残しつつ、日本では原色より1〜2トーン落とした配色がドラッグストア棚で強い。",
     tags: ["丸ゴシック", "手書き風アクセント", "ツヤ感の写真"],
+    refEn: "k-beauty cosmetics packaging pastel pink design",
+    refJa: "コスメ パッケージ ピンク",
   },
   {
     colors: ["#1f2937", "#111827", "#f59e0b", "#fbbf24", "#f3f4f6"],
     title: "パフォーマンス(高タンパク食品向け)",
     desc: "ダーク×イエローの高コントラスト。「タンパク質15g」など数値を最大サイズで配置するのが日本のプロテイン市場の定石。",
     tags: ["極太ゴシック", "数値ドーン", "黒背景"],
+    refEn: "protein snack packaging bold black yellow design",
+    refJa: "プロテイン スナック パッケージ",
   },
   {
     colors: ["#eef2f7", "#dfe7f0", "#b8c9dd", "#8aa3c0", "#5b7897"],
     title: "ミニマル・テック(デスク家電向け)",
     desc: "ニュアンスブルーグレー。BALMUDA以降の日本市場では「家電=白物」から「インテリアに馴染む低彩度」へ移行。",
     tags: ["余白と直線", "小さめロゴ", "ライフスタイル写真"],
+    refEn: "minimal home appliance product design",
+    refJa: "卓上 加湿器 家電 デザイン",
   },
   {
     colors: ["#fdf6e3", "#f5e6c8", "#e8c87e", "#d4a24c", "#8b6a2e"],
     title: "プレミアム・ギフト(高価格帯向け)",
     desc: "生成り×ゴールド。日本の贈答文化(お中元・お歳暮・自分へのご褒美)を狙うなら箔押し・上質紙の質感表現が必須。",
     tags: ["明朝体", "箔押し表現", "化粧箱"],
+    refEn: "premium gift box packaging gold luxury design",
+    refJa: "ギフトボックス 高級 パッケージ",
   },
   {
     colors: ["#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"],
     title: "フレッシュ・ポップ(SNS拡散狙い)",
     desc: "彩度高めのブルー系。TikTok/リールで映える「開封動画向け」パッケージ。Z世代向けトライアル商品で有効。",
     tags: ["大胆な色面", "絵文字的アイコン", "開封体験"],
+    refEn: "colorful pop packaging design unboxing",
+    refJa: "ポップ カラフル パッケージ デザイン",
   },
 ];
+
+function buildRefLinks(m) {
+  const en = encodeURIComponent(m.refEn);
+  const qooImg = encodeURIComponent(m.refJa + " site:qoo10.jp");
+  return [
+    { label: "📌 Pinterestで見る", url: `https://www.pinterest.com/search/pins/?q=${en}` },
+    { label: "🎨 Behanceで見る", url: `https://www.behance.net/search/projects?search=${en}` },
+    { label: "🏀 Dribbbleで見る", url: `https://dribbble.com/search/${en}` },
+    { label: "🛍️ Qoo10の実商品を見る", url: `https://www.google.com/search?tbm=isch&q=${qooImg}` },
+  ];
+}
+
+document.getElementById("moodGrid").innerHTML = MOODS.map(m => `
+  <div class="mood">
+    <div class="swatches">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
+    <div class="mood-body">
+      <h4>${m.title}</h4>
+      <p>${m.desc}</p>
+      <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
+      <div class="ref-links">${buildRefLinks(m).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
+    </div>
+  </div>`).join("");
 
 // ================= タブ切替 =================
 document.querySelectorAll(".tab").forEach(tab => {
@@ -747,75 +862,271 @@ document.querySelectorAll(".cat-btn").forEach(btn => {
 });
 renderTrend("beauty");
 
-// ================= 企画ジェネレーター =================
-document.getElementById("genBtn").addEventListener("click", () => {
+// ================= Claude API設定(ブラウザのみに保存 / BYOK) =================
+const CLAUDE_KEY_STORAGE = "k2j_claude_api_key";
+const CLAUDE_MODEL = "claude-sonnet-5";
+
+function getClaudeKey() {
+  return localStorage.getItem(CLAUDE_KEY_STORAGE) || "";
+}
+function setClaudeKey(v) {
+  if (v) localStorage.setItem(CLAUDE_KEY_STORAGE, v);
+  else localStorage.removeItem(CLAUDE_KEY_STORAGE);
+  refreshApiStatus();
+}
+function refreshApiStatus() {
+  const has = !!getClaudeKey();
+  const statusEl = document.getElementById("apiStatus");
+  statusEl.textContent = has
+    ? "✨ Claude APIキー設定済み — 生成時に実際のAPIを呼び出します"
+    : "🧪 サンプルモードで動作中(Claude APIキー未設定)";
+  statusEl.classList.toggle("on", has);
+  document.getElementById("apiKeyInput").value = has ? getClaudeKey() : "";
+}
+document.getElementById("apiToggleBtn").addEventListener("click", () => {
+  document.getElementById("apiPanel").classList.toggle("show");
+});
+document.getElementById("apiSaveBtn").addEventListener("click", () => {
+  const v = document.getElementById("apiKeyInput").value.trim();
+  if (v) {
+    setClaudeKey(v);
+    document.getElementById("apiPanel").classList.remove("show");
+  }
+});
+document.getElementById("apiClearBtn").addEventListener("click", () => {
+  setClaudeKey("");
+});
+refreshApiStatus();
+
+// ================= Claude APIへの企画生成リクエスト =================
+function buildPrompt(cat, priceLabel, channelLabel) {
+  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
+  const trend = TREND[cat];
+  const context = {
+    category: catLabel,
+    priceRange: priceLabel,
+    channel: channelLabel,
+    topRankedProducts: trend.rank.slice(0, 3).map(r => ({ name: r.name, growth: r.growth, tags: r.tags })),
+    reviewInsights: trend.insights.map(i => ({ type: i.type, title: i.title, body: i.body })),
+  };
+
+  const system = `あなたは韓国企業の日本向けOEM商品開発を支援する優秀なプロダクトマネージャー兼マーケターです。
+与えられた日本市場(Qoo10)のトレンドデータをもとに、独自性の高いOEM商品コンセプトを1件提案してください。
+
+重要な制約:
+- ブランド名・商品名は、日本や韓国で実在する可能性がある有名ブランド名・商品名とは一切重複・類似させず、完全にオリジナルな造語にしてください。既存の実在商品を模倣した名称は禁止です。
+- 出力は必ず以下のJSON形式のみとし、それ以外の文字列(説明文・前置き・コードフェンス等)は一切含めないでください。
+- colorsのhex値は必ず "#rrggbb" 形式にしてください。
+
+{
+  "brandName": "オリジナルの英字ブランド名(日本語読みをカッコ書きで併記可)",
+  "productName": "商品名(日本語表記)",
+  "packageLabel": "パッケージ表示用の短い英字ラベル(全て大文字、12文字以内)",
+  "packageSub": "パッケージ表示用の短い英字サブコピー(24文字以内)",
+  "lead": "商品コンセプトの要約(80字程度)",
+  "target": ["ターゲット層の説明を3つ"],
+  "spec": ["処方・仕様のポイントを3つ"],
+  "price": ["価格・原価計画のポイントを3つ"],
+  "regulatory": ["日本の規制チェックポイントを3つ"],
+  "images": [
+    {"name": "A案の名称", "desc": "デザイン意図の説明(40字程度)", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
+    {"name": "B案の名称", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
+    {"name": "C案の名称", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}}
+  ]
+}`;
+
+  const user = `以下の条件・Qoo10トレンドデータをもとに、OEM商品コンセプトをJSON形式で1件提案してください。
+
+${JSON.stringify(context, null, 2)}`;
+
+  return { system, user };
+}
+
+async function generateWithClaude(cat, priceLabel, channelLabel) {
+  const key = getClaudeKey();
+  const { system, user } = buildPrompt(cat, priceLabel, channelLabel);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  let res;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 2000,
+        system: system,
+        messages: [{ role: "user", content: user }],
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
+    throw new Error(`Claude APIエラー(${res.status})${detail ? ": " + detail : ""}`);
+  }
+
+  const data = await res.json();
+  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+  const jsonStr = text.trim().replace(/^```(json)?\s*/i, "").replace(/```\s*$/i, "");
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (e) {
+    throw new Error("Claude APIの応答をJSONとして解析できませんでした");
+  }
+  return parsed;
+}
+
+// ================= 企画データの正規化(欠損時はサンプルで補完) =================
+function normalizeProposal(cat, raw) {
+  raw = raw || {};
+  const fb = PROPOSALS[cat];
+  const hexRe = /^#[0-9a-fA-F]{3,8}$/;
+  const pickArr = (v, fallback) => (Array.isArray(v) && v.length ? v.slice(0, 4).map(String) : fallback);
+
+  const out = {
+    brandName: (raw.brandName || fb.brandName).toString().slice(0, 60),
+    productName: (raw.productName || fb.productName).toString().slice(0, 80),
+    packageLabel: (raw.packageLabel || fb.packageLabel).toString().slice(0, 16),
+    packageSub: (raw.packageSub || fb.packageSub).toString().slice(0, 32),
+    statBig: (raw.statBig || (cat === "food" ? fb.statBig : "") || "").toString().slice(0, 6),
+    lead: (raw.lead || fb.lead).toString().slice(0, 220),
+    target: pickArr(raw.target, fb.target),
+    spec: pickArr(raw.spec, fb.spec),
+    price: pickArr(raw.price, fb.price),
+    regulatory: pickArr(raw.regulatory, fb.regulatory),
+  };
+
+  out.images = [0, 1, 2].map(i => {
+    const src = (Array.isArray(raw.images) && raw.images[i]) || {};
+    const defImg = fb.images[i % fb.images.length];
+    const c = src.colors || {};
+    const colors = {};
+    ["bg1", "bg2", "body", "cap", "text", "mist"].forEach(k => {
+      colors[k] = hexRe.test(c[k]) ? c[k] : defImg.colors[k];
+    });
+    return {
+      name: (src.name || defImg.name).toString().slice(0, 40),
+      desc: (src.desc || defImg.desc).toString().slice(0, 100),
+      colors,
+    };
+  });
+
+  return out;
+}
+
+// ================= 企画結果の描画 =================
+function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote) {
+  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
+  const factories = PROPOSALS[cat].factories;
+  const items = [
+    { icon: "🎯", title: "ターゲット", list: data.target },
+    { icon: "⚗️", title: "処方・仕様", list: data.spec },
+    { icon: "💰", title: "価格・原価計画", list: data.price },
+    { icon: "⚖️", title: "規制チェック", list: data.regulatory },
+  ];
+
+  document.getElementById("proposal").innerHTML = `
+    <div class="prop-head">
+      <span class="p-tag">PROPOSAL — ${catLabel} ・ ${escapeHtml(priceLabel)} ・ ${escapeHtml(channelLabel)}</span>
+      <div class="gen-badge ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが生成(リアルタイム)" : (errorNote ? "🧪 サンプル表示中(APIエラーのフォールバック)" : "🧪 サンプル表示中(Claude APIキー未設定)")}</div>
+      <h3>${escapeHtml(data.productName)}${data.brandName ? `「${escapeHtml(data.brandName)}」` : ""}</h3>
+      <p>${escapeHtml(data.lead)}</p>
+    </div>
+    <div class="prop-body">
+      ${errorNote ? `<div class="api-error">⚠️ Claude APIの呼び出しに失敗したため、サンプルデータを表示しています: ${escapeHtml(errorNote)}</div>` : ""}
+      <div class="prop-grid">
+        ${items.map(it => `
+          <div class="prop-item">
+            <b>${it.icon} ${it.title}</b>
+            <ul>${(it.list || []).map(li => `<li>${escapeHtml(li)}</li>`).join("")}</ul>
+          </div>`).join("")}
+      </div>
+      <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(${liveMode ? "AI生成" : "サンプル"}・3案)</h3>
+      <p class="img-note">${liveMode ? "Claude が提案したデザイン方向性(配色)をもとにモックアップを生成しました。" : "トレンド分析とデザインリファレンスを反映したコンセプト画像です。"} ※実際の商品写真ではなく、パッケージ形状を模したイメージモックアップです。</p>
+      <div class="img-grid">
+        ${data.images.map((img, i) => `
+          <div class="img-card">
+            ${SVG_BY_CAT[cat]("_" + cat + i + (liveMode ? "_live" : ""), img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig })}
+            <div class="ic-body">
+              <span class="ai-badge">${liveMode ? "✨ AI GENERATED" : "🧪 SAMPLE"}</span>
+              <div class="ic-name">${escapeHtml(img.name)}</div>
+              <div class="ic-desc">${escapeHtml(img.desc)}</div>
+            </div>
+          </div>`).join("")}
+      </div>
+      <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 マッチするOEM/ODM工場(サンプル)</h3>
+      ${factories.map(f => `
+        <div class="factory">
+          <span class="f-logo">${f.emoji}</span>
+          <div>
+            <div class="f-name">${escapeHtml(f.name)}</div>
+            <div class="f-meta">${escapeHtml(f.meta)}</div>
+          </div>
+          <span class="match">${f.match}</span>
+        </div>`).join("")}
+    </div>`;
+}
+
+// ================= 企画ジェネレーター(ボタン押下時) =================
+document.getElementById("genBtn").addEventListener("click", async () => {
   const btn = document.getElementById("genBtn");
   const loading = document.getElementById("genLoading");
+  const loadingText = document.getElementById("genLoadingText");
   const box = document.getElementById("proposal");
   const cat = document.getElementById("planCat").value;
   const price = document.getElementById("planPrice").value;
   const channel = document.getElementById("planChannel").value;
+  const hasKey = !!getClaudeKey();
 
   btn.disabled = true;
   box.classList.remove("show");
+  loadingText.textContent = hasKey
+    ? "Claude APIでQoo10トレンドデータを分析し、商品コンセプトを生成しています…"
+    : "Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…(サンプルモード)";
   loading.classList.add("show");
 
-  setTimeout(() => {
-    const p = PROPOSALS[cat];
-    box.innerHTML = `
-      <div class="prop-head">
-        <span class="p-tag">${p.tag} ・ ${price} ・ ${channel}</span>
-        <h3>${p.title}</h3>
-        <p>${p.lead}</p>
-      </div>
-      <div class="prop-body">
-        <div class="prop-grid">
-          ${p.items.map(it => `
-            <div class="prop-item">
-              <b>${it.icon} ${it.title}</b>
-              <ul>${it.list.map(li => `<li>${li}</li>`).join("")}</ul>
-            </div>`).join("")}
-        </div>
-        <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(AI生成・3案)</h3>
-        <p class="img-note">トレンド分析とデザインリファレンスを反映したコンセプト画像を自動生成します。※デモでは簡易モックを表示(実サービスではAI画像生成モデルで写真品質のパッケージ/商品カット・Qoo10商品ページ用画像まで生成)</p>
-        <div class="img-grid">
-          ${CONCEPT_IMAGES[cat].map((img, i) => `
-            <div class="img-card">
-              ${SVG_BY_CAT[cat]("_" + cat + i, img.pal)}
-              <div class="ic-body">
-                <span class="ai-badge">✨ AI GENERATED</span>
-                <div class="ic-name">${img.name}</div>
-                <div class="ic-desc">${img.desc}</div>
-              </div>
-            </div>`).join("")}
-        </div>
-        <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 マッチするOEM/ODM工場(サンプル)</h3>
-        ${p.factories.map(f => `
-          <div class="factory">
-            <span class="f-logo">${f.emoji}</span>
-            <div>
-              <div class="f-name">${f.name}</div>
-              <div class="f-meta">${f.meta}</div>
-            </div>
-            <span class="match">${f.match}</span>
-          </div>`).join("")}
-      </div>`;
-    loading.classList.remove("show");
-    box.classList.add("show");
-    btn.disabled = false;
-  }, 1400);
-});
+  let liveMode = false;
+  let errorNote = "";
+  let raw = null;
 
-// ================= ムードボード =================
-document.getElementById("moodGrid").innerHTML = MOODS.map(m => `
-  <div class="mood">
-    <div class="swatches">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
-    <div class="mood-body">
-      <h4>${m.title}</h4>
-      <p>${m.desc}</p>
-      <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
-    </div>
-  </div>`).join("");
+  if (hasKey) {
+    try {
+      raw = await generateWithClaude(cat, price, channel);
+      liveMode = true;
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        errorNote = "Claude APIへの接続がタイムアウトしました。";
+      } else if (err instanceof TypeError) {
+        errorNote = "ブラウザから直接APIへ接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
+      } else {
+        errorNote = (err && err.message) ? err.message : String(err);
+      }
+    }
+  } else {
+    await new Promise(r => setTimeout(r, 1200));
+  }
+
+  const data = normalizeProposal(cat, raw);
+  renderProposal(cat, price, channel, data, liveMode, errorNote);
+
+  loading.classList.remove("show");
+  box.classList.add("show");
+  btn.disabled = false;
+});
 </script>
 
 </body>
