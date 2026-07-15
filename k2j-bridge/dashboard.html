@@ -235,6 +235,25 @@
   }
   .ref-btn:hover { background: #e4e9fb; border-color: var(--accent); }
 
+  /* Product loader (design tab) */
+  .loader-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .loader-tab {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px;
+    padding: 8px 16px; font-size: 12.5px; font-weight: 700; color: var(--sub);
+  }
+  .loader-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .loader-pane { display: none; }
+  .loader-pane.active { display: block; }
+  .ds-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 14px; flex-wrap: wrap; }
+  .p-tag2 { font-size: 15px; font-weight: 900; }
+  .gen-badge.light { background: #eef1fd; color: var(--accent-2); }
+  .gen-badge.light.live { background: rgba(45,212,168,.15); color: #0f9d78; }
+  .mood-visual { border-bottom: 1px solid var(--line); }
+  .mood-visual svg { display: block; width: 100%; height: auto; }
+  .mini-swatch { display: flex; gap: 4px; margin-top: 10px; }
+  .mini-swatch i { width: 16px; height: 16px; border-radius: 4px; display: block; }
+  .subhead { font-size: 16px; font-weight: 900; margin-top: 8px; }
+
   /* ===== Marketing tab ===== */
   .timeline { position: relative; padding-left: 26px; }
   .timeline::before { content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
@@ -387,8 +406,51 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">日本で売れている商品のパッケージ・LP・広告のトンマナを分析し、方向性をムードボードとして提案します。各カードから<b>Pinterest・Behance・Dribbble・Qoo10の実際の商品/作品</b>を参照できます。</p>
+    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、その商品に合うデザインの方向性を<b>画像</b>で提案し、<b>Pinterest・Behance・Dribbble・Qoo10</b>の実際の参考作品/商品を検索できます。</p>
 
+    <div class="card">
+      <div class="loader-tabs">
+        <button class="loader-tab active" data-mode="ai" type="button">🤖 AI商品企画で生成した商品を読み込む</button>
+        <button class="loader-tab" data-mode="manual" type="button">✍️ 自社商品を入力する</button>
+      </div>
+
+      <div class="loader-pane active" id="loaderAi">
+        <label class="fld">生成済みの商品</label>
+        <select id="productSelect"></select>
+      </div>
+      <div class="loader-pane" id="loaderManual">
+        <div class="form-row" style="grid-template-columns:1fr 1fr 2fr">
+          <div>
+            <label class="fld">商品名</label>
+            <input type="text" id="manualName" placeholder="例: 潤いフェイスミスト">
+          </div>
+          <div>
+            <label class="fld">カテゴリー</label>
+            <select id="manualCat">
+              <option value="beauty">美容・コスメ</option>
+              <option value="food">食品</option>
+              <option value="living">生活雑貨・家電</option>
+            </select>
+          </div>
+          <div>
+            <label class="fld">特徴・キーワード(任意)</label>
+            <input type="text" id="manualKeywords" placeholder="例: オーガニック, パステルカラー, ミニマル">
+          </div>
+        </div>
+      </div>
+
+      <button class="gen-btn mt" id="designGenBtn" type="button">🔍 この商品のデザインを探す</button>
+    </div>
+
+    <div class="loading" id="designLoading">
+      <div class="spinner"></div>
+      <span id="designLoadingText">デザインの方向性を分析しています…</span>
+    </div>
+
+    <div id="designSuggestBox"></div>
+
+    <h3 class="subhead mt">業界共通のデザイントレンド</h3>
+    <p class="page-sub">カテゴリー横断で押さえておきたい6つのデザイン方向性です。</p>
     <div class="grid g3" id="moodGrid"></div>
 
     <div class="grid g2 mt">
@@ -600,6 +662,7 @@ const PROPOSALS = {
     packageLabel: "HAN MAEK",
     packageSub: "PROTEIN SNACK",
     statBig: "15g",
+    badge: "マイルド / 旨辛",
     lead: "「韓国スナックは辛すぎる・量が多い」という日本のレビュー不満と、高タンパク市場の急成長を掛け合わせた個包装スナック。",
     target: ["20〜40代の筋トレ・ボディメイク層", "オフィス間食のヘルシー志向層", "韓国グルメ好きのライト層"],
     spec: ["1袋あたりタンパク質15g・糖質10g以下", "辛さは日本向けに2段階(マイルド/旨辛)", "個包装×7袋入り(持ち歩き前提)"],
@@ -700,7 +763,7 @@ function svgFood(id, p, pkg) {
     ${big ? `<text x="150" y="140" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="900" fill="${p.cap}">${big}</text>` : ""}
     <text x="150" y="${big ? 156 : 130}" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="700" fill="${p.text}" opacity=".85" letter-spacing="2">${sub}</text>
     <rect x="118" y="166" width="64" height="14" rx="7" fill="${p.cap}"/>
-    <text x="150" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="800" fill="${p.body}">マイルド / 旨辛</text>
+    <text x="150" y="176" text-anchor="middle" font-family="sans-serif" font-size="8" font-weight="800" fill="${p.body}">${escapeHtml(pkg.badge || "NEW")}</text>
   </svg>`;
 }
 
@@ -734,6 +797,7 @@ const SVG_BY_CAT = { beauty: svgBeauty, food: svgFood, living: svgLiving };
 // ================= デザインムードボード + 実例参照リンク =================
 const MOODS = [
   {
+    cat: "beauty", label: "PURE CICA", sub: "SOOTHING MIST",
     colors: ["#e8f0e4", "#f7f3ea", "#c9d8c5", "#8fae8b", "#5c7a58"],
     title: "ナチュラル・クリーン(スキンケア向け)",
     desc: "無印良品的な引き算の美学。低彩度グリーン×生成りで「成分の誠実さ」を伝える。日本のセンシティブスキン市場で最も支持されるトンマナ。",
@@ -742,6 +806,7 @@ const MOODS = [
     refJa: "スキンケア ナチュラル パッケージ",
   },
   {
+    cat: "beauty", label: "SOFT GLOW", sub: "TINT & CUSHION",
     colors: ["#fde8ec", "#fff5f7", "#f9c8d4", "#e88aa0", "#c25b76"],
     title: "ソフト・フェミニン(メイク・リップ向け)",
     desc: "くすみピンク基調。K-Beautyらしさを残しつつ、日本では原色より1〜2トーン落とした配色がドラッグストア棚で強い。",
@@ -750,6 +815,7 @@ const MOODS = [
     refJa: "コスメ パッケージ ピンク",
   },
   {
+    cat: "food", label: "POWER FUEL", sub: "PROTEIN SNACK", big: "15g",
     colors: ["#1f2937", "#111827", "#f59e0b", "#fbbf24", "#f3f4f6"],
     title: "パフォーマンス(高タンパク食品向け)",
     desc: "ダーク×イエローの高コントラスト。「タンパク質15g」など数値を最大サイズで配置するのが日本のプロテイン市場の定石。",
@@ -758,6 +824,7 @@ const MOODS = [
     refJa: "プロテイン スナック パッケージ",
   },
   {
+    cat: "living", label: "CALM DESK", sub: "AROMA HUMIDIFIER",
     colors: ["#eef2f7", "#dfe7f0", "#b8c9dd", "#8aa3c0", "#5b7897"],
     title: "ミニマル・テック(デスク家電向け)",
     desc: "ニュアンスブルーグレー。BALMUDA以降の日本市場では「家電=白物」から「インテリアに馴染む低彩度」へ移行。",
@@ -766,6 +833,7 @@ const MOODS = [
     refJa: "卓上 加湿器 家電 デザイン",
   },
   {
+    cat: "beauty", label: "GILT GIFT", sub: "PREMIUM EDITION",
     colors: ["#fdf6e3", "#f5e6c8", "#e8c87e", "#d4a24c", "#8b6a2e"],
     title: "プレミアム・ギフト(高価格帯向け)",
     desc: "生成り×ゴールド。日本の贈答文化(お中元・お歳暮・自分へのご褒美)を狙うなら箔押し・上質紙の質感表現が必須。",
@@ -774,6 +842,7 @@ const MOODS = [
     refJa: "ギフトボックス 高級 パッケージ",
   },
   {
+    cat: "food", label: "POP BURST", sub: "TRIAL PACK",
     colors: ["#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"],
     title: "フレッシュ・ポップ(SNS拡散狙い)",
     desc: "彩度高めのブルー系。TikTok/リールで映える「開封動画向け」パッケージ。Z世代向けトライアル商品で有効。",
@@ -782,6 +851,10 @@ const MOODS = [
     refJa: "ポップ カラフル パッケージ デザイン",
   },
 ];
+
+function paletteFromSwatch(colors) {
+  return { bg1: colors[0], bg2: colors[1], body: colors[1], cap: colors[3], text: colors[4], mist: colors[2] };
+}
 
 function buildRefLinks(m) {
   const en = encodeURIComponent(m.refEn);
@@ -794,16 +867,180 @@ function buildRefLinks(m) {
   ];
 }
 
-document.getElementById("moodGrid").innerHTML = MOODS.map(m => `
-  <div class="mood">
-    <div class="swatches">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
+document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
+  <div class="mood img-card">
+    <div class="mood-visual">${SVG_BY_CAT[m.cat]("_mood" + i, paletteFromSwatch(m.colors), { label: m.label, sub: m.sub, big: m.big })}</div>
     <div class="mood-body">
       <h4>${m.title}</h4>
       <p>${m.desc}</p>
+      <div class="mini-swatch">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
       <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
       <div class="ref-links">${buildRefLinks(m).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
     </div>
   </div>`).join("");
+
+// ================= 商品を読み込んでデザインを探す =================
+document.querySelectorAll(".loader-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".loader-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".loader-pane").forEach(p => p.classList.remove("active"));
+    document.getElementById(btn.dataset.mode === "ai" ? "loaderAi" : "loaderManual").classList.add("active");
+  });
+});
+
+function getFallbackDirections(cat, keywords) {
+  const catEnBase = { beauty: "cosmetics packaging design", food: "snack food packaging design", living: "home appliance product design" }[cat];
+  const catJaBase = { beauty: "コスメ パッケージ", food: "スナック パッケージ", living: "生活家電 パッケージ" }[cat];
+  const kwList = (keywords || "").split(/[,、\s]+/).filter(Boolean).slice(0, 4);
+  return PROPOSALS[cat].images.map(img => ({
+    name: img.name,
+    desc: img.desc,
+    tags: kwList,
+    enKeywords: [catEnBase, keywords].filter(Boolean).join(" "),
+    jaKeywords: [catJaBase, keywords].filter(Boolean).join(" "),
+    colors: img.colors,
+  }));
+}
+
+function buildDesignPrompt(productName, cat, keywords) {
+  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
+  const system = `あなたは日本市場向けOEM商品のデザインディレクターです。与えられた商品情報をもとに、日本の消費者に響くデザインの方向性を3パターン提案してください。
+
+重要な制約:
+- 出力は必ず以下のJSON形式のみとし、それ以外の文字列(説明文・前置き・コードフェンス等)は一切含めないでください。
+- enKeywordsはPinterest・Behance・Dribbbleでの画像検索に適した英語のキーワード(3〜6語程度)にしてください。
+- jaKeywordsはQoo10で類似の実商品を探すのに適した日本語キーワード(2〜4語程度)にしてください。
+- colorsのhex値は必ず "#rrggbb" 形式にしてください。
+
+{
+  "directions": [
+    {"name": "方向性A案の名称", "desc": "デザイン意図の説明(40字程度)", "tags": ["キーワード1","キーワード2","キーワード3"], "enKeywords": "...", "jaKeywords": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
+    {"name": "方向性B案の名称", "desc": "...", "tags": [...], "enKeywords": "...", "jaKeywords": "...", "colors": {...}},
+    {"name": "方向性C案の名称", "desc": "...", "tags": [...], "enKeywords": "...", "jaKeywords": "...", "colors": {...}}
+  ]
+}`;
+  const user = `商品名: ${productName}
+カテゴリー: ${catLabel}
+特徴・キーワード: ${keywords || "(指定なし)"}
+
+上記の商品に合う日本市場向けデザインの方向性をJSON形式で3パターン提案してください。`;
+  return { system, user };
+}
+
+async function generateDesignDirections(productName, cat, keywords) {
+  const { system, user } = buildDesignPrompt(productName, cat, keywords);
+  return callClaudeAPI(system, user, 1400);
+}
+
+function normalizeDirections(cat, raw, keywords) {
+  const fb = getFallbackDirections(cat, keywords);
+  const hexRe = /^#[0-9a-fA-F]{3,8}$/;
+  const arr = Array.isArray(raw && raw.directions) ? raw.directions : [];
+  return [0, 1, 2].map(i => {
+    const src = arr[i] || {};
+    const def = fb[i % fb.length];
+    const c = src.colors || {};
+    const colors = {};
+    ["bg1", "bg2", "body", "cap", "text", "mist"].forEach(k => { colors[k] = hexRe.test(c[k]) ? c[k] : def.colors[k]; });
+    return {
+      name: (src.name || def.name).toString().slice(0, 40),
+      desc: (src.desc || def.desc).toString().slice(0, 100),
+      tags: Array.isArray(src.tags) && src.tags.length ? src.tags.slice(0, 4).map(String) : def.tags,
+      enKeywords: (src.enKeywords || def.enKeywords || "").toString().slice(0, 140),
+      jaKeywords: (src.jaKeywords || def.jaKeywords || "").toString().slice(0, 80),
+      colors,
+    };
+  });
+}
+
+function renderDesignSuggestions(cat, productName, directions, liveMode, errorNote) {
+  const catSub = { beauty: "PACKAGE CONCEPT", food: "PACKAGE CONCEPT", living: "PRODUCT CONCEPT" }[cat];
+  const pkg = { label: productName.slice(0, 14), sub: catSub };
+  const links = d => ([
+    { label: "📌 Pinterestで見る", url: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}` },
+    { label: "🎨 Behanceで見る", url: `https://www.behance.net/search/projects?search=${encodeURIComponent(d.enKeywords)}` },
+    { label: "🏀 Dribbbleで見る", url: `https://dribbble.com/search/${encodeURIComponent(d.enKeywords)}` },
+    { label: "🛍️ Qoo10の実商品を見る", url: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(d.jaKeywords + " site:qoo10.jp")}` },
+  ]);
+
+  document.getElementById("designSuggestBox").innerHTML = `
+    <div class="ds-head">
+      <span class="p-tag2">🖼「${escapeHtml(productName)}」のためのデザイン提案</span>
+      <span class="gen-badge light ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが生成" : "🧪 サンプルの方向性"}</span>
+    </div>
+    ${errorNote ? `<div class="api-error">⚠️ Claude APIの呼び出しに失敗したため、サンプルの方向性を表示しています: ${escapeHtml(errorNote)}</div>` : ""}
+    <div class="grid g3">
+      ${directions.map((d, i) => `
+        <div class="img-card">
+          ${SVG_BY_CAT[cat]("_ds" + i + (liveMode ? "_live" : ""), d.colors, pkg)}
+          <div class="ic-body">
+            <span class="ai-badge">${liveMode ? "✨ AI GENERATED" : "🧪 SAMPLE"}</span>
+            <div class="ic-name">${escapeHtml(d.name)}</div>
+            <div class="ic-desc">${escapeHtml(d.desc)}</div>
+            <div class="mood-tags" style="margin-top:8px">${(d.tags || []).map((t, j) => `<span class="tag b${(j % 3) + 1}">${escapeHtml(t)}</span>`).join("")}</div>
+            <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
+          </div>
+        </div>`).join("")}
+    </div>`;
+}
+
+document.getElementById("designGenBtn").addEventListener("click", async () => {
+  const activeMode = document.querySelector(".loader-tab.active").dataset.mode;
+  let productName, cat, keywords;
+
+  if (activeMode === "ai") {
+    const idx = document.getElementById("productSelect").value;
+    const list = getGeneratedProducts();
+    if (idx === "" || !list[idx]) {
+      alert("読み込む商品がありません。先に「AI商品企画」タブで商品を生成してください。");
+      return;
+    }
+    productName = list[idx].productName;
+    cat = list[idx].cat;
+    keywords = list[idx].brandName || "";
+  } else {
+    productName = document.getElementById("manualName").value.trim();
+    cat = document.getElementById("manualCat").value;
+    keywords = document.getElementById("manualKeywords").value.trim();
+    if (!productName) {
+      alert("商品名を入力してください。");
+      return;
+    }
+  }
+
+  const btn = document.getElementById("designGenBtn");
+  const loading = document.getElementById("designLoading");
+  const loadingText = document.getElementById("designLoadingText");
+  const hasKey = !!getClaudeKey();
+
+  btn.disabled = true;
+  loadingText.textContent = hasKey
+    ? "Claude APIでこの商品に合うデザインの方向性を分析しています…"
+    : "デザインの方向性を分析しています…(サンプルモード)";
+  loading.classList.add("show");
+
+  let liveMode = false;
+  let errorNote = "";
+  let raw = null;
+
+  if (hasKey) {
+    try {
+      raw = await generateDesignDirections(productName, cat, keywords);
+      liveMode = true;
+    } catch (err) {
+      errorNote = describeClaudeError(err);
+    }
+  } else {
+    await new Promise(r => setTimeout(r, 900));
+  }
+
+  const directions = normalizeDirections(cat, raw, keywords);
+  renderDesignSuggestions(cat, productName, directions, liveMode, errorNote);
+
+  loading.classList.remove("show");
+  btn.disabled = false;
+});
 
 // ================= タブ切替 =================
 document.querySelectorAll(".tab").forEach(tab => {
@@ -898,6 +1135,31 @@ document.getElementById("apiClearBtn").addEventListener("click", () => {
 });
 refreshApiStatus();
 
+// ================= 生成済み商品の保存(デザインタブで読み込むため) =================
+const GENERATED_STORAGE = "k2j_generated_products";
+const CAT_LABEL = { beauty: "美容", food: "食品", living: "生活雑貨" };
+
+function getGeneratedProducts() {
+  try { return JSON.parse(localStorage.getItem(GENERATED_STORAGE) || "[]"); } catch (e) { return []; }
+}
+function saveGeneratedProduct(entry) {
+  const list = getGeneratedProducts();
+  list.unshift(entry);
+  localStorage.setItem(GENERATED_STORAGE, JSON.stringify(list.slice(0, 10)));
+  refreshProductSelect();
+}
+function refreshProductSelect() {
+  const sel = document.getElementById("productSelect");
+  if (!sel) return;
+  const list = getGeneratedProducts();
+  if (!list.length) {
+    sel.innerHTML = `<option value="">(まだAI商品企画で商品が生成されていません。先に「AI商品企画」タブで生成してください)</option>`;
+    return;
+  }
+  sel.innerHTML = list.map((p, i) => `<option value="${i}">[${CAT_LABEL[p.cat] || p.cat}] ${escapeHtml(p.productName)}${p.liveMode ? " ✨AI生成" : ""}</option>`).join("");
+}
+refreshProductSelect();
+
 // ================= Claude APIへの企画生成リクエスト =================
 function buildPrompt(cat, priceLabel, channelLabel) {
   const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
@@ -942,10 +1204,8 @@ ${JSON.stringify(context, null, 2)}`;
   return { system, user };
 }
 
-async function generateWithClaude(cat, priceLabel, channelLabel) {
+async function callClaudeAPI(system, user, maxTokens) {
   const key = getClaudeKey();
-  const { system, user } = buildPrompt(cat, priceLabel, channelLabel);
-
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -961,7 +1221,7 @@ async function generateWithClaude(cat, priceLabel, channelLabel) {
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 2000,
+        max_tokens: maxTokens,
         system: system,
         messages: [{ role: "user", content: user }],
       }),
@@ -981,13 +1241,22 @@ async function generateWithClaude(cat, priceLabel, channelLabel) {
   const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
   const jsonStr = text.trim().replace(/^```(json)?\s*/i, "").replace(/```\s*$/i, "");
 
-  let parsed;
   try {
-    parsed = JSON.parse(jsonStr);
+    return JSON.parse(jsonStr);
   } catch (e) {
     throw new Error("Claude APIの応答をJSONとして解析できませんでした");
   }
-  return parsed;
+}
+
+function describeClaudeError(err) {
+  if (err && err.name === "AbortError") return "Claude APIへの接続がタイムアウトしました。";
+  if (err instanceof TypeError) return "ブラウザから直接APIへ接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
+  return (err && err.message) ? err.message : String(err);
+}
+
+async function generateWithClaude(cat, priceLabel, channelLabel) {
+  const { system, user } = buildPrompt(cat, priceLabel, channelLabel);
+  return callClaudeAPI(system, user, 2000);
 }
 
 // ================= 企画データの正規化(欠損時はサンプルで補完) =================
@@ -1003,6 +1272,7 @@ function normalizeProposal(cat, raw) {
     packageLabel: (raw.packageLabel || fb.packageLabel).toString().slice(0, 16),
     packageSub: (raw.packageSub || fb.packageSub).toString().slice(0, 32),
     statBig: (raw.statBig || (cat === "food" ? fb.statBig : "") || "").toString().slice(0, 6),
+    badge: (cat === "food" ? (fb.badge || "") : "").toString().slice(0, 12),
     lead: (raw.lead || fb.lead).toString().slice(0, 220),
     target: pickArr(raw.target, fb.target),
     spec: pickArr(raw.spec, fb.spec),
@@ -1060,7 +1330,7 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
       <div class="img-grid">
         ${data.images.map((img, i) => `
           <div class="img-card">
-            ${SVG_BY_CAT[cat]("_" + cat + i + (liveMode ? "_live" : ""), img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig })}
+            ${SVG_BY_CAT[cat]("_" + cat + i + (liveMode ? "_live" : ""), img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })}
             <div class="ic-body">
               <span class="ai-badge">${liveMode ? "✨ AI GENERATED" : "🧪 SAMPLE"}</span>
               <div class="ic-name">${escapeHtml(img.name)}</div>
@@ -1108,13 +1378,7 @@ document.getElementById("genBtn").addEventListener("click", async () => {
       raw = await generateWithClaude(cat, price, channel);
       liveMode = true;
     } catch (err) {
-      if (err && err.name === "AbortError") {
-        errorNote = "Claude APIへの接続がタイムアウトしました。";
-      } else if (err instanceof TypeError) {
-        errorNote = "ブラウザから直接APIへ接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
-      } else {
-        errorNote = (err && err.message) ? err.message : String(err);
-      }
+      errorNote = describeClaudeError(err);
     }
   } else {
     await new Promise(r => setTimeout(r, 1200));
@@ -1122,6 +1386,7 @@ document.getElementById("genBtn").addEventListener("click", async () => {
 
   const data = normalizeProposal(cat, raw);
   renderProposal(cat, price, channel, data, liveMode, errorNote);
+  saveGeneratedProduct({ cat, productName: data.productName, brandName: data.brandName, liveMode, ts: Date.now() });
 
   loading.classList.remove("show");
   box.classList.add("show");
