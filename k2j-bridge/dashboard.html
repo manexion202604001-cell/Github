@@ -172,6 +172,12 @@
     background: linear-gradient(135deg, #1a2036, #2b3468); color: #fff;
     border-radius: var(--radius) var(--radius) 0 0; padding: 24px;
   }
+  .prop-head-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .print-btn {
+    border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff;
+    font-size: 11.5px; font-weight: 700; padding: 6px 14px; border-radius: 999px;
+  }
+  .print-btn:hover { background: rgba(255,255,255,.16); }
   .prop-head .p-tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #9db0ff; }
   .prop-head h3 { font-size: 21px; font-weight: 900; margin: 6px 0 4px; }
   .prop-head p { font-size: 13px; color: #c3c8dd; }
@@ -190,11 +196,49 @@
   .prop-item b { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 6px; color: var(--ink); }
   .prop-item ul { margin: 4px 0 0 18px; color: #444d6e; }
   .prop-item li { margin-top: 3px; }
-  .factory { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; }
+  .factory { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; flex-wrap: wrap; }
   .factory .f-logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: #eef1fd; flex-shrink: 0; }
   .factory .f-name { font-weight: 800; font-size: 13.5px; }
   .factory .f-meta { font-size: 11.5px; color: var(--sub); }
   .match { margin-left: auto; font-size: 12px; font-weight: 900; color: var(--mint); white-space: nowrap; }
+  .rfq-btn {
+    font-size: 11px; font-weight: 700; padding: 7px 13px; border-radius: 999px;
+    background: var(--accent); color: #fff; border: none; white-space: nowrap;
+  }
+  .rfq-btn:hover { background: var(--accent-2); }
+  .rfq-fallback { width: 100%; margin-top: 10px; font-family: monospace; font-size: 12px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); }
+
+  /* 商標事前確認 */
+  .tm-check {
+    background: #fff8ec; border: 1px solid #f0e2b8; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;
+  }
+  .tm-check b { font-size: 13px; }
+  .tm-check p { font-size: 12px; color: #7a6a3f; margin: 6px 0 10px; }
+
+  /* 収益シミュレーター */
+  .sim-card { background: #f8f9fd; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 20px 0; }
+  .sim-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .sim-grid input {
+    width: 100%; margin-top: 4px; padding: 8px 10px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+  }
+  .sim-result { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+  .sim-result > div { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .sim-label { display: block; font-size: 10.5px; color: var(--sub); font-weight: 700; }
+  .sim-val { display: block; font-size: 16px; font-weight: 900; margin-top: 2px; color: var(--ink); }
+  .sim-val.up { color: var(--mint); }
+  .sim-val.down { color: var(--coral); }
+  @media (max-width: 700px) {
+    .sim-grid, .sim-result { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media print {
+    .topbar, .tabs, .api-bar, .api-panel, .card, .loading, .note, .no-print { display: none !important; }
+    body { background: #fff; }
+    .page { max-width: none; padding: 0; }
+    .proposal { display: block !important; margin-top: 0; }
+    .prop-head { background: #1a2036 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
   /* Generated product images */
   .img-note { font-size: 12px; color: var(--sub); margin: 2px 0 12px; }
   .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -439,8 +483,28 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、Pinterestのようなマスonry(タイル状)レイアウトで<b>実際の参考写真</b>を並べます。イラストではなく実写真での参考資料としてご利用ください。各写真から出典元、または<b>Pinterest・Behance・Dribbble・Qoo10</b>の検索結果へ直接ジャンプできます。</p>
-    <p class="pin-note">📌 参考写真はPinterest本体の画像ではなく(Pinterestは外部提供用の画像検索APIを公開していないため)、著作権フリー/クリエイティブ・コモンズの実写真を検索できる <a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">Openverse</a> から取得しています。各写真には出典・ライセンスを表示し、「Pinterestで見る」ボタンから本家Pinterestでの検索結果も確認できます。</p>
+    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、Pinterestのようなマスonry(タイル状)レイアウトで<b>実際に売られている商品の写真</b>を並べます。イラストではなく実商品での参考資料としてご利用ください。各写真から出典元、または<b>Pinterest・Behance・Dribbble・Qoo10</b>の検索結果へ直接ジャンプできます。</p>
+
+    <div class="api-bar">
+      <span class="api-status" id="googleStatus">🖼️ CC素材(Openverse)で表示中 — 実商品検索は未設定</span>
+      <button class="api-toggle" id="googleToggleBtn" type="button">⚙️ 実商品検索の設定(Google)</button>
+    </div>
+    <div class="api-panel" id="googlePanel">
+      <p class="api-desc">
+        <b>Google Programmable Search Engine</b> のAPIキーと検索エンジンIDを設定すると、Qoo10・Amazon・楽天・@cosmeなど<b>実際の通販サイトに出品されている商品の写真</b>を参考資料として表示します(未設定時はOpenverseの一般的なCCライセンス写真で代用します)。<br>
+        <b>キーはこのブラウザ(localStorage)にのみ保存され、Googleへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
+        Google Cloud Consoleでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
+        <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① 検索エンジンを作成(cxを取得)</a> ・
+        <a href="https://console.cloud.google.com/apis/library/customsearch.googleapis.com" target="_blank" rel="noopener">② Custom Search APIキーを取得</a>
+      </p>
+      <div class="api-row">
+        <input type="text" id="googleKeyInput" placeholder="Google APIキー" autocomplete="off" spellcheck="false">
+        <input type="text" id="googleCxInput" placeholder="検索エンジンID(cx)" autocomplete="off" spellcheck="false">
+        <button class="btn-save" id="googleSaveBtn" type="button">保存</button>
+        <button class="btn-clear" id="googleClearBtn" type="button">削除</button>
+      </div>
+    </div>
+    <p class="pin-note">📌 Pinterest・Qoo10・Amazon・楽天は外部提供用の画像検索APIを公開していないため、実商品検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる <a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">Openverse</a> で代用しています。各写真には出典を表示し、「Pinterestで見る」ボタンから本家Pinterestでの検索結果も確認できます。</p>
 
     <div class="card">
       <div class="loader-tabs">
@@ -594,10 +658,60 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// ================= Pinterest風の実写真リファレンス(Openverse: CC0/CCライセンスの実写真を検索。APIキー不要) =================
-// Pinterest自体は外部サイトから画像を取得できる公開APIを提供していないため、
-// 著作権フリー/CCライセンスの実写真を検索できるOpenverse(https://openverse.org)から取得し、
-// Pinterestと同じマスonryレイアウトで表示します。各ボードからPinterest本体の検索結果にも遷移できます。
+// ================= 実商品検索(Google Programmable Search Engine, BYOK) =================
+// PinterestやQoo10/Amazon/楽天は外部サイトから画像を取得できる無料の公開APIを提供していないため、
+// ユーザー自身のGoogle Custom Search APIキー+検索エンジンIDを使い、実際の通販サイトに絞った画像検索を行います。
+// (未設定、または結果が0件の場合はOpenverseのCCライセンス実写真にフォールバックします)
+const GOOGLE_KEY_STORAGE = "k2j_google_search_key";
+const GOOGLE_CX_STORAGE = "k2j_google_search_cx";
+const PRODUCT_SITES = {
+  beauty: ["qoo10.jp", "amazon.co.jp", "www.cosme.net", "www.rakuten.co.jp"],
+  food: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
+  living: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
+};
+
+function getGoogleKey() { return localStorage.getItem(GOOGLE_KEY_STORAGE) || ""; }
+function getGoogleCx() { return localStorage.getItem(GOOGLE_CX_STORAGE) || ""; }
+function setGoogleCreds(key, cx) {
+  if (key) localStorage.setItem(GOOGLE_KEY_STORAGE, key); else localStorage.removeItem(GOOGLE_KEY_STORAGE);
+  if (cx) localStorage.setItem(GOOGLE_CX_STORAGE, cx); else localStorage.removeItem(GOOGLE_CX_STORAGE);
+  refreshGoogleStatus();
+}
+function buildProductQuery(keywords, cat) {
+  const sites = PRODUCT_SITES[cat] || PRODUCT_SITES.beauty;
+  return `${keywords} (${sites.map(s => `site:${s}`).join(" OR ")})`;
+}
+
+// 実際の通販サイトの商品写真(Google Programmable Search Engineでの画像検索。要ユーザー自身のAPIキー)
+async function fetchRealProductImages(query, count) {
+  const key = getGoogleKey();
+  const cx = getGoogleCx();
+  if (!key || !cx) return null; // 未設定 = フォールバックへ
+  try {
+    const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&searchType=image&safe=active&num=${Math.min(count, 10)}&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const items = (data.items || [])
+      .map(it => {
+        let host = "";
+        try { host = new URL(it.image?.contextLink || it.link || "").hostname.replace(/^www\./, ""); } catch (e) { /* noop */ }
+        return {
+          thumb: it.image?.thumbnailLink || it.link || "",
+          landingUrl: it.image?.contextLink || it.link || "#",
+          title: it.title || "実商品",
+          creator: host,
+          license: "",
+        };
+      })
+      .filter(img => img.thumb);
+    return items;
+  } catch (e) {
+    return null; // ネットワークエラー等もフォールバックへ
+  }
+}
+
+// 著作権フリー/CCライセンスの実写真(Openverse。APIキー不要。実商品検索が未設定/0件の場合のフォールバック)
 async function fetchReferenceImages(query, count) {
   try {
     const res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${count}&mature=false`);
@@ -618,24 +732,38 @@ async function fetchReferenceImages(query, count) {
   }
 }
 
-function renderPinBoard(containerId, query, count) {
+function renderImagesInto(containerId, images, sourceTag) {
+  const target = document.getElementById(containerId);
+  if (!target) return;
+  target.innerHTML = `<div class="pin-masonry">${images.map(img => `
+    <div class="pin-card">
+      <a href="${img.landingUrl}" target="_blank" rel="noopener">
+        <img src="${img.thumb}" alt="${escapeHtml(img.title)}" loading="lazy">
+        <div class="pin-overlay"><span class="pin-save-btn">元ページを見る</span></div>
+      </a>
+      <div class="pin-credit">${sourceTag} ${img.creator ? `・ <b>${escapeHtml(img.creator)}</b>` : ""}${img.license ? ` ・ ${escapeHtml(img.license)}` : ""}</div>
+    </div>`).join("")}</div>`;
+}
+
+function renderPinBoard(containerId, query, count, cat) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  fetchReferenceImages(query, count).then(images => {
-    const target = document.getElementById(containerId);
-    if (!target) return;
-    if (!images.length) {
-      target.innerHTML = `<div class="pin-empty">実写真の参考画像を取得できませんでした。上の「Pinterestで見る」から直接検索してください。</div>`;
+  const productQuery = buildProductQuery(query, cat);
+
+  fetchRealProductImages(productQuery, count).then(realImages => {
+    if (realImages && realImages.length) {
+      renderImagesInto(containerId, realImages, "🛍️ 実商品");
       return;
     }
-    target.innerHTML = `<div class="pin-masonry">${images.map(img => `
-      <div class="pin-card">
-        <a href="${img.landingUrl}" target="_blank" rel="noopener">
-          <img src="${img.thumb}" alt="${escapeHtml(img.title)}" loading="lazy">
-          <div class="pin-overlay"><span class="pin-save-btn">元画像を見る</span></div>
-        </a>
-        <div class="pin-credit">${img.creator ? `📷 <b>${escapeHtml(img.creator)}</b> ・ ` : ""}${img.license ? escapeHtml(img.license) : "出典元サイトへ"}</div>
-      </div>`).join("")}</div>`;
+    fetchReferenceImages(query, count).then(images => {
+      const target = document.getElementById(containerId);
+      if (!target) return;
+      if (!images.length) {
+        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "実商品検索を設定すると、より的確な参考写真が表示されます(上部「⚙️ 実商品検索の設定」)。" : "参考画像を取得できませんでした。"}上の「Pinterestで見る」から直接検索してください。</div>`;
+        return;
+      }
+      renderImagesInto(containerId, images, "🖼️ CC素材");
+    });
   });
 }
 
@@ -957,7 +1085,7 @@ document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
       <div class="ref-links">${buildRefLinks(m).filter(l => !l.label.includes("Pinterest")).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
     </div>
   </div>`).join("");
-MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4));
+MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat));
 
 // ================= 商品を読み込んでデザインを探す =================
 document.querySelectorAll(".loader-tab").forEach(btn => {
@@ -1061,7 +1189,7 @@ function renderDesignSuggestions(cat, productName, directions, liveMode, errorNo
         <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
       </div>`).join("")}`;
 
-  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6));
+  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6, cat));
 }
 
 document.getElementById("designGenBtn").addEventListener("click", async () => {
@@ -1213,6 +1341,33 @@ document.getElementById("apiClearBtn").addEventListener("click", () => {
   setClaudeKey("");
 });
 refreshApiStatus();
+
+// ================= 実商品検索(Google)の設定パネル =================
+function refreshGoogleStatus() {
+  const has = !!(getGoogleKey() && getGoogleCx());
+  const statusEl = document.getElementById("googleStatus");
+  statusEl.textContent = has
+    ? "🛍️ 実商品検索が有効です — Qoo10・Amazon・楽天等の実商品写真を優先表示します"
+    : "🖼️ CC素材(Openverse)で表示中 — 実商品検索は未設定";
+  statusEl.classList.toggle("on", has);
+  document.getElementById("googleKeyInput").value = getGoogleKey();
+  document.getElementById("googleCxInput").value = getGoogleCx();
+}
+document.getElementById("googleToggleBtn").addEventListener("click", () => {
+  document.getElementById("googlePanel").classList.toggle("show");
+});
+document.getElementById("googleSaveBtn").addEventListener("click", () => {
+  const key = document.getElementById("googleKeyInput").value.trim();
+  const cx = document.getElementById("googleCxInput").value.trim();
+  if (key && cx) {
+    setGoogleCreds(key, cx);
+    document.getElementById("googlePanel").classList.remove("show");
+  }
+});
+document.getElementById("googleClearBtn").addEventListener("click", () => {
+  setGoogleCreds("", "");
+});
+refreshGoogleStatus();
 
 // ================= 生成済み商品の保存(デザインタブで読み込むため) =================
 const GENERATED_STORAGE = "k2j_generated_products";
@@ -1378,25 +1533,116 @@ function normalizeProposal(cat, raw) {
 }
 
 // ================= 企画結果の描画 =================
+// ================= 実務向け機能:収益シミュレーター・商標事前確認・見積依頼文 =================
+let lastProposalContext = null; // renderProposal直後の内容(RFQボタンのクリック時に参照)
+
+function parseYen(str) {
+  const m = String(str || "").match(/[\d,]{2,}/);
+  return m ? parseInt(m[0].replace(/,/g, ""), 10) : null;
+}
+
+function updateProfitSim() {
+  const priceEl = document.getElementById("simPrice");
+  if (!priceEl) return;
+  const price = parseFloat(priceEl.value) || 0;
+  const costPct = parseFloat(document.getElementById("simCostPct").value) || 0;
+  const units = parseFloat(document.getElementById("simUnits").value) || 0;
+  const ad = parseFloat(document.getElementById("simAd").value) || 0;
+  const grossUnit = Math.round(price * (1 - costPct / 100));
+  const grossMonth = grossUnit * units;
+  const netMonth = grossMonth - ad;
+  const breakeven = grossUnit > 0 ? Math.ceil(ad / grossUnit) : 0;
+  document.getElementById("simGrossUnit").textContent = "¥" + grossUnit.toLocaleString();
+  document.getElementById("simGrossMonth").textContent = "¥" + grossMonth.toLocaleString();
+  const netEl = document.getElementById("simNetMonth");
+  netEl.textContent = (netMonth >= 0 ? "¥" : "-¥") + Math.abs(Math.round(netMonth)).toLocaleString();
+  netEl.className = "sim-val " + (netMonth >= 0 ? "up" : "down");
+  document.getElementById("simBreakeven").textContent = breakeven.toLocaleString() + " 個/月";
+}
+
+function buildRfqText(ctx, factory) {
+  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[ctx.cat];
+  return [
+    `${factory.name} ご担当者様`,
+    ``,
+    `お世話になっております。日本向けOEM商品の製造について、下記商品のお見積りをお願いできますでしょうか。`,
+    ``,
+    `■商品名: ${ctx.data.productName}${ctx.data.brandName ? `(ブランド名候補: ${ctx.data.brandName})` : ""}`,
+    `■カテゴリー: ${catLabel}`,
+    `■想定販路: ${ctx.channelLabel}`,
+    `■想定価格帯: ${ctx.priceLabel}`,
+    `■仕様・特徴:`,
+    ...(ctx.data.spec || []).map(s => `　- ${s}`),
+    ``,
+    `以下についてご教示いただけますと幸いです。`,
+    `・最小ロット(MOQ)と単価`,
+    `・サンプル製作の可否と費用/納期`,
+    `・量産リードタイム`,
+    ``,
+    `よろしくお願いいたします。`,
+  ].join("\n");
+}
+
+document.getElementById("proposal").addEventListener("click", async (e) => {
+  const rfqBtn = e.target.closest(".rfq-btn");
+  if (rfqBtn && lastProposalContext) {
+    const factory = lastProposalContext.factories[parseInt(rfqBtn.dataset.fidx, 10)];
+    const text = buildRfqText(lastProposalContext, factory);
+    try {
+      await navigator.clipboard.writeText(text);
+      rfqBtn.textContent = "✅ コピーしました";
+      setTimeout(() => { rfqBtn.textContent = "📋 見積依頼文をコピー"; }, 2200);
+    } catch (err) {
+      const box = document.getElementById("rfqFallbackBox");
+      if (box) {
+        box.style.display = "block";
+        box.value = text;
+        box.focus();
+        box.select();
+      }
+    }
+    return;
+  }
+  if (e.target.closest(".print-btn")) {
+    window.print();
+  }
+});
+
 function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote) {
   const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
   const factories = PROPOSALS[cat].factories;
+  lastProposalContext = { cat, priceLabel, channelLabel, data, factories };
   const items = [
     { icon: "🎯", title: "ターゲット", list: data.target },
     { icon: "⚗️", title: "処方・仕様", list: data.spec },
     { icon: "💰", title: "価格・原価計画", list: data.price },
     { icon: "⚖️", title: "規制チェック", list: data.regulatory },
   ];
+  const defaultPrice = parseYen((data.price || [])[0]) || 2000;
+  const tmQuery = encodeURIComponent(`"${data.brandName || data.productName}" 商標`);
 
   document.getElementById("proposal").innerHTML = `
     <div class="prop-head">
-      <span class="p-tag">PROPOSAL — ${catLabel} ・ ${escapeHtml(priceLabel)} ・ ${escapeHtml(channelLabel)}</span>
+      <div class="prop-head-top">
+        <span class="p-tag">PROPOSAL — ${catLabel} ・ ${escapeHtml(priceLabel)} ・ ${escapeHtml(channelLabel)}</span>
+        <button class="print-btn" type="button">🖨 提案書を印刷/PDF保存</button>
+      </div>
       <div class="gen-badge ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが生成(リアルタイム)" : (errorNote ? "🧪 サンプル表示中(APIエラーのフォールバック)" : "🧪 サンプル表示中(Claude APIキー未設定)")}</div>
       <h3>${escapeHtml(data.productName)}${data.brandName ? `「${escapeHtml(data.brandName)}」` : ""}</h3>
       <p>${escapeHtml(data.lead)}</p>
     </div>
     <div class="prop-body">
       ${errorNote ? `<div class="api-error">⚠️ Claude APIの呼び出しに失敗したため、サンプルデータを表示しています: ${escapeHtml(errorNote)}</div>` : ""}
+
+      <div class="tm-check">
+        <b>⚖️ 商標の事前確認</b>
+        <p>「${escapeHtml(data.brandName || data.productName)}」はAIが生成したオリジナル名称です。実際に出願・使用する前に、必ず公式データベースで既存の商標と重複していないかご確認ください。</p>
+        <div class="ref-links">
+          <a class="ref-btn" href="https://www.j-platpat.inpit.go.jp/" target="_blank" rel="noopener">🔎 J-PlatPatで確認する(特許庁)</a>
+          <a class="ref-btn" href="https://www.google.com/search?q=${tmQuery}" target="_blank" rel="noopener">Googleで確認する</a>
+        </div>
+      </div>
+
       <div class="prop-grid">
         ${items.map(it => `
           <div class="prop-item">
@@ -1404,6 +1650,24 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
             <ul>${(it.list || []).map(li => `<li>${escapeHtml(li)}</li>`).join("")}</ul>
           </div>`).join("")}
       </div>
+
+      <div class="sim-card no-print">
+        <b style="font-size:14px">💹 収益シミュレーター</b>
+        <p style="font-size:12px;color:var(--sub);margin-top:2px">数値を入力すると、月間の粗利・広告費控除後利益・損益分岐販売数を試算します(簡易計算・税抜)。</p>
+        <div class="sim-grid">
+          <div><label class="fld">想定売価(円)</label><input type="number" id="simPrice" value="${defaultPrice}" oninput="updateProfitSim()"></div>
+          <div><label class="fld">原価率(%)</label><input type="number" id="simCostPct" value="30" oninput="updateProfitSim()"></div>
+          <div><label class="fld">月間販売目標(個)</label><input type="number" id="simUnits" value="500" oninput="updateProfitSim()"></div>
+          <div><label class="fld">月間広告費(円)</label><input type="number" id="simAd" value="200000" oninput="updateProfitSim()"></div>
+        </div>
+        <div class="sim-result">
+          <div><span class="sim-label">粗利/個</span><span class="sim-val" id="simGrossUnit">-</span></div>
+          <div><span class="sim-label">月間粗利</span><span class="sim-val" id="simGrossMonth">-</span></div>
+          <div><span class="sim-label">広告費控除後利益</span><span class="sim-val" id="simNetMonth">-</span></div>
+          <div><span class="sim-label">損益分岐販売数</span><span class="sim-val" id="simBreakeven">-</span></div>
+        </div>
+      </div>
+
       <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(${liveMode ? "AI生成" : "サンプル"}・3案)</h3>
       <p class="img-note">${liveMode ? "Claude が提案したデザイン方向性(配色)をもとにモックアップを生成しました。" : "トレンド分析とデザインリファレンスを反映したコンセプト画像です。"} ※実際の商品写真ではなく、パッケージ形状を模したイメージモックアップです。</p>
       <div class="img-grid">
@@ -1417,8 +1681,9 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
             </div>
           </div>`).join("")}
       </div>
+
       <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 マッチするOEM/ODM工場(サンプル)</h3>
-      ${factories.map(f => `
+      ${factories.map((f, i) => `
         <div class="factory">
           <span class="f-logo">${f.emoji}</span>
           <div>
@@ -1426,8 +1691,12 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
             <div class="f-meta">${escapeHtml(f.meta)}</div>
           </div>
           <span class="match">${f.match}</span>
+          <button class="rfq-btn no-print" type="button" data-fidx="${i}">📋 見積依頼文をコピー</button>
         </div>`).join("")}
+      <textarea id="rfqFallbackBox" class="rfq-fallback no-print" readonly style="display:none" rows="10"></textarea>
+      <p class="pin-note no-print">📋 見積依頼文は、クリップボードにコピーされた文面を実際の工場担当者のメールに貼り付けてお使いください(上記の工場情報はサンプルです)。</p>
     </div>`;
+  updateProfitSim();
 }
 
 // ================= 企画ジェネレーター(ボタン押下時) =================
