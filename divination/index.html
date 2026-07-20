@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>八珠の理 | 八犬伝心相数×易経 多角鑑定</title>
+<style>
+:root {
+  --bg: #10121c;
+  --bg2: #181b2a;
+  --card: #1e2233;
+  --card2: #242942;
+  --ink: #e8e4d8;
+  --sub: #9a96a8;
+  --gold: #c9a45c;
+  --gold2: #e6c987;
+  --line: #35395230;
+  --accent: #7a8bd0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  line-height: 1.8;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #2a2f4a55, transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, #3a2f4a33, transparent);
+  background-attachment: fixed;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 20px 80px; }
+
+header { text-align: center; padding: 56px 0 36px; }
+.title {
+  font-size: 34px; letter-spacing: 0.35em; color: var(--gold2);
+  text-shadow: 0 0 24px #c9a45c33; font-weight: 600;
+}
+.title-sub { margin-top: 10px; font-size: 13px; color: var(--sub); letter-spacing: 0.2em; }
+.title-deco { color: var(--gold); font-size: 12px; letter-spacing: 0.5em; margin-top: 18px; opacity: 0.7; }
+
+.panel {
+  background: linear-gradient(160deg, var(--card), var(--bg2));
+  border: 1px solid #3a3f5a66;
+  border-radius: 14px;
+  padding: 28px 28px 32px;
+  margin-bottom: 26px;
+  box-shadow: 0 8px 40px #00000044;
+}
+.panel h2 {
+  font-size: 15px; letter-spacing: 0.3em; color: var(--gold);
+  border-bottom: 1px solid #3a3f5a88; padding-bottom: 12px; margin-bottom: 20px;
+  font-weight: 600;
+}
+.panel h2 .en { font-size: 10px; letter-spacing: 0.15em; color: var(--sub); margin-left: 12px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.form-grid .full { grid-column: 1 / -1; }
+label { display: block; font-size: 12px; color: var(--sub); letter-spacing: 0.15em; margin-bottom: 7px; }
+input, textarea {
+  width: 100%; background: #12141f; color: var(--ink);
+  border: 1px solid #3a3f5a88; border-radius: 8px;
+  padding: 11px 14px; font-size: 15px; font-family: inherit;
+  outline: none; transition: border-color 0.2s;
+}
+input:focus, textarea:focus { border-color: var(--gold); }
+textarea { resize: vertical; min-height: 64px; }
+input[type="date"] { color-scheme: dark; }
+
+.btn {
+  display: block; width: 100%; margin-top: 24px;
+  background: linear-gradient(135deg, #b8934a, #d8b46a);
+  color: #1a1508; border: none; border-radius: 10px;
+  padding: 15px; font-size: 16px; letter-spacing: 0.4em; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px #c9a45c33;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px #c9a45c55; }
+.btn:active { transform: translateY(0); }
+.btn-sub {
+  background: transparent; color: var(--gold); border: 1px solid var(--gold);
+  box-shadow: none; margin-top: 14px; letter-spacing: 0.25em; font-size: 13px; padding: 11px;
+}
+.btn-sub:hover { background: #c9a45c14; box-shadow: none; }
+.err { color: #e08b8b; font-size: 13px; margin-top: 12px; display: none; }
+
+#results { display: none; }
+.big-num {
+  font-size: 72px; color: var(--gold2); line-height: 1.1;
+  text-shadow: 0 0 30px #c9a45c44; font-weight: 600;
+}
+.card-head { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 14px; }
+.card-title { font-size: 21px; letter-spacing: 0.12em; }
+.keywords { margin-top: 4px; }
+.kw {
+  display: inline-block; font-size: 11px; color: var(--gold2);
+  border: 1px solid #c9a45c66; border-radius: 999px;
+  padding: 2px 12px; margin: 3px 6px 3px 0; letter-spacing: 0.15em;
+}
+.body-text { font-size: 15px; color: var(--ink); }
+.note { font-size: 12px; color: var(--sub); margin-top: 12px; }
+
+.tama-circle {
+  width: 96px; height: 96px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px; font-weight: 700; color: #fff;
+  box-shadow: 0 0 0 5px #ffffff10, 0 0 40px var(--tama-glow, #c9a45c55);
+  flex-shrink: 0;
+}
+.kenshi-name { font-size: 13px; color: var(--sub); margin-top: 3px; letter-spacing: 0.1em; }
+
+.hex-flex { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+.hex-draw { flex-shrink: 0; }
+.hex-info { flex: 1; min-width: 240px; }
+.luck-badge {
+  display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: 0.2em;
+  border-radius: 6px; padding: 3px 14px; margin-left: 12px; vertical-align: middle;
+}
+.luck-大吉 { background: #a83232; color: #ffe9e9; }
+.luck-吉 { background: #b8934a; color: #211a06; }
+.luck-中吉 { background: #4a7a5a; color: #e6f5ea; }
+.luck-平 { background: #4a5a7a; color: #e6ecf5; }
+.luck-要注意 { background: #5a4a7a; color: #ece6f5; }
+.henka { margin-top: 18px; padding: 14px 18px; background: #12141f88; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; }
+.henka b { color: var(--gold2); }
+
+.radar-flex { display: flex; gap: 28px; flex-wrap: wrap; align-items: center; }
+.radar-flex svg { flex-shrink: 0; }
+.radar-note { flex: 1; min-width: 240px; }
+
+.sogo { font-size: 15.5px; }
+.sogo p { margin-bottom: 14px; }
+.sogo .lucky {
+  margin-top: 18px; padding: 14px 18px; background: #c9a45c12;
+  border: 1px dashed #c9a45c55; border-radius: 8px; font-size: 14px;
+}
+
+footer { text-align: center; font-size: 11px; color: #6a6678; letter-spacing: 0.1em; margin-top: 40px; }
+.fade { animation: fadein 0.8s ease both; }
+@keyframes fadein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .title { font-size: 26px; letter-spacing: 0.25em; }
+  .panel { padding: 22px 18px 26px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">八珠の理</div>
+    <div class="title-sub">— やたまのことわり —</div>
+    <div class="title-deco">仁 義 礼 智 忠 信 孝 悌</div>
+    <div class="title-sub" style="margin-top:14px">八犬伝心相数 と 易経 で読み解く、多角鑑定の占い処</div>
+  </header>
+
+  <section class="panel" id="form-panel">
+    <h2>鑑定の間<span class="en">INPUT</span></h2>
+    <div class="form-grid">
+      <div>
+        <label>お名前(任意)</label>
+        <input type="text" id="in-name" placeholder="例:里見 八重" />
+      </div>
+      <div>
+        <label>生年月日(必須)</label>
+        <input type="date" id="in-birth" min="1900-01-01" />
+      </div>
+      <div class="full">
+        <label>易に問いたいこと(任意/空欄なら本日の運気を占います)</label>
+        <textarea id="in-question" placeholder="例:いま進めている仕事はうまくいくでしょうか"></textarea>
+      </div>
+    </div>
+    <button class="btn" id="btn-divine">鑑 定 す る</button>
+    <div class="err" id="form-err">生年月日を入力してください。</div>
+  </section>
+
+  <div id="results">
+    <section class="panel fade" id="panel-shinso">
+      <h2>第一の見立て ─ 心相数<span class="en">NUMEROLOGY</span></h2>
+      <div class="card-head">
+        <div class="big-num" id="shinso-num"></div>
+        <div>
+          <div class="card-title" id="shinso-title"></div>
+          <div class="keywords" id="shinso-kw"></div>
+        </div>
+      </div>
+      <div class="body-text" id="shinso-text"></div>
+      <div class="note">※ 心相数は生年月日の数字をすべて足し合わせ、一桁(または11・22・33のゾロ目)まで還元した数です。</div>
+    </section>
+
+    <section class="panel fade" id="panel-tama">
+      <h2>第二の見立て ─ 八犬士の守護珠<span class="en">EIGHT VIRTUES</span></h2>
+      <div class="card-head">
+        <div class="tama-circle" id="tama-circle"></div>
+        <div>
+          <div class="card-title" id="tama-title"></div>
+          <div class="kenshi-name" id="tama-kenshi"></div>
+          <div class="keywords" id="tama-kw"></div>
+        </div>
+      </div>
+      <div class="body-text" id="tama-text"></div>
+      <div class="note">※ 南総里見八犬伝の八つの霊玉(八徳)のうち、あなたの生まれ数が結ぶ珠を守護珠として立てています。</div>
+    </section>
+
+    <section class="panel fade" id="panel-eki">
+      <h2>第三の見立て ─ 易経の卦<span class="en">I CHING</span></h2>
+      <div class="note" style="margin:0 0 16px" id="eki-theme"></div>
+      <div class="hex-flex">
+        <div class="hex-draw" id="hex-svg"></div>
+        <div class="hex-info">
+          <div class="card-title"><span id="eki-name"></span><span id="eki-luck"></span></div>
+          <div class="kenshi-name" id="eki-yomi"></div>
+          <div class="keywords" id="eki-kw"></div>
+          <div class="body-text" style="margin-top:10px" id="eki-text"></div>
+          <div class="henka" id="eki-henka" style="display:none"></div>
+        </div>
+      </div>
+      <button class="btn btn-sub" id="btn-recast">卦 を 立 て 直 す</button>
+      <div class="note">※ 三枚の銭を六度投じる略筮法(サイコロの代わりに乱数)で本卦を立て、変爻があれば之卦(ゆくところの卦)も示します。</div>
+    </section>
+
+    <section class="panel fade" id="panel-radar">
+      <h2>八徳の均衡<span class="en">BALANCE</span></h2>
+      <div class="radar-flex">
+        <div id="radar-svg"></div>
+        <div class="radar-note body-text" id="radar-text"></div>
+      </div>
+    </section>
+
+    <section class="panel fade" id="panel-sogo">
+      <h2>総合鑑定<span class="en">SYNTHESIS</span></h2>
+      <div class="sogo" id="sogo-text"></div>
+    </section>
+  </div>
+
+  <footer>
+    八珠の理 ─ 本鑑定は娯楽を目的としたものです。大切な決断はご自身の心の声とともに。
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+ * 心相数(数秘)データ 1-9, 11, 22, 33
+ * ============================================================ */
+const SHINSO = {
+  1:  { title: "開拓の一", kw: ["先駆", "意志", "独立"], type: "行動",
+        text: "一は万物のはじまり、道なき野を最初に踏み出す数です。あなたの心には「自分で決めて自分で切り拓く」という強い火が灯っています。人に合わせて燻るより、旗を立てて先頭を歩くときに運気が回りはじめます。ただし独走は孤立と紙一重。振り返って仲間の足音を確かめる余裕が、開拓者を将へと育てます。" },
+  2:  { title: "調和の二", kw: ["受容", "支援", "感受性"], type: "感性",
+        text: "二は陰陽が向かい合う対の数。あなたは人の心の機微を映しとる鏡のような感性を持ち、争いの場をやわらげ、人と人を結ぶ天性があります。誰かを支えるとき、あなた自身の運も静かに満ちていきます。一方で、気を遣いすぎて自分の願いを後回しにしがち。「私はこうしたい」と小さく口にする練習が開運の鍵です。" },
+  3:  { title: "創造の三", kw: ["表現", "愉快", "子ども心"], type: "感性",
+        text: "三は天地人が揃い、物事が形になって弾ける数。あなたの本質は無邪気な創造力です。話す・書く・作る・歌う――表現するほどに周囲が明るくなり、幸運も人づてに舞い込みます。飽きっぽさは欠点ではなく好奇心の証。ただし種を蒔きっぱなしにせず、ひとつだけでも花が咲くまで育てると、才能が実力に変わります。" },
+  4:  { title: "礎の四", kw: ["堅実", "秩序", "継続"], type: "思考",
+        text: "四は四隅・四季、かたちを支える土台の数。あなたはコツコツと積み上げる誠実さと、約束を守る信用で運を築くひとです。派手さはなくとも、あなたの仕事の確かさは周囲が一番よく知っています。変化を恐れて足がすくむ時は「土台があるからこそ増築できる」と思い出して。守りの強さは、挑む時にこそ最大の武器になります。" },
+  5:  { title: "自由の五", kw: ["変化", "冒険", "行動力"], type: "行動",
+        text: "五は四方の中心に立ち、どこへでも動ける自由の数。あなたは変化の風を吸って生きるひとで、旅・転機・新しい出会いが運気の燃料になります。同じ場所に留まりすぎると心が曇るので、小さくても「初めて」を暮らしに混ぜ続けてください。ただし刺激を求めすぎて散らかる時期も。自由とは選び直せる力のことだと覚えておくと軸が定まります。" },
+  6:  { title: "慈愛の六", kw: ["愛情", "責任", "美意識"], type: "感性",
+        text: "六は天地を結ぶ調和と愛の数。あなたは家族・仲間・弱いものを放っておけない、面倒見のよい心の持ち主です。人に尽くした分だけ人望として還ってくる、循環の運を持っています。気をつけたいのは「良かれ」の押しつけと抱え込み。手を貸す前にひと呼吸おいて、相手の力を信じることも、大きな愛のかたちです。" },
+  7:  { title: "探究の七", kw: ["洞察", "独学", "職人気質"], type: "思考",
+        text: "七は物事の奥に分け入る、静かな知の数。あなたは表面より本質、群れより一人の時間に価値を見出す探究者です。専門を深めるほど唯一無二の存在になり、静かな自信が運を引き寄せます。孤独は弱点ではなくあなたの書斎。ただし心を閉ざしすぎると好機も閉め出してしまうので、信頼できる数人には扉を開けておきましょう。" },
+  8:  { title: "豊穣の八", kw: ["実行力", "情熱", "末広がり"], type: "行動",
+        text: "八は末広がり、力が現実の実りへと結ぶ数。あなたは目標を立てて成し遂げる馬力と、人や富を動かす器を持っています。本気になった時の集中力は八犬士の戦のごとく、周囲を巻き込む渦になります。強さゆえに敵も作りやすいのが玉に瑕。勝ち負けより「誰と分かち合うか」を先に決めると、豊かさが長く続きます。" },
+  9:  { title: "大成の九", kw: ["包容", "理想", "俯瞰"], type: "感性",
+        text: "九は一桁の終わり、すべての数を含んで見渡す賢者の数。あなたは損得を超えた理想を胸に持ち、立場の違う人の心をどちらも汲める稀有な器があります。人の相談が集まるのはその証。ただし何でも呑み込んで疲れ果てないよう、自分のための時間を先に確保すること。あなたが満ちていることが、周囲への一番の貢献です。" },
+  11: { title: "直感の十一", kw: ["霊感", "感応", "伝達"], type: "感性",
+        text: "十一はゾロ目のマスターナンバー。理屈より先に「わかってしまう」鋭い直感の持ち主です。ひらめき・虫の知らせ・人の本心への感応が強く、それを言葉にして伝えることが天命に近い役割です。感受性が強いぶん、人混みや悪意に当てられやすい体質でもあります。眠りと静けさを大切に、受信機の手入れを怠らないでください。" },
+  22: { title: "大器の二十二", kw: ["構築", "大局", "実現力"], type: "行動",
+        text: "二十二は「見た夢を現実に建てる」といわれる最強の建築数。理想を語るだけでなく、組織や仕組みという形に落とし込む力を秘めています。時間はかかっても、あなたの積む石垣は百年残ります。スケールが大きいゆえに、若いうちは周囲に理解されず遠回りに感じることも。焦らず土台から。大器は晩成でこそ本物になります。" },
+  33: { title: "菩薩の三十三", kw: ["無償の愛", "癒し", "革新"], type: "感性",
+        text: "三十三は最も稀といわれる愛の極数。損得を離れて人を照らす、太陽のような温かさを持っています。あなたの何気ない一言に救われた人が、あなたの知らぬところに大勢います。常識の枠に収まらない生き方も、この数の持ち主なら道になります。ただし自己犠牲が過ぎると光が翳ります。自分を愛することも修行のうちです。" }
+};
+
+/* ============================================================
+ * 八犬士・八徳の珠データ
+ * ============================================================ */
+const TAMA = [
+  { v: "仁", yomi: "じん", kenshi: "犬江親兵衛 仁", color: "#a83f3f",
+    kw: ["思いやり", "率直", "若き力"], lucky: "紅色・南の方角",
+    text: "仁は人を慈しむ心、八徳の筆頭です。あなたの根には、見返りを求めず人に手を差し伸べるまっすぐな優しさがあります。最年少にして最強の犬士・親兵衛のように、素直さこそがあなたの底力。計算のない親切が、思わぬ場面であなたを守る縁となって返ってきます。優しさに理屈はいりません。迷ったら、温かいほうの道を選んでください。" },
+  { v: "義", yomi: "ぎ", kenshi: "犬川荘助 義任", color: "#3f6ea8",
+    kw: ["筋を通す", "誠実", "忍耐"], lucky: "藍色・西の方角",
+    text: "義は損得を超えて正しきを行う心。あなたは「それは違う」と言うべき時に言える、背骨の通ったひとです。苦境に耐えて主家に尽くした荘助のように、雌伏の時期も腐らず筋を通す姿を、見ている人は必ず見ています。義理堅さは最高の信用格付け。ただし融通のなさに転じぬよう、正しさの刀は抜きどころを選びましょう。" },
+  { v: "礼", yomi: "れい", kenshi: "犬村大角 礼儀", color: "#7a5aa8",
+    kw: ["敬意", "静けさ", "学び"], lucky: "紫色・北西の方角",
+    text: "礼は相手を敬い、場を整える心。あなたには物事の順序と間合いを心得た品格があります。学者肌の犬士・大角のように、知と礼節を兼ね備えた立ち居振る舞いは、荒れた場さえ静める力を持ちます。丁寧に生きることは遠回りに見えて、実は最も強い護身術。あなたの一礼が、閉じた扉を内側から開けさせます。" },
+  { v: "智", yomi: "ち", kenshi: "犬坂毛野 胤智", color: "#3f8a8a",
+    kw: ["知略", "柔軟", "変化自在"], lucky: "浅葱色・東南の方角",
+    text: "智は物事の本質を見抜き、最善の一手を打つ心。あなたは知恵と機転で局面をひっくり返す才を持っています。女田楽師に身をやつして仇を討った毛野のように、正面突破だけが戦ではありません。視点を変え、姿を変え、時を待つ――そのしなやかさが武器です。ただし策に溺れず、ここぞの場面では真心で勝負を。" },
+  { v: "忠", yomi: "ちゅう", kenshi: "犬山道節 忠与", color: "#a8703f",
+    kw: ["一途", "炎の意志", "献身"], lucky: "焔色・南西の方角",
+    text: "忠はおのれの信じるものに身を捧げる心。あなたは一度こうと決めた道への、火のような一途さを持っています。火遁の術を使う道節のごとく、その情熱は周囲を熱くし、停滞を焼き払う力があります。忠義の対象は主君に限りません。仕事でも夢でも人でも、捧げる先を自分で選び直せるのが現代の忠。燃やす先を間違えないことです。" },
+  { v: "信", yomi: "しん", kenshi: "犬飼現八 信道", color: "#4a7a5a",
+    kw: ["信頼", "言行一致", "胆力"], lucky: "萌黄色・東の方角",
+    text: "信は嘘偽りなく、言ったことを違えぬ心。あなたの言葉には重みがあり、「あの人が言うなら」と人を動かす力が宿ります。囚われの身から立ち上がった剛の者・現八のように、逆境でも約束を守り抜く胆力が真骨頂。信用は積むのに十年、失うのは一瞬です。守れない約束をしない誠実さが、あなたの運の土台を固めます。" },
+  { v: "孝", yomi: "こう", kenshi: "犬塚信乃 戌孝", color: "#b8934a",
+    kw: ["恩を継ぐ", "宿命", "主人公"], lucky: "山吹色・北の方角",
+    text: "孝は親と先人の恩に報いる心。あなたは受け継いだもの――家族、教え、土地、技――を背負って前へ進む、物語の主人公の星です。名刀村雨を託された信乃のように、あなたにも「託されたもの」が必ずあります。それは重荷ではなく、あなたを守る刀。ルーツを大切にする人には、先人の運がそのまま味方につきます。" },
+  { v: "悌", yomi: "てい", kenshi: "犬田小文吾 悌順", color: "#5a6a9a",
+    kw: ["和合", "寛容", "縁の下"], lucky: "縹色・北東の方角",
+    text: "悌は兄弟や仲間と和し、年長を敬い年少を導く心。あなたは場の空気を大きく受け止める、力士のような包容力の持ち主です。怪力ながら心優しい小文吾のように、あなたがそこにいるだけで場が安心する――それは何よりの才能です。目立つ手柄より続く縁を。あなたの築く「輪」が、やがて八方から福を運んできます。" }
+];
+
+/* ============================================================
+ * 易経 六十四卦データ
+ * ============================================================ */
+const HEXAGRAMS = {
+  1:  { name: "乾為天", yomi: "けんいてん", kw: ["天翔る龍", "剛健"], luck: "大吉",
+       text: "六本すべてが陽の、力満ちる大吉の卦。龍が天を昇るように、実力を存分に振るうべき時です。ただし昇りきった龍は悔いを知るもの。絶頂でこそ謙虚さを忘れずに。" },
+  2:  { name: "坤為地", yomi: "こんいち", kw: ["大地の徳", "受容"], luck: "吉",
+       text: "すべてを載せて育む大地の卦。自ら先頭に立つより、支え役に回ることで大きな実りを得ます。牝馬のように従順に、しかし歩みは止めないこと。後からついていく者が勝つ時です。" },
+  3:  { name: "水雷屯", yomi: "すいらいちゅん", kw: ["産みの悩み", "萌芽"], luck: "要注意",
+       text: "芽が凍土を破ろうとする、産みの苦しみの卦。物事の始まりには混乱がつきものです。今は無理に進まず、助けてくれる人を立てて態勢を整える時。悩みは成長の胎動です。" },
+  4:  { name: "山水蒙", yomi: "さんすいもう", kw: ["霧の中", "学び"], luck: "平",
+       text: "霧に包まれた童蒙の卦。見通しが利かないのは、まだ学びの途中だから。知ったかぶりが最大の敵です。素直に師や先達に問えば霧は晴れます。教わる姿勢が開運の鍵。" },
+  5:  { name: "水天需", yomi: "すいてんじゅ", kw: ["待機", "時を養う"], luck: "吉",
+       text: "雨雲は空にあり、やがて必ず降る――「待てば吉」の卦。焦って渡ろうとせず、飲食し英気を養いながら時機を待ちなさい。準備して待つ者にだけ、恵みの雨は降ります。" },
+  6:  { name: "天水訟", yomi: "てんすいしょう", kw: ["争い", "すれ違い"], luck: "要注意",
+       text: "天は上へ水は下へ、心が背き合う争いの卦。訴訟や対立は深追いするほど不利になります。白黒つけるより、間に立つ人を得て早めに矛を収めるが吉。勝っても失うものが多い時です。" },
+  7:  { name: "地水師", yomi: "ちすいし", kw: ["軍を率いる", "統率"], luck: "平",
+       text: "地中に水を蓄えるように、衆を率いる将帥の卦。戦うなら大義と規律が要ります。経験ある老練な人を将に立てれば功あり。私欲の戦いは敗れます。組織立って挑む時です。" },
+  8:  { name: "水地比", yomi: "すいちひ", kw: ["親しみ", "結束"], luck: "吉",
+       text: "水が大地に染み入るように、人と人が親しみ結ぶ卦。よき仲間・よき指導者のもとへ、遅れずに馳せ参じなさい。協力・提携・仲間づくりに最良の時。孤立だけが凶です。" },
+  9:  { name: "風天小畜", yomi: "ふうてんしょうちく", kw: ["小さな蓄え", "足踏み"], luck: "平",
+       text: "密雲あれど雨降らず――あと一歩で実らないもどかしさの卦。大きな成果は今すぐ望めませんが、小さな蓄積は着実に進んでいます。今は貯める時期。雨は間もなく降ります。" },
+  10: { name: "天沢履", yomi: "てんたくり", kw: ["虎の尾を踏む", "礼節"], luck: "平",
+       text: "虎の尾を踏んでも、礼を尽くせば噛まれない――危うい場を渡る作法の卦。目上や強い相手と向き合う時は、恐れず、しかし礼儀正しく。振る舞いさえ正しければ道は通れます。" },
+  11: { name: "地天泰", yomi: "ちてんたい", kw: ["天地交わる", "泰平"], luck: "大吉",
+       text: "天地の気が交わり万物が通じ合う、泰平の大吉卦。上下の心が通い、物事が滑らかに運びます。今のうちに人との橋を架け、平和な時こそ次への備えを。満ちれば欠けるのが月です。" },
+  12: { name: "天地否", yomi: "てんちひ", kw: ["閉塞", "陰の時"], luck: "要注意",
+       text: "天地の気が背き合い、塞がりの時。何をしても噛み合わない時期は、誰にでも巡ります。今は才を誇示せず、内に徳を養って嵐をやり過ごしなさい。否は必ず泰に転じます。" },
+  13: { name: "天火同人", yomi: "てんかどうじん", kw: ["同志", "公明"], luck: "吉",
+       text: "野において人と同じくす――志を同じくする仲間と結ぶ吉卦。身内びいきではなく、広く公平に人と交わることで大事が成ります。大川を渉るべし。共同事業・チーム結成に好機。" },
+  14: { name: "火天大有", yomi: "かてんたいゆう", kw: ["大いなる所有", "日輪"], luck: "大吉",
+       text: "太陽が中天に輝く、大いに保つの大吉卦。実力・人望・財が集まる収穫の時です。得たものは独り占めせず、天に代わって分かち合うこと。謙虚な成功者には天が味方し続けます。" },
+  15: { name: "地山謙", yomi: "ちざんけん", kw: ["謙遜", "実るほど頭を垂れる"], luck: "吉",
+       text: "高い山が地の下にへりくだる、謙譲の徳の卦。六十四卦で唯一、すべての爻に咎なしとされる卦です。能力があるのに威張らない人へ、人も天も力を貸します。謙虚こそ最強の処世です。" },
+  16: { name: "雷地予", yomi: "らいちよ", kw: ["楽しみ", "備えあれば"], luck: "吉",
+       text: "春雷が大地に轟き、万物が動き出す悦びの卦。音楽が鳴るように物事が調子づきます。ただし「予」は予備・予防の予でもあります。楽しみに溺れず備えを怠らねば、喜びは長続きします。" },
+  17: { name: "沢雷随", yomi: "たくらいずい", kw: ["従う", "流れに乗る"], luck: "吉",
+       text: "時の流れ、良き人に随う卦。自分のやり方に固執せず、信頼できる相手や新しい潮流に素直に乗ることで運が開けます。夜はしっかり休むこと。従う相手を選ぶ目だけは確かに。" },
+  18: { name: "山風蠱", yomi: "さんぷうこ", kw: ["腐敗を正す", "立て直し"], luck: "要注意",
+       text: "器の中の食物が腐る「蠱」の卦。放置してきた問題・悪習・古い遺恨が表に出る時です。しかし壊れたものは直せばよい。原因を突き止め腹を据えて改革すれば、混乱は再生に変わります。" },
+  19: { name: "地沢臨", yomi: "ちたくりん", kw: ["春の訪れ", "上昇"], luck: "吉",
+       text: "陽の気がぐんぐん伸びる、春の到来の卦。人の上に臨む立場となり、物事が育ちはじめます。今は伸ばせるだけ伸ばしなさい。ただし八月には陰が返るとの戒めあり。好調の賞味期限を意識して。" },
+  20: { name: "風地観", yomi: "ふうちかん", kw: ["観察", "示す"], luck: "平",
+       text: "高台から風が地を渡るのを観る卦。動く前に、じっくり観察し本質を見極める時です。またあなた自身も人から観られています。行動より佇まいが問われる時。内省が次の一手を教えます。" },
+  21: { name: "火雷噬嗑", yomi: "からいぜいごう", kw: ["噛み砕く", "障害排除"], luck: "平",
+       text: "口の中の異物を噛み砕く卦。行く手を阻む障害物は、曖昧にせず断固噛み砕くべし。筋を通し、時に厳しさをもって臨めば通ります。ごまかしや情実は禍根を残すのみ。" },
+  22: { name: "山火賁", yomi: "さんかひ", kw: ["飾り", "夕映えの美"], luck: "平",
+       text: "山裾を夕日が飾る、装飾の卦。見た目・演出・体裁を整えることに利がありますが、飾りはあくまで飾り。中身が伴わぬ美は長持ちしません。小事には吉、大事の決断には実質で。" },
+  23: { name: "山地剥", yomi: "さんちはく", kw: ["剥落", "冬ごもり"], luck: "要注意",
+       text: "山が崩れ落ちるように、陰が陽を剥ぎ取る卦。今は何かを失いやすい時、新しい行動には不利です。しかし山頂に最後の一陽(大きな果実)が残っています。それだけは守り抜き、春を待ちなさい。" },
+  24: { name: "地雷復", yomi: "ちらいふく", kw: ["一陽来復", "回帰"], luck: "吉",
+       text: "冬至に一筋の陽が返る、再生の卦。長い停滞が底を打ち、運気が回復へ向かいます。焦らず、来た道を静かに戻るように、初心と健康を取り戻すことから。七日にして復す――回復には周期があります。" },
+  25: { name: "天雷无妄", yomi: "てんらいむぼう", kw: ["天真", "作為なし"], luck: "吉",
+       text: "天の下を雷が行く、偽りなき「无妄」の卦。誠実に自然体で進めば大いに通ります。ただし小賢しい計算や、期待しすぎの皮算用は災いのもと。思いがけない出来事も、天の采配と受け止めて。" },
+  26: { name: "山天大畜", yomi: "さんてんたいちく", kw: ["大いに蓄える", "実力充実"], luck: "吉",
+       text: "山の中に天を蓄える、大きな貯蓄の卦。日々学び徳と実力を蓄えてきた人に、大きな任が与えられる時です。家に留まらず外へ出て食むが吉。蓄えた力を世に問う好機、大川を渉りなさい。" },
+  27: { name: "山雷頤", yomi: "さんらいい", kw: ["養う", "口を慎む"], luck: "平",
+       text: "上あごと下あご、「養い」の卦。何を食べ、何を語り、誰を養い誰に養われるか――その質が問われています。暴飲暴食と失言は運を漏らす穴。正しく養えば、心身も事業も健やかに育ちます。" },
+  28: { name: "沢風大過", yomi: "たくふうたいか", kw: ["棟木たわむ", "非常時"], luck: "要注意",
+       text: "棟木が重みでたわむ、負荷過剰の卦。責任や仕事があなたの器に対して過大になっています。非常の時は非常の行動――思い切って支えを増やすか、荷を下ろす英断を。独りで抱えるのが最も危険です。" },
+  29: { name: "坎為水", yomi: "かんいすい", kw: ["重なる険難", "誠"], luck: "要注意",
+       text: "険難の水が二重に重なる卦。困難が続く時ですが、水は穴に落ちても満ちればまた流れ出します。誠の心だけは失わず、流れを止めないこと。この経験があなたを深くします。習うは険難の中にあり。" },
+  30: { name: "離為火", yomi: "りいか", kw: ["付く火", "明知"], luck: "吉",
+       text: "太陽が二つ重なる明るさの卦。知性と美が輝き、注目を集める時です。ただし火は薪に付いてこそ燃え続けるもの。輝きの拠り所――支えてくれる人や基盤――を大切に。柔順であれば大吉です。" },
+  31: { name: "沢山咸", yomi: "たくざんかん", kw: ["感応", "恋"], luck: "吉",
+       text: "山の上に沢、若い男女が惹かれ合う感応の卦。理屈を超えて心が通じ合う時です。恋愛・縁談・共感によって結ばれる縁に大吉。心を虚しくして相手を受け入れれば、感応はさらに深まります。" },
+  32: { name: "雷風恒", yomi: "らいふうこう", kw: ["恒常", "継続は力"], luck: "吉",
+       text: "雷と風が常に伴う、恒久の卦。変わらぬ日常・長い関係・続けてきた努力に価値が宿る時です。目新しさに浮気せず、今の道を守り続けなさい。恒に居て徳を成す――続けること自体が答えです。" },
+  33: { name: "天山遯", yomi: "てんざんとん", kw: ["退く", "距離を置く"], luck: "要注意",
+       text: "陰の勢いが伸び、賢者が身を退く卦。今は前進より撤退に利があります。逃げるのではなく、距離を置いて力を温存する戦略的後退です。深入りせず、身辺を軽くして。退き際の美しさが次の運を作ります。" },
+  34: { name: "雷天大壮", yomi: "らいてんたいそう", kw: ["大いに壮ん", "勢い"], luck: "吉",
+       text: "雷が天上に轟く、大いなる勢いの卦。力が満ちて意気盛んな時です。ただし勢い余った羊は垣根に角を絡めて動けなくなるとの戒めも。力があるからこそ礼に従うこと。正しき勢いなら押し切れます。" },
+  35: { name: "火地晋", yomi: "かちしん", kw: ["日の出", "昇進"], luck: "大吉",
+       text: "太陽が地上に昇る「晋」の卦。昇進・抜擢・表舞台へ進み出る大チャンスです。明るい徳をもって堂々と前へ。一日に三度も引き立てを受けるとされる好運。日の出の勢いは、朗らかな人に宿ります。" },
+  36: { name: "地火明夷", yomi: "ちかめいい", kw: ["光を隠す", "韜晦"], luck: "要注意",
+       text: "太陽が地中に沈む、明知が傷つけられる卦。正しさが通らない環境にいる時は、賢さをあえて隠し、内なる灯だけは消さぬこと。目立たず、しかし志は曲げず。夜明け前が最も暗いのです。" },
+  37: { name: "風火家人", yomi: "ふうかかじん", kw: ["家庭", "内を固める"], luck: "吉",
+       text: "火から風が生じるように、家の内から徳が広がる卦。家族・身内・チーム内部を整えることが、外での成功の土台になります。言葉に実があり、行いに恒があれば吉。まず足元の灯を明るく。" },
+  38: { name: "火沢睽", yomi: "かたくけい", kw: ["そむき合う", "小事に吉"], luck: "要注意",
+       text: "火は上へ沢は下へ、背き違う「睽」の卦。誤解やすれ違いが起きやすい時ですが、対立の中にも通じ合う細い道はあります。大きな事は望まず、小さな一致から積み上げて。違いは敵ではありません。" },
+  39: { name: "水山蹇", yomi: "すいざんけん", kw: ["行き悩み", "立ち止まる"], luck: "要注意",
+       text: "険しい山の上に水、足が凍える難所の卦。進めば難あり、留まれば誉あり。無理な前進をやめ、仲間や賢者のもとへ身を寄せなさい。難所は自分を省みる鏡。西南に往くは利あり、独行は不利です。" },
+  40: { name: "雷水解", yomi: "らいすいかい", kw: ["雪解け", "解放"], luck: "吉",
+       text: "春雷が響き氷が解ける、「解」の卦。長く続いた困難・誤解・しがらみがほどける時です。赦すべきは赦し、済んだことは速やかに手仕舞いを。解けた後にぐずぐず留まらないことが吉を保ちます。" },
+  41: { name: "山沢損", yomi: "さんたくそん", kw: ["損して得取れ", "献上"], luck: "平",
+       text: "下を減らして上に捧げる「損」の卦。目先の持ち出し・譲歩・出費は、信頼という形で必ず返ってきます。誠さえあれば、供え物は質素で構いません。損は徳の修行。怒りと欲を減らすが吉。" },
+  42: { name: "風雷益", yomi: "ふうらいえき", kw: ["益す", "追い風"], luck: "大吉",
+       text: "上を減らして下に施す「益」の卦。上からの引き立て、思わぬ援助が得られる追い風の時です。良いと思ったことは風のように速やかに実行を。大川を渉るに利あり――思い切った挑戦が実ります。" },
+  43: { name: "沢天夬", yomi: "たくてんかい", kw: ["決断", "膿を出す"], luck: "平",
+       text: "満ちた沢が天で決壊する「夬」の卦。断つべき悪癖・悪縁を、公明正大に決断する時です。ただし力ずくは禍のもと。事情を公にし、周囲の理解を得てから断行を。最後の詰めこそ慎重に。" },
+  44: { name: "天風姤", yomi: "てんぷうこう", kw: ["不意の出会い", "誘惑"], luck: "要注意",
+       text: "思いがけない出会いの卦。魅力的な話・人物が不意に現れますが、その正体を見極めるまで深入りは禁物です。小さな陰が、やがて勢力を増す兆し。うまい話ほど、金の袋の紐は固く結んで。" },
+  45: { name: "沢地萃", yomi: "たくちすい", kw: ["集まる", "祭"], luck: "吉",
+       text: "沢に水が集まるように、人と物が寄り集まる「萃」の卦。集い・祭・組織づくりに好機です。集まる場には争いの芽も生じるもの、備えは怠らずに。真心をもって大いなる者にまみえれば吉。" },
+  46: { name: "地風升", yomi: "ちふうしょう", kw: ["昇る", "着実な成長"], luck: "吉",
+       text: "地中の若木がすくすく伸びる「升」の卦。一段ずつ階段を上るような、着実な上昇運です。目上の人に会いに行くこと、南へ向かうことに利あり。跳ばずに登る。積み重ねが高みへの最短路です。" },
+  47: { name: "沢水困", yomi: "たくすいこん", kw: ["水涸れる", "言葉は信じられず"], luck: "要注意",
+       text: "沢の水が涸れ果てる「困」の卦。力を尽くしても報われにくい試練の時。こういう時は言葉を重ねるほど信を失います。弁解より沈黙、行動より充電。君子はここで志を磨きます。窮して通ず。" },
+  48: { name: "水風井", yomi: "すいふうせい", kw: ["井戸", "変わらぬ恵み"], luck: "平",
+       text: "町は移っても井戸は移らず。あなたの持つ変わらぬ価値――技術・人徳・知識という井戸を、手入れして皆に汲ませなさい。釣瓶を上げきる直前に壊すのが最悪。最後の詰めまで丁寧に。" },
+  49: { name: "沢火革", yomi: "たくかかく", kw: ["革命", "面目一新"], luck: "吉",
+       text: "沢の中に火、古きを破る「革」の卦。虎が毛皮を替えるような、鮮やかな変革の時です。転職・改革・イメージチェンジに好機。ただし改革は機が熟してから、そして三度自問してから。変えたら迷わぬこと。" },
+  50: { name: "火風鼎", yomi: "かふうてい", kw: ["鼎", "新体制"], luck: "吉",
+       text: "三本足の鼎で煮炊きする、新しきを取る卦。革で壊した後、鼎で新体制を築きます。三本足のように、三者の協力・バランスが成功の鍵。よき人材を得て養えば、事業は安定して煮え立ちます。" },
+  51: { name: "震為雷", yomi: "しんいらい", kw: ["雷震う", "驚きの後に笑う"], luck: "平",
+       text: "雷が二つ重なる、驚愕の卦。突然の出来事に肝を冷やしますが、雷は驚かせても百里先まで実害は少ないもの。動じず祭器を取り落とさなければ、後に笑って語れます。驚きは油断への戒めです。" },
+  52: { name: "艮為山", yomi: "ごんいさん", kw: ["山のごとく止まる", "不動"], luck: "平",
+       text: "山が二つ重なる、「止まる」の卦。進む時ではなく、どっしり止まって心を鎮める時です。背中で止まり、我を忘れれば咎なし。止まるべき時に止まれる人だけが、動くべき時に動けるのです。" },
+  53: { name: "風山漸", yomi: "ふうざんぜん", kw: ["雁の歩み", "漸進"], luck: "吉",
+       text: "雁が水際から磐へ、木へ、丘へと順に登る「漸」の卦。物事が正しい手順で少しずつ進む吉運です。婚姻に大吉。近道や飛び級を狙わず、段取りを踏むこと。ゆっくりは、確実の別名です。" },
+  54: { name: "雷沢帰妹", yomi: "らいたくきまい", kw: ["順序の乱れ", "情に流れる"], luck: "要注意",
+       text: "若い娘が順序を違えて嫁ぐ卦。情や勢いに流されて手順を飛ばすと、後々立場を失います。今の関係・契約は、対等さと順序を欠いていないか点検を。分をわきまえ永き終わりを思えば、災いは避けられます。" },
+  55: { name: "雷火豊", yomi: "らいかほう", kw: ["豊大", "正午の太陽"], luck: "吉",
+       text: "雷と稲妻が轟く、豊かさの絶頂の卦。実り豊かな収穫の時ですが、正午の太陽は傾きはじめるのも早いもの。憂えるより、日の照るうちに為すべきを為しなさい。盛大な時こそ、日没後の灯りの用意を。" },
+  56: { name: "火山旅", yomi: "かざんりょ", kw: ["旅人", "仮住まい"], luck: "要注意",
+       text: "山の上の火が移りゆく「旅」の卦。定まらぬ身の、心細い時期です。旅先では謙虚さと柔軟さが命綱。横柄な旅人は宿を失います。小さな成果で良しとし、深追いせず。この漂泊が見聞を広げます。" },
+  57: { name: "巽為風", yomi: "そんいふう", kw: ["風の浸透", "従順"], luck: "平",
+       text: "風が二つ重なり、隅々まで吹き入る卦。強引さではなく、風のような柔らかさで繰り返し働きかければ、固い扉も少しずつ開きます。ただし方針は一つに定めて。あちこち吹き迷う風は何も動かせません。" },
+  58: { name: "兌為沢", yomi: "だいたく", kw: ["悦び", "語らい"], luck: "吉",
+       text: "沢が二つ連なり潤し合う、悦びの卦。友と語らい、学び合い、笑いの絶えない時です。人に喜ばれることが、そのまま利益になります。ただし追従や享楽に溺れる悦びは凶。真心からの笑顔を交わして。" },
+  59: { name: "風水渙", yomi: "ふうすいかん", kw: ["散らす", "わだかまり解消"], luck: "吉",
+       text: "風が水面を吹き渡り、氷を散らす「渙」の卦。滞っていた気分・組織のわだかまり・私心が吹き散らされる時。出し惜しみせず、蓄えを公のために放つと大きく通ります。大川を渉るに利あり。" },
+  60: { name: "水沢節", yomi: "すいたくせつ", kw: ["節度", "けじめ"], luck: "平",
+       text: "沢の上に水、あふれぬよう堰を設ける「節」の卦。竹に節があるからこそ高く伸びるように、生活・支出・言動に区切りを設ける時です。ただし苦しすぎる節制は続きません。ほどよき節が吉。" },
+  61: { name: "風沢中孚", yomi: "ふうたくちゅうふ", kw: ["まごころ", "信は豚魚に及ぶ"], luck: "吉",
+       text: "母鳥が卵を抱くような、まごころの卦。誠は豚や魚にまで通じるとされます。あなたの偽りない真心が、言葉の通じにくい相手さえ動かす時です。鶴が鳴けば雛が和す――真心には必ず応えがあります。" },
+  62: { name: "雷山小過", yomi: "らいざんしょうか", kw: ["小さく過ぎる", "低く飛ぶ"], luck: "要注意",
+       text: "飛ぶ鳥は高く昇らず低きに下るが吉。今は大きな事を成す時ではなく、小さな事を少し丁寧すぎるくらいにやる時です。礼は恭しく、暮らしは倹しく。背伸びさえしなければ、小さな吉が積もります。" },
+  63: { name: "水火既済", yomi: "すいかきせい", kw: ["完成", "整いすぎ"], luck: "平",
+       text: "水と火が正しく整った「完成」の卦。物事はいったん成りました。しかし完成は乱れの始まりでもあります。初めは吉、終わりは乱る。成功に安住せず、点検と手入れを続けることが守成の道です。" },
+  64: { name: "火水未済", yomi: "かすいびせい", kw: ["未完", "これから"], luck: "平",
+       text: "六十四卦の最後は「未だ済らず」。物語はまだ完成していません。子狐が川をほぼ渡り終えて尾を濡らすように、詰めの甘さにだけ注意すれば、未完とは「可能性が残っている」ということ。物語は続きます。" }
+};
+
+/* 上卦×下卦 → 卦番号(周文王の序)。三爻は下から上へ 1=陽 0=陰 */
+const TRIGRAM = { "111": "乾", "110": "兌", "101": "離", "100": "震", "011": "巽", "010": "坎", "001": "艮", "000": "坤" };
+const HEX_MAP = {
+  "乾": { "乾": 1,  "兌": 10, "離": 13, "震": 25, "巽": 44, "坎": 6,  "艮": 33, "坤": 12 },
+  "兌": { "乾": 43, "兌": 58, "離": 49, "震": 17, "巽": 28, "坎": 47, "艮": 31, "坤": 45 },
+  "離": { "乾": 14, "兌": 38, "離": 30, "震": 21, "巽": 50, "坎": 64, "艮": 56, "坤": 35 },
+  "震": { "乾": 34, "兌": 54, "離": 55, "震": 51, "巽": 32, "坎": 40, "艮": 62, "坤": 16 },
+  "巽": { "乾": 9,  "兌": 61, "離": 37, "震": 42, "巽": 57, "坎": 59, "艮": 53, "坤": 20 },
+  "坎": { "乾": 5,  "兌": 60, "離": 63, "震": 3,  "巽": 48, "坎": 29, "艮": 39, "坤": 8 },
+  "艮": { "乾": 26, "兌": 41, "離": 22, "震": 27, "巽": 18, "坎": 4,  "艮": 52, "坤": 23 },
+  "坤": { "乾": 11, "兌": 19, "離": 36, "震": 24, "巽": 46, "坎": 7,  "艮": 15, "坤": 2 }
+};
+
+/* ============================================================
+ * ユーティリティ
+ * ============================================================ */
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function digitSum(n) {
+  return String(n).split("").reduce((a, c) => a + Number(c), 0);
+}
+
+/* 心相数: 生年月日の全数字を加算し、11/22/33 を除き一桁まで還元 */
+function calcShinso(dateStr) {
+  let n = digitSum(dateStr.replace(/-/g, ""));
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33) n = digitSum(n);
+  return n;
+}
+
+/* 守護珠: 生年月日の全数字合計を 8 で割った余りで八徳に結ぶ */
+function calcTama(dateStr) {
+  const total = digitSum(dateStr.replace(/-/g, ""));
+  return TAMA[total % 8];
+}
+
+/* 略筮法: 三枚の銭 × 六爻。6=老陰 7=少陽 8=少陰 9=老陽 */
+function castHexagram(rng) {
+  const lines = [];
+  for (let i = 0; i < 6; i++) {
+    let v = 0;
+    for (let c = 0; c < 3; c++) v += rng() < 0.5 ? 2 : 3;
+    lines.push(v);
+  }
+  return lines;
+}
+function linesToHex(lines, changed) {
+  const bits = lines.map(v => {
+    if (changed) return (v === 6 || v === 7) ? 1 : 0; /* 老陰→陽, 老陽→陰 */
+    return (v === 7 || v === 9) ? 1 : 0;
+  });
+  const lower = TRIGRAM[bits.slice(0, 3).join("")];
+  const upper = TRIGRAM[bits.slice(3, 6).join("")];
+  return HEXAGRAMS[HEX_MAP[upper][lower]];
+}
+
+/* 八徳スコア(生年月日+名前から決定的に算出、守護珠は最大) */
+function calcVirtueScores(dateStr, name, guardian) {
+  const scores = {};
+  TAMA.forEach(t => {
+    const r = mulberry32(hashStr(dateStr + "|" + name + "|" + t.v));
+    scores[t.v] = t.v === guardian.v ? 92 + Math.floor(r() * 9) : 52 + Math.floor(r() * 34);
+  });
+  return scores;
+}
+
+/* ============================================================
+ * 描画
+ * ============================================================ */
+function esc(s) {
+  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function kwHtml(list) {
+  return list.map(k => `<span class="kw">${esc(k)}</span>`).join("");
+}
+
+function drawHexagram(lines) {
+  /* 上爻を上に描く。老陽=○付き陽爻、老陰=×付き陰爻 */
+  const w = 150, lh = 12, gap = 12;
+  let svg = `<svg width="${w}" height="${6 * (lh + gap)}" viewBox="0 0 ${w} ${6 * (lh + gap)}">`;
+  for (let i = 5; i >= 0; i--) {
+    const y = (5 - i) * (lh + gap) + 4;
+    const v = lines[i];
+    const yang = v === 7 || v === 9;
+    const moving = v === 6 || v === 9;
+    const fill = moving ? "#e6c987" : "#8a92c0";
+    if (yang) {
+      svg += `<rect x="10" y="${y}" width="${w - 40}" height="${lh}" rx="2" fill="${fill}"/>`;
+    } else {
+      svg += `<rect x="10" y="${y}" width="${(w - 40) / 2 - 7}" height="${lh}" rx="2" fill="${fill}"/>`;
+      svg += `<rect x="${10 + (w - 40) / 2 + 7}" y="${y}" width="${(w - 40) / 2 - 7}" height="${lh}" rx="2" fill="${fill}"/>`;
+    }
+    if (moving) {
+      svg += `<text x="${w - 18}" y="${y + lh - 1}" fill="#e6c987" font-size="13">${v === 9 ? "○" : "×"}</text>`;
+    }
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+function drawRadar(scores) {
+  const size = 300, cx = size / 2, cy = size / 2, R = 105;
+  const keys = TAMA.map(t => t.v);
+  const pt = (i, r) => {
+    const a = (Math.PI * 2 * i) / 8 - Math.PI / 2;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  };
+  let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="八徳バランスチャート">`;
+  for (let ring = 1; ring <= 4; ring++) {
+    const pts = keys.map((_, i) => pt(i, (R * ring) / 4).join(",")).join(" ");
+    svg += `<polygon points="${pts}" fill="none" stroke="#3a3f5a" stroke-width="1"/>`;
+  }
+  keys.forEach((_, i) => {
+    const [x, y] = pt(i, R);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#3a3f5a" stroke-width="1"/>`;
+  });
+  const dataPts = keys.map((k, i) => pt(i, (R * scores[k]) / 100).join(",")).join(" ");
+  svg += `<polygon points="${dataPts}" fill="#c9a45c33" stroke="#c9a45c" stroke-width="2"/>`;
+  keys.forEach((k, i) => {
+    const [x, y] = pt(i, R + 20);
+    svg += `<text x="${x}" y="${y + 5}" text-anchor="middle" fill="#e8e4d8" font-size="15" font-weight="bold">${k}</text>`;
+    const [dx, dy] = pt(i, (R * scores[k]) / 100);
+    svg += `<circle cx="${dx}" cy="${dy}" r="3.5" fill="#e6c987"/>`;
+  });
+  svg += "</svg>";
+  return svg;
+}
+
+/* ============================================================
+ * 総合鑑定の文章合成
+ * ============================================================ */
+const LUCK_ADVICE = {
+  "大吉": "易の答えは追い風です。守護の徳を胸に、いま思い描いている一歩を迷わず踏み出してください。好機の波は、乗る人を選びます。",
+  "吉": "易の答えは晴れ。物事は良い流れの中にあります。欲張って走らず、いつもの誠実さのまま歩幅を保てば、実りは自然と大きくなります。",
+  "中吉": "易の答えはおおむね良好です。派手さはなくとも、着実な積み重ねが評価される時。足元の一つひとつを丁寧に仕上げていきましょう。",
+  "平": "易の答えは凪。無理に動かすより、観察と手入れの時期です。心相数の示すあなたの持ち味を磨き直しておけば、風が吹いた時にすぐ帆を張れます。",
+  "要注意": "易は「今は攻め時ではない」と告げています。ただし停滞は敗北ではありません。守護の徳に立ち返り、守りと充電に徹すれば、この時期こそが次の飛躍の仕込みになります。"
+};
+const TYPE_LINE = {
+  "行動": "あなたは考えるより先に体が動く行動の人。だからこそ、動く方向を定める今日の卦を道しるべにしてください。",
+  "感性": "あなたは心で世界を受けとる感性の人。理屈より、胸のざわめきと温もりを判断の秤にすると道を誤りません。",
+  "思考": "あなたは静かに考え抜く思考の人。焦って結論を出さず、集めた材料が熟すのを待てるのが強みです。"
+};
+
+function buildSogo(name, shinso, s, tama, hex) {
+  const who = name ? esc(name) + " さん" : "あなた";
+  const p1 = `${who}の心相数は <b style="color:var(--gold2)">${shinso}「${s.title}」</b>。${TYPE_LINE[s.type]}`;
+  const p2 = `守護珠は八犬士・${tama.kenshi}の結ぶ <b style="color:var(--gold2)">「${tama.v}」の珠</b>。迷いが生じた時は「${tama.v}の心――${tama.kw[0]}」に立ち返ることが、${who}にとっての羅針盤になります。`;
+  const p3 = `そして易が示した <b style="color:var(--gold2)">${hex.name}</b>。${LUCK_ADVICE[hex.luck]}`;
+  const lucky = `<div class="lucky">◆ 開運の手がかり ─ 守護珠「${tama.v}」の縁起もの:<b>${tama.lucky}</b>。身につける色や向かう方角に迷ったら、こちらを頼りにどうぞ。</div>`;
+  return `<p>${p1}</p><p>${p2}</p><p>${p3}</p>${lucky}`;
+}
+
+/* ============================================================
+ * メイン
+ * ============================================================ */
+let castCount = 0;
+let current = null;
+
+function renderEki(lines, question) {
+  const hex = linesToHex(lines, false);
+  const movingIdx = lines.map((v, i) => (v === 6 || v === 9) ? i + 1 : null).filter(Boolean);
+  document.getElementById("eki-theme").textContent =
+    "占的:" + (question ? "「" + question + "」" : "本日の運気について");
+  document.getElementById("hex-svg").innerHTML = drawHexagram(lines);
+  document.getElementById("eki-name").textContent = hex.name;
+  document.getElementById("eki-luck").innerHTML = `<span class="luck-badge luck-${hex.luck}">${hex.luck}</span>`;
+  document.getElementById("eki-yomi").textContent = hex.yomi;
+  document.getElementById("eki-kw").innerHTML = kwHtml(hex.kw);
+  document.getElementById("eki-text").textContent = hex.text;
+  const henka = document.getElementById("eki-henka");
+  if (movingIdx.length > 0) {
+    const to = linesToHex(lines, true);
+    henka.style.display = "block";
+    henka.innerHTML =
+      `変爻:第${movingIdx.join("・")}爻(金色の爻)<br>` +
+      `之卦は <b>${to.name}(${to.yomi})</b> ─ 「${to.kw[0]}」。` +
+      `いまの局面「${hex.kw[0]}」は、やがてこの方向へ動いていく兆しです。`;
+  } else {
+    henka.style.display = "none";
+  }
+  return hex;
+}
+
+function divine() {
+  const name = document.getElementById("in-name").value.trim();
+  const birth = document.getElementById("in-birth").value;
+  const question = document.getElementById("in-question").value.trim();
+  const err = document.getElementById("form-err");
+  if (!birth) { err.style.display = "block"; return; }
+  err.style.display = "none";
+
+  const shinso = calcShinso(birth);
+  const s = SHINSO[shinso];
+  const tama = calcTama(birth);
+
+  /* 卦は「人×問い×日付×立て直し回数」で決まる。同じ日に同じ問いなら同じ卦。 */
+  const today = new Date().toISOString().slice(0, 10);
+  const rng = mulberry32(hashStr([birth, name, question, today, castCount].join("|")));
+  const lines = castHexagram(rng);
+
+  document.getElementById("shinso-num").textContent = shinso;
+  document.getElementById("shinso-title").textContent = s.title;
+  document.getElementById("shinso-kw").innerHTML = kwHtml(s.kw);
+  document.getElementById("shinso-text").textContent = s.text;
+
+  const circle = document.getElementById("tama-circle");
+  circle.textContent = tama.v;
+  circle.style.background = `radial-gradient(circle at 35% 30%, ${tama.color}ee, ${tama.color}88 60%, #10121c)`;
+  circle.style.setProperty("--tama-glow", tama.color + "66");
+  document.getElementById("tama-title").textContent = `「${tama.v}」の珠 ─ ${tama.yomi}`;
+  document.getElementById("tama-kenshi").textContent = "結び犬士:" + tama.kenshi;
+  document.getElementById("tama-kw").innerHTML = kwHtml(tama.kw);
+  document.getElementById("tama-text").textContent = tama.text;
+
+  const hex = renderEki(lines, question);
+
+  const scores = calcVirtueScores(birth, name, tama);
+  document.getElementById("radar-svg").innerHTML = drawRadar(scores);
+  const sorted = TAMA.slice().sort((a, b) => scores[b.v] - scores[a.v]);
+  document.getElementById("radar-text").innerHTML =
+    `守護珠「<b style="color:var(--gold2)">${tama.v}</b>」を頂に、八つの徳の現在の巡りを映しました。` +
+    `いま特に息づいているのは「${sorted[0].v}」「${sorted[1].v}」の徳。` +
+    `いっぽう「${sorted[7].v}」の徳は休んでいる時期です。` +
+    `足りない徳は欠点ではなく伸びしろ――「${sorted[7].v}(${sorted[7].kw[0]})」を少し意識するだけで、珠の輝きは調います。`;
+
+  document.getElementById("sogo-text").innerHTML = buildSogo(name, shinso, s, tama, hex);
+
+  current = { name, birth, question };
+  document.getElementById("results").style.display = "block";
+  document.getElementById("panel-shinso").scrollIntoView({ behavior: "smooth" });
+}
+
+document.getElementById("btn-divine").addEventListener("click", () => { castCount = 0; divine(); });
+document.getElementById("btn-recast").addEventListener("click", () => {
+  if (!current) return;
+  castCount++;
+  const today = new Date().toISOString().slice(0, 10);
+  const rng = mulberry32(hashStr([current.birth, current.name, current.question, today, castCount].join("|")));
+  const lines = castHexagram(rng);
+  const hex = renderEki(lines, current.question);
+  const s = SHINSO[calcShinso(current.birth)];
+  document.getElementById("sogo-text").innerHTML =
+    buildSogo(current.name, calcShinso(current.birth), s, calcTama(current.birth), hex);
+});
+["in-name", "in-birth", "in-question"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if (e.key === "Enter" && id !== "in-question") { e.preventDefault(); castCount = 0; divine(); }
+  });
+});
+</script>
+</body>
+</html>
