@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>K2J Bridge — デモダッシュボード</title>
-<meta name="description" content="日本市場トレンド分析からOEM商品企画・デザイン提案・マーケティングまでのデモダッシュボード。Claude APIキーを設定すると実際にAIが商品企画を生成します。">
+<meta name="description" content="日本市場トレンド分析からOEM商品企画・デザイン提案・マーケティングまでのデモダッシュボード。AI APIキーを設定すると実際にAIが商品企画を生成します。">
 <style>
   :root {
     --bg: #f4f6fb;
@@ -371,7 +371,7 @@
 
 <div class="topbar">
   <a class="logo" href="index.html"><span class="mark">K2</span>K2J Bridge</a>
-  <span class="demo-pill">DEMO — Claude APIキー設定でライブ生成も可能</span>
+  <span class="demo-pill">DEMO — AI APIキー設定でライブ生成も可能</span>
   <span class="spacer"></span>
   <a class="back-link" href="index.html">← サービス紹介へ戻る</a>
 </div>
@@ -422,17 +422,17 @@
   <!-- ================= Planner ================= -->
   <section class="panel" id="panel-plan">
     <h2 class="page-title">AI商品企画ジェネレーター</h2>
-    <p class="page-sub">条件を選ぶと、ECモールのトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>Claude APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
+    <p class="page-sub">条件を選ぶと、ECモールのトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>AI APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
 
     <div class="api-bar">
-      <span class="api-status" id="apiStatus">🧪 サンプルモードで動作中(Claude APIキー未設定)</span>
-      <button class="api-toggle" id="apiToggleBtn" type="button">⚙️ Claude API設定</button>
+      <span class="api-status" id="apiStatus">🧪 サンプルモードで動作中(AI APIキー未設定)</span>
+      <button class="api-toggle" id="apiToggleBtn" type="button">⚙️ AI API設定</button>
     </div>
     <div class="api-panel" id="apiPanel">
       <p class="api-desc">
-        お持ちの Anthropic APIキーを入力すると、「企画を生成」ボタンで実際に Claude がECモールのトレンドデータをもとにOEM商品コンセプトを生成します。<br>
-        <b>キーはこのブラウザ(localStorage)にのみ保存され、Anthropic社のAPIへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
-        API利用料はご自身のAnthropicアカウントに発生します。共有PCでは使用しないでください。<br>
+        お持ちの AI APIキーを入力すると、「企画を生成」ボタンで実際にAIがECモールのトレンドデータをもとにOEM商品コンセプトを生成します。<br>
+        <b>キーはこのブラウザ(localStorage)にのみ保存され、AI APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
+        API利用料はご自身のAPIアカウントに発生します。共有PCでは使用しないでください。<br>
         <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">APIキーの取得はこちら →</a>
       </p>
       <div class="api-row">
@@ -483,28 +483,28 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、タイル状(マスonry)レイアウトで<b>実際の写真</b>を並べます。業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>を、商品専用の参考は<b>主要ECモールの実商品写真</b>を表示(いずれもGoogle検索設定時)。イラストではなく実物での参考資料としてご利用ください。</p>
+    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、タイル状(マスonry)レイアウトで<b>実際の写真</b>を並べます。業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>を、商品専用の参考は<b>主要ECモールの実商品写真</b>を表示(いずれも実画像検索設定時)。イラストではなく実物での参考資料としてご利用ください。</p>
 
     <div class="api-bar">
-      <span class="api-status" id="googleStatus">🖼️ CC素材(Openverse)で表示中 — 実画像検索は未設定</span>
-      <button class="api-toggle" id="googleToggleBtn" type="button">⚙️ 実画像検索の設定(Google)</button>
+      <span class="api-status" id="googleStatus">🖼️ CC素材で表示中 — 実画像検索は未設定</span>
+      <button class="api-toggle" id="googleToggleBtn" type="button">⚙️ 実画像検索の設定</button>
     </div>
     <div class="api-panel" id="googlePanel">
       <p class="api-desc">
-        <b>Google Programmable Search Engine</b> のAPIキーと検索エンジンIDを設定すると、業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>、商品専用の参考は<b>主要ECモール・口コミサイトの実商品写真</b>を表示します(未設定時はOpenverseの一般的なCCライセンス写真で代用します)。<br>
-        <b>キーはこのブラウザ(localStorage)にのみ保存され、Googleへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
-        Google Cloud Consoleでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
+        <b>画像検索エンジン</b>のAPIキーと検索エンジンIDを設定すると、業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>、商品専用の参考は<b>主要ECモール・口コミサイトの実商品写真</b>を表示します(未設定時は一般的なCCライセンス写真で代用します)。<br>
+        <b>キーはこのブラウザ(localStorage)にのみ保存され、検索APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
+        APIコンソールでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
         <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① 検索エンジンを作成(cxを取得)</a> ・
         <a href="https://console.cloud.google.com/apis/library/customsearch.googleapis.com" target="_blank" rel="noopener">② Custom Search APIキーを取得</a>
       </p>
       <div class="api-row">
-        <input type="text" id="googleKeyInput" placeholder="Google APIキー" autocomplete="off" spellcheck="false">
+        <input type="text" id="googleKeyInput" placeholder="画像検索APIキー" autocomplete="off" spellcheck="false">
         <input type="text" id="googleCxInput" placeholder="検索エンジンID(cx)" autocomplete="off" spellcheck="false">
         <button class="btn-save" id="googleSaveBtn" type="button">保存</button>
         <button class="btn-clear" id="googleClearBtn" type="button">削除</button>
       </div>
     </div>
-    <p class="pin-note">📌 主要な外部サービスは画像検索APIを公開していないため、実画像検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる <a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">Openverse</a> で代用しています。各写真には出典を表示し、上部のボタンから外部サイトでの検索結果も確認できます。</p>
+    <p class="pin-note">📌 主要な外部サービスは画像検索APIを公開していないため、実画像検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる<a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">CCライセンス画像サービス</a>で代用しています。各写真には出典を表示し、上部のボタンから外部サイトでの検索結果も確認できます。</p>
 
     <div class="card">
       <div class="loader-tabs">
@@ -649,7 +649,7 @@
     </div>
   </section>
 
-  <p class="note">⚠️ このページはプロダクトのデモです。トレンド数値・工場情報は説明用のサンプルデータです。「AI商品企画」タブでClaude APIキーを設定した場合のみ、実際にAIが商品コンセプトを生成します(API利用料はお客様のAnthropicアカウントに発生します)。生成される商品画像はイメージモックアップであり、実際の商品写真ではありません。</p>
+  <p class="note">⚠️ このページはプロダクトのデモです。トレンド数値・工場情報は説明用のサンプルデータです。「AI商品企画」タブでAI APIキーを設定した場合のみ、実際にAIが商品コンセプトを生成します(API利用料はお客様のAPIアカウントに発生します)。生成される商品画像はイメージモックアップであり、実際の商品写真ではありません。</p>
 </main>
 
 <script>
@@ -658,10 +658,10 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// ================= 実商品検索(Google Programmable Search Engine, BYOK) =================
+// ================= 実商品検索(画像検索エンジン, BYOK) =================
 // 主要な外部サービスは画像を取得できる無料の公開APIを提供していないため、
-// ユーザー自身のGoogle Custom Search APIキー+検索エンジンIDを使い、実際の通販サイトに絞った画像検索を行います。
-// (未設定、または結果が0件の場合はOpenverseのCCライセンス実写真にフォールバックします)
+// ユーザー自身の画像検索APIキー+検索エンジンIDを使い、実際の通販サイトに絞った画像検索を行います。
+// (未設定、または結果が0件の場合はCCライセンス実写真にフォールバックします)
 const GOOGLE_KEY_STORAGE = "k2j_google_search_key";
 const GOOGLE_CX_STORAGE = "k2j_google_search_cx";
 const PRODUCT_SITES = {
@@ -670,7 +670,7 @@ const PRODUCT_SITES = {
   living: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
 };
 // デザイン/ムードボード用: 実商品(通販サイト)ではなく、デザイン参考が集まる外部サイトなど
-// デザイン参考が集まるサイトに絞って検索します(Google Programmable Search Engine経由)。
+// デザイン参考が集まるサイトに絞って検索します(画像検索エンジン経由)。
 const DESIGN_SITES = ["pinterest.com", "www.pinterest.com", "jp.pinterest.com", "behance.net", "dribbble.com"];
 
 function getGoogleKey() { return localStorage.getItem(GOOGLE_KEY_STORAGE) || ""; }
@@ -688,7 +688,7 @@ function buildDesignQuery(keywords) {
   return `${keywords} (${DESIGN_SITES.map(s => `site:${s}`).join(" OR ")})`;
 }
 
-// 実際の通販サイトの商品写真(Google Programmable Search Engineでの画像検索。要ユーザー自身のAPIキー)
+// 実際の通販サイトの商品写真(画像検索エンジンでの画像検索。要ユーザー自身のAPIキー)
 async function fetchRealProductImages(query, count) {
   const key = getGoogleKey();
   const cx = getGoogleCx();
@@ -713,7 +713,7 @@ async function fetchRealProductImages(query, count) {
   }
 }
 
-// 著作権フリー/CCライセンスの実写真(Openverse。APIキー不要。実商品検索が未設定/0件の場合のフォールバック)
+// 著作権フリー/CCライセンスの実写真(APIキー不要。実商品検索が未設定/0件の場合のフォールバック)
 async function fetchReferenceImages(query, count) {
   try {
     const res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${count}&mature=false`);
@@ -1177,9 +1177,9 @@ function renderDesignSuggestions(cat, productName, directions, liveMode, errorNo
   document.getElementById("designSuggestBox").innerHTML = `
     <div class="ds-head">
       <span class="p-tag2">📌「${escapeHtml(productName)}」のためのデザイン提案</span>
-      <span class="gen-badge light ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが方向性を提案" : "🧪 サンプルの方向性"}</span>
+      <span class="gen-badge light ${liveMode ? "live" : ""}">${liveMode ? "✨ AIが方向性を提案" : "🧪 サンプルの方向性"}</span>
     </div>
-    ${errorNote ? `<div class="api-error">⚠️ Claude APIの呼び出しに失敗したため、サンプルの方向性を表示しています: ${escapeHtml(errorNote)}</div>` : ""}
+    ${errorNote ? `<div class="api-error">⚠️ AI APIの呼び出しに失敗したため、サンプルの方向性を表示しています: ${escapeHtml(errorNote)}</div>` : ""}
     ${directions.map((d, i) => `
       <div class="card mt">
         <b style="font-size:14px">${escapeHtml(d.name)}</b>
@@ -1227,7 +1227,7 @@ document.getElementById("designGenBtn").addEventListener("click", async () => {
 
   btn.disabled = true;
   loadingText.textContent = hasKey
-    ? "Claude APIでこの商品に合うデザインの方向性を分析しています…"
+    ? "AI APIでこの商品に合うデザインの方向性を分析しています…"
     : "デザインの方向性を分析しています…(サンプルモード)";
   loading.classList.add("show");
 
@@ -1310,7 +1310,7 @@ document.querySelectorAll(".cat-btn").forEach(btn => {
 });
 renderTrend("beauty");
 
-// ================= Claude API設定(ブラウザのみに保存 / BYOK) =================
+// ================= AI API設定(ブラウザのみに保存 / BYOK) =================
 const CLAUDE_KEY_STORAGE = "k2j_claude_api_key";
 const CLAUDE_MODEL = "claude-sonnet-5";
 
@@ -1326,8 +1326,8 @@ function refreshApiStatus() {
   const has = !!getClaudeKey();
   const statusEl = document.getElementById("apiStatus");
   statusEl.textContent = has
-    ? "✨ Claude APIキー設定済み — 生成時に実際のAPIを呼び出します"
-    : "🧪 サンプルモードで動作中(Claude APIキー未設定)";
+    ? "✨ AI APIキー設定済み — 生成時に実際のAPIを呼び出します"
+    : "🧪 サンプルモードで動作中(AI APIキー未設定)";
   statusEl.classList.toggle("on", has);
   document.getElementById("apiKeyInput").value = has ? getClaudeKey() : "";
 }
@@ -1346,13 +1346,13 @@ document.getElementById("apiClearBtn").addEventListener("click", () => {
 });
 refreshApiStatus();
 
-// ================= 実商品検索(Google)の設定パネル =================
+// ================= 実商品検索の設定パネル =================
 function refreshGoogleStatus() {
   const has = !!(getGoogleKey() && getGoogleCx());
   const statusEl = document.getElementById("googleStatus");
   statusEl.textContent = has
     ? "📌 実画像検索が有効です — デザイン参考画像/実商品写真を優先表示します"
-    : "🖼️ CC素材(Openverse)で表示中 — 実画像検索は未設定";
+    : "🖼️ CC素材で表示中 — 実画像検索は未設定";
   statusEl.classList.toggle("on", has);
   document.getElementById("googleKeyInput").value = getGoogleKey();
   document.getElementById("googleCxInput").value = getGoogleCx();
@@ -1472,7 +1472,7 @@ async function callClaudeAPI(system, user, maxTokens) {
   if (!res.ok) {
     let detail = "";
     try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
-    throw new Error(`Claude APIエラー(${res.status})${detail ? ": " + detail : ""}`);
+    throw new Error(`AI APIエラー(${res.status})${detail ? ": " + detail : ""}`);
   }
 
   const data = await res.json();
@@ -1482,12 +1482,12 @@ async function callClaudeAPI(system, user, maxTokens) {
   try {
     return JSON.parse(jsonStr);
   } catch (e) {
-    throw new Error("Claude APIの応答をJSONとして解析できませんでした");
+    throw new Error("AI APIの応答をJSONとして解析できませんでした");
   }
 }
 
 function describeClaudeError(err) {
-  if (err && err.name === "AbortError") return "Claude APIへの接続がタイムアウトしました。";
+  if (err && err.name === "AbortError") return "AI APIへの接続がタイムアウトしました。";
   if (err instanceof TypeError) return "ブラウザから直接APIへ接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
   return (err && err.message) ? err.message : String(err);
 }
@@ -1631,19 +1631,19 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
         <span class="p-tag">PROPOSAL — ${catLabel} ・ ${escapeHtml(priceLabel)} ・ ${escapeHtml(channelLabel)}</span>
         <button class="print-btn" type="button">🖨 提案書を印刷/PDF保存</button>
       </div>
-      <div class="gen-badge ${liveMode ? "live" : ""}">${liveMode ? "✨ Claude AIが生成(リアルタイム)" : (errorNote ? "🧪 サンプル表示中(APIエラーのフォールバック)" : "🧪 サンプル表示中(Claude APIキー未設定)")}</div>
+      <div class="gen-badge ${liveMode ? "live" : ""}">${liveMode ? "✨ AIが生成(リアルタイム)" : (errorNote ? "🧪 サンプル表示中(APIエラーのフォールバック)" : "🧪 サンプル表示中(AI APIキー未設定)")}</div>
       <h3>${escapeHtml(data.productName)}${data.brandName ? `「${escapeHtml(data.brandName)}」` : ""}</h3>
       <p>${escapeHtml(data.lead)}</p>
     </div>
     <div class="prop-body">
-      ${errorNote ? `<div class="api-error">⚠️ Claude APIの呼び出しに失敗したため、サンプルデータを表示しています: ${escapeHtml(errorNote)}</div>` : ""}
+      ${errorNote ? `<div class="api-error">⚠️ AI APIの呼び出しに失敗したため、サンプルデータを表示しています: ${escapeHtml(errorNote)}</div>` : ""}
 
       <div class="tm-check">
         <b>⚖️ 商標の事前確認</b>
         <p>「${escapeHtml(data.brandName || data.productName)}」はAIが生成したオリジナル名称です。実際に出願・使用する前に、必ず公式データベースで既存の商標と重複していないかご確認ください。</p>
         <div class="ref-links">
-          <a class="ref-btn" href="https://www.j-platpat.inpit.go.jp/" target="_blank" rel="noopener">🔎 J-PlatPatで確認する(特許庁)</a>
-          <a class="ref-btn" href="https://www.google.com/search?q=${tmQuery}" target="_blank" rel="noopener">Googleで確認する</a>
+          <a class="ref-btn" href="https://www.j-platpat.inpit.go.jp/" target="_blank" rel="noopener">🔎 特許庁の商標検索で確認する</a>
+          <a class="ref-btn" href="https://www.google.com/search?q=${tmQuery}" target="_blank" rel="noopener">Web検索で確認する</a>
         </div>
       </div>
 
@@ -1673,7 +1673,7 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
       </div>
 
       <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(${liveMode ? "AI生成" : "サンプル"}・3案)</h3>
-      <p class="img-note">${liveMode ? "Claude が提案したデザイン方向性(配色)をもとにモックアップを生成しました。" : "トレンド分析とデザインリファレンスを反映したコンセプト画像です。"} ※実際の商品写真ではなく、パッケージ形状を模したイメージモックアップです。</p>
+      <p class="img-note">${liveMode ? "AIが提案したデザイン方向性(配色)をもとにモックアップを生成しました。" : "トレンド分析とデザインリファレンスを反映したコンセプト画像です。"} ※実際の商品写真ではなく、パッケージ形状を模したイメージモックアップです。</p>
       <div class="img-grid">
         ${data.images.map((img, i) => `
           <div class="img-card">
@@ -1717,7 +1717,7 @@ document.getElementById("genBtn").addEventListener("click", async () => {
   btn.disabled = true;
   box.classList.remove("show");
   loadingText.textContent = hasKey
-    ? "Claude APIでECモールのトレンドデータを分析し、商品コンセプトを生成しています…"
+    ? "AI APIでECモールのトレンドデータを分析し、商品コンセプトを生成しています…"
     : "ECモールのトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…(サンプルモード)";
   loading.classList.add("show");
 
