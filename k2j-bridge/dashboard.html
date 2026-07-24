@@ -483,15 +483,15 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、Pinterestのようなマスonry(タイル状)レイアウトで<b>実際に売られている商品の写真</b>を並べます。イラストではなく実商品での参考資料としてご利用ください。各写真から出典元、または<b>Pinterest・Behance・Dribbble・Qoo10</b>の検索結果へ直接ジャンプできます。</p>
+    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、Pinterestのようなマスonry(タイル状)レイアウトで<b>実際の写真</b>を並べます。業界共通のデザイントレンドは<b>Pinterest・Behance・Dribbbleに実在するデザイン画像</b>を、商品専用の参考は<b>Qoo10・Amazon・楽天の実商品写真</b>を表示(いずれもGoogle検索設定時)。イラストではなく実物での参考資料としてご利用ください。</p>
 
     <div class="api-bar">
-      <span class="api-status" id="googleStatus">🖼️ CC素材(Openverse)で表示中 — 実商品検索は未設定</span>
-      <button class="api-toggle" id="googleToggleBtn" type="button">⚙️ 実商品検索の設定(Google)</button>
+      <span class="api-status" id="googleStatus">🖼️ CC素材(Openverse)で表示中 — 実画像検索は未設定</span>
+      <button class="api-toggle" id="googleToggleBtn" type="button">⚙️ 実画像検索の設定(Google)</button>
     </div>
     <div class="api-panel" id="googlePanel">
       <p class="api-desc">
-        <b>Google Programmable Search Engine</b> のAPIキーと検索エンジンIDを設定すると、Qoo10・Amazon・楽天・@cosmeなど<b>実際の通販サイトに出品されている商品の写真</b>を参考資料として表示します(未設定時はOpenverseの一般的なCCライセンス写真で代用します)。<br>
+        <b>Google Programmable Search Engine</b> のAPIキーと検索エンジンIDを設定すると、業界共通のデザイントレンドは<b>Pinterest・Behance・Dribbbleに実在するデザイン画像</b>、商品専用の参考は<b>Qoo10・Amazon・楽天・@cosmeの実商品写真</b>を表示します(未設定時はOpenverseの一般的なCCライセンス写真で代用します)。<br>
         <b>キーはこのブラウザ(localStorage)にのみ保存され、Googleへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
         Google Cloud Consoleでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
         <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① 検索エンジンを作成(cxを取得)</a> ・
@@ -669,6 +669,9 @@ const PRODUCT_SITES = {
   food: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
   living: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
 };
+// デザイン/ムードボード用: 実商品(通販サイト)ではなく、Pinterest・Behance・Dribbbleなど
+// デザイン参考が集まるサイトに絞って検索します(Google Programmable Search Engine経由)。
+const DESIGN_SITES = ["pinterest.com", "www.pinterest.com", "jp.pinterest.com", "behance.net", "dribbble.com"];
 
 function getGoogleKey() { return localStorage.getItem(GOOGLE_KEY_STORAGE) || ""; }
 function getGoogleCx() { return localStorage.getItem(GOOGLE_CX_STORAGE) || ""; }
@@ -680,6 +683,9 @@ function setGoogleCreds(key, cx) {
 function buildProductQuery(keywords, cat) {
   const sites = PRODUCT_SITES[cat] || PRODUCT_SITES.beauty;
   return `${keywords} (${sites.map(s => `site:${s}`).join(" OR ")})`;
+}
+function buildDesignQuery(keywords) {
+  return `${keywords} (${DESIGN_SITES.map(s => `site:${s}`).join(" OR ")})`;
 }
 
 // 実際の通販サイトの商品写真(Google Programmable Search Engineでの画像検索。要ユーザー自身のAPIキー)
@@ -745,21 +751,23 @@ function renderImagesInto(containerId, images, sourceTag) {
     </div>`).join("")}</div>`;
 }
 
-function renderPinBoard(containerId, query, count, cat) {
+function renderPinBoard(containerId, query, count, cat, mode) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  const productQuery = buildProductQuery(query, cat);
+  // mode: "design"(Pinterest/Behance/Dribbbleのデザイン参考) or "product"(Qoo10/Amazon/楽天の実商品)
+  const searchQuery = mode === "design" ? buildDesignQuery(query) : buildProductQuery(query, cat);
+  const sourceTag = mode === "design" ? "📌 実際のデザイン画像" : "🛍️ 実商品";
 
-  fetchRealProductImages(productQuery, count).then(realImages => {
+  fetchRealProductImages(searchQuery, count).then(realImages => {
     if (realImages && realImages.length) {
-      renderImagesInto(containerId, realImages, "🛍️ 実商品");
+      renderImagesInto(containerId, realImages, sourceTag);
       return;
     }
     fetchReferenceImages(query, count).then(images => {
       const target = document.getElementById(containerId);
       if (!target) return;
       if (!images.length) {
-        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "実商品検索を設定すると、より的確な参考写真が表示されます(上部「⚙️ 実商品検索の設定」)。" : "参考画像を取得できませんでした。"}上の「Pinterestで見る」から直接検索してください。</div>`;
+        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "実商品検索を設定すると、Pinterest・Qoo10等の実際の画像が表示されます(上部「⚙️ 実商品検索の設定」)。" : "参考画像を取得できませんでした。"}上の「Pinterestで見る」から直接検索してください。</div>`;
         return;
       }
       renderImagesInto(containerId, images, "🖼️ CC素材");
@@ -1085,7 +1093,7 @@ document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
       <div class="ref-links">${buildRefLinks(m).filter(l => !l.label.includes("Pinterest")).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
     </div>
   </div>`).join("");
-MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat));
+MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat, "design"));
 
 // ================= 商品を読み込んでデザインを探す =================
 document.querySelectorAll(".loader-tab").forEach(btn => {
@@ -1189,7 +1197,7 @@ function renderDesignSuggestions(cat, productName, directions, liveMode, errorNo
         <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
       </div>`).join("")}`;
 
-  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6, cat));
+  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6, cat, "product"));
 }
 
 document.getElementById("designGenBtn").addEventListener("click", async () => {
@@ -1347,8 +1355,8 @@ function refreshGoogleStatus() {
   const has = !!(getGoogleKey() && getGoogleCx());
   const statusEl = document.getElementById("googleStatus");
   statusEl.textContent = has
-    ? "🛍️ 実商品検索が有効です — Qoo10・Amazon・楽天等の実商品写真を優先表示します"
-    : "🖼️ CC素材(Openverse)で表示中 — 実商品検索は未設定";
+    ? "📌 実画像検索が有効です — Pinterest等のデザイン画像/Qoo10等の実商品写真を優先表示します"
+    : "🖼️ CC素材(Openverse)で表示中 — 実画像検索は未設定";
   statusEl.classList.toggle("on", has);
   document.getElementById("googleKeyInput").value = getGoogleKey();
   document.getElementById("googleCxInput").value = getGoogleCx();
