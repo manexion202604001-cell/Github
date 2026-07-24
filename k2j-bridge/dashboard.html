@@ -271,7 +271,7 @@
   .ref-list li { padding: 9px 0 9px 24px; position: relative; border-top: 1px dashed var(--line); color: #444d6e; }
   .ref-list li::before { content: "🔖"; position: absolute; left: 0; font-size: 12px; }
 
-  /* Design references (Pinterest / Behance / Dribbble / Qoo10) */
+  /* Design references (external reference links) */
   .ref-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
   .ref-btn {
     font-size: 11px; font-weight: 700; padding: 6px 11px; border-radius: 999px;
@@ -296,7 +296,7 @@
   .mini-swatch i { width: 16px; height: 16px; border-radius: 4px; display: block; }
   .subhead { font-size: 16px; font-weight: 900; margin-top: 8px; }
 
-  /* ===== Pinterest風マスonryグリッド(実写真の参考資料) ===== */
+  /* ===== マスonryグリッド(実写真の参考資料) ===== */
   .pin-board { margin-top: 14px; }
   .pin-board-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .pin-board-title { font-size: 12.5px; font-weight: 800; color: var(--sub); }
@@ -387,8 +387,8 @@
 
   <!-- ================= Trend ================= -->
   <section class="panel active" id="panel-trend">
-    <h2 class="page-title">Qoo10トレンドレーダー</h2>
-    <p class="page-sub">日本市場の参考データは <b>Qoo10(日本)</b> を中心に毎日分析。ランキング・メガ割・レビューから「いま売れているもの」を抽出します(このデモではサンプルデータを表示しています)</p>
+    <h2 class="page-title">ECトレンドレーダー</h2>
+    <p class="page-sub">日本市場の参考データは<b>国内主要ECモール</b>を中心に毎日分析。ランキング・大型セール・レビューから「いま売れているもの」を抽出します(このデモではサンプルデータを表示しています)</p>
 
     <div class="cat-row" id="catRow">
       <button class="cat-btn active" data-cat="beauty">💄 美容・コスメ</button>
@@ -400,9 +400,9 @@
 
     <div class="grid g2 mt">
       <div class="card">
-        <h3>🔥 Qoo10 急上昇ランキング(直近7日)</h3>
+        <h3>🔥 EC急上昇ランキング(直近7日)</h3>
         <table>
-          <thead><tr><th></th><th>商品ジャンル</th><th>Qoo10での位置づけ</th><th>検索/売上成長</th></tr></thead>
+          <thead><tr><th></th><th>商品ジャンル</th><th>ECモールでの位置づけ</th><th>検索/売上成長</th></tr></thead>
           <tbody id="rankBody"></tbody>
         </table>
       </div>
@@ -422,7 +422,7 @@
   <!-- ================= Planner ================= -->
   <section class="panel" id="panel-plan">
     <h2 class="page-title">AI商品企画ジェネレーター</h2>
-    <p class="page-sub">条件を選ぶと、Qoo10のトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>Claude APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
+    <p class="page-sub">条件を選ぶと、ECモールのトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>Claude APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
 
     <div class="api-bar">
       <span class="api-status" id="apiStatus">🧪 サンプルモードで動作中(Claude APIキー未設定)</span>
@@ -430,7 +430,7 @@
     </div>
     <div class="api-panel" id="apiPanel">
       <p class="api-desc">
-        お持ちの Anthropic APIキーを入力すると、「企画を生成」ボタンで実際に Claude が Qoo10トレンドデータをもとにOEM商品コンセプトを生成します。<br>
+        お持ちの Anthropic APIキーを入力すると、「企画を生成」ボタンで実際に Claude がECモールのトレンドデータをもとにOEM商品コンセプトを生成します。<br>
         <b>キーはこのブラウザ(localStorage)にのみ保存され、Anthropic社のAPIへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
         API利用料はご自身のAnthropicアカウントに発生します。共有PCでは使用しないでください。<br>
         <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">APIキーの取得はこちら →</a>
@@ -463,8 +463,8 @@
         <div>
           <label class="fld">主な販路</label>
           <select id="planChannel">
-            <option selected>ECモール(Qoo10・楽天・Amazon)</option>
-            <option>クラウドファンディング(Makuake)</option>
+            <option selected>ECモール</option>
+            <option>クラウドファンディング</option>
             <option>卸・小売(バラエティショップ等)</option>
           </select>
         </div>
@@ -474,7 +474,7 @@
 
     <div class="loading" id="genLoading">
       <div class="spinner"></div>
-      <span id="genLoadingText">Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…</span>
+      <span id="genLoadingText">ECモールのトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…</span>
     </div>
 
     <div class="proposal" id="proposal"></div>
@@ -483,7 +483,7 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、Pinterestのようなマスonry(タイル状)レイアウトで<b>実際の写真</b>を並べます。業界共通のデザイントレンドは<b>Pinterest・Behance・Dribbbleに実在するデザイン画像</b>を、商品専用の参考は<b>Qoo10・Amazon・楽天の実商品写真</b>を表示(いずれもGoogle検索設定時)。イラストではなく実物での参考資料としてご利用ください。</p>
+    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、タイル状(マスonry)レイアウトで<b>実際の写真</b>を並べます。業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>を、商品専用の参考は<b>主要ECモールの実商品写真</b>を表示(いずれもGoogle検索設定時)。イラストではなく実物での参考資料としてご利用ください。</p>
 
     <div class="api-bar">
       <span class="api-status" id="googleStatus">🖼️ CC素材(Openverse)で表示中 — 実画像検索は未設定</span>
@@ -491,7 +491,7 @@
     </div>
     <div class="api-panel" id="googlePanel">
       <p class="api-desc">
-        <b>Google Programmable Search Engine</b> のAPIキーと検索エンジンIDを設定すると、業界共通のデザイントレンドは<b>Pinterest・Behance・Dribbbleに実在するデザイン画像</b>、商品専用の参考は<b>Qoo10・Amazon・楽天・@cosmeの実商品写真</b>を表示します(未設定時はOpenverseの一般的なCCライセンス写真で代用します)。<br>
+        <b>Google Programmable Search Engine</b> のAPIキーと検索エンジンIDを設定すると、業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>、商品専用の参考は<b>主要ECモール・口コミサイトの実商品写真</b>を表示します(未設定時はOpenverseの一般的なCCライセンス写真で代用します)。<br>
         <b>キーはこのブラウザ(localStorage)にのみ保存され、Googleへブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
         Google Cloud Consoleでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
         <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① 検索エンジンを作成(cxを取得)</a> ・
@@ -504,7 +504,7 @@
         <button class="btn-clear" id="googleClearBtn" type="button">削除</button>
       </div>
     </div>
-    <p class="pin-note">📌 Pinterest・Qoo10・Amazon・楽天は外部提供用の画像検索APIを公開していないため、実商品検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる <a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">Openverse</a> で代用しています。各写真には出典を表示し、「Pinterestで見る」ボタンから本家Pinterestでの検索結果も確認できます。</p>
+    <p class="pin-note">📌 主要な外部サービスは画像検索APIを公開していないため、実画像検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる <a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">Openverse</a> で代用しています。各写真には出典を表示し、上部のボタンから外部サイトでの検索結果も確認できます。</p>
 
     <div class="card">
       <div class="loader-tabs">
@@ -595,7 +595,7 @@
           <div class="tl-item">
             <span class="tl-when">MONTH 4-5</span>
             <h4>テストマーケティング</h4>
-            <p>Makuakeやサンプリング施策で需要検証。レビュー・CVRデータで価格と訴求を調整</p>
+            <p>クラウドファンディングやサンプリング施策で需要検証。レビュー・CVRデータで価格と訴求を調整</p>
           </div>
           <div class="tl-item">
             <span class="tl-when">MONTH 5-6</span>
@@ -609,22 +609,22 @@
           <h3>📣 チャネル適合度(美容カテゴリー例)</h3>
           <div class="channel">
             <span class="ch-icon">🛒</span>
-            <div><div class="ch-name">Qoo10(メガ割)</div><div class="ch-desc">K-Beautyの主戦場。メガ割期間の集中投下が定石</div></div>
+            <div><div class="ch-name">国内ECモール(大型セール)</div><div class="ch-desc">K-Beautyの主戦場。大型セール期間の集中投下が定石</div></div>
             <div class="ch-fit"><b>95</b><span>適合度</span></div>
           </div>
           <div class="channel">
             <span class="ch-icon">📱</span>
-            <div><div class="ch-name">TikTok / Instagram Reels</div><div class="ch-desc">使用感の動画レビューが購買に直結</div></div>
+            <div><div class="ch-name">SNSショート動画</div><div class="ch-desc">使用感の動画レビューが購買に直結</div></div>
             <div class="ch-fit"><b>90</b><span>適合度</span></div>
           </div>
           <div class="channel">
             <span class="ch-icon">🅰️</span>
-            <div><div class="ch-name">Amazon.co.jp</div><div class="ch-desc">指名検索の受け皿。レビュー獲得を最優先</div></div>
+            <div><div class="ch-name">大手ECモール</div><div class="ch-desc">指名検索の受け皿。レビュー獲得を最優先</div></div>
             <div class="ch-fit"><b>82</b><span>適合度</span></div>
           </div>
           <div class="channel">
             <span class="ch-icon">🏪</span>
-            <div><div class="ch-name">バラエティショップ卸</div><div class="ch-desc">LOFT・PLAZA等。EC実績を持って商談へ</div></div>
+            <div><div class="ch-name">バラエティショップ卸</div><div class="ch-desc">大手バラエティショップ等。EC実績を持って商談へ</div></div>
             <div class="ch-fit"><b>74</b><span>適合度</span></div>
           </div>
         </div>
@@ -659,7 +659,7 @@ function escapeHtml(s) {
 }
 
 // ================= 実商品検索(Google Programmable Search Engine, BYOK) =================
-// PinterestやQoo10/Amazon/楽天は外部サイトから画像を取得できる無料の公開APIを提供していないため、
+// 主要な外部サービスは画像を取得できる無料の公開APIを提供していないため、
 // ユーザー自身のGoogle Custom Search APIキー+検索エンジンIDを使い、実際の通販サイトに絞った画像検索を行います。
 // (未設定、または結果が0件の場合はOpenverseのCCライセンス実写真にフォールバックします)
 const GOOGLE_KEY_STORAGE = "k2j_google_search_key";
@@ -669,7 +669,7 @@ const PRODUCT_SITES = {
   food: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
   living: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
 };
-// デザイン/ムードボード用: 実商品(通販サイト)ではなく、Pinterest・Behance・Dribbbleなど
+// デザイン/ムードボード用: 実商品(通販サイト)ではなく、デザイン参考が集まる外部サイトなど
 // デザイン参考が集まるサイトに絞って検索します(Google Programmable Search Engine経由)。
 const DESIGN_SITES = ["pinterest.com", "www.pinterest.com", "jp.pinterest.com", "behance.net", "dribbble.com"];
 
@@ -699,17 +699,13 @@ async function fetchRealProductImages(query, count) {
     if (!res.ok) return null;
     const data = await res.json();
     const items = (data.items || [])
-      .map(it => {
-        let host = "";
-        try { host = new URL(it.image?.contextLink || it.link || "").hostname.replace(/^www\./, ""); } catch (e) { /* noop */ }
-        return {
-          thumb: it.image?.thumbnailLink || it.link || "",
-          landingUrl: it.image?.contextLink || it.link || "#",
-          title: it.title || "実商品",
-          creator: host,
-          license: "",
-        };
-      })
+      .map(it => ({
+        thumb: it.image?.thumbnailLink || it.link || "",
+        landingUrl: it.image?.contextLink || it.link || "#",
+        title: it.title || "実商品",
+        creator: "",
+        license: "",
+      }))
       .filter(img => img.thumb);
     return items;
   } catch (e) {
@@ -754,7 +750,7 @@ function renderImagesInto(containerId, images, sourceTag) {
 function renderPinBoard(containerId, query, count, cat, mode) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  // mode: "design"(Pinterest/Behance/Dribbbleのデザイン参考) or "product"(Qoo10/Amazon/楽天の実商品)
+  // mode: "design"(デザイン参考サイト) or "product"(ECモールの実商品)
   const searchQuery = mode === "design" ? buildDesignQuery(query) : buildProductQuery(query, cat);
   const sourceTag = mode === "design" ? "📌 実際のデザイン画像" : "🛍️ 実商品";
 
@@ -767,7 +763,7 @@ function renderPinBoard(containerId, query, count, cat, mode) {
       const target = document.getElementById(containerId);
       if (!target) return;
       if (!images.length) {
-        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "実商品検索を設定すると、Pinterest・Qoo10等の実際の画像が表示されます(上部「⚙️ 実商品検索の設定」)。" : "参考画像を取得できませんでした。"}上の「Pinterestで見る」から直接検索してください。</div>`;
+        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "実画像検索を設定すると、より的確な実際の画像が表示されます(上部「⚙️ 実画像検索の設定」)。" : "参考画像を取得できませんでした。"}上部のボタンから外部サイトで直接検索してください。</div>`;
         return;
       }
       renderImagesInto(containerId, images, "🖼️ CC素材");
@@ -779,17 +775,17 @@ function renderPinBoard(containerId, query, count, cat, mode) {
 const TREND = {
   beauty: {
     kpi: [
-      { label: "Qoo10 追跡商品数", value: "12,480", delta: "+320 / 週", up: true },
-      { label: "急上昇キーワード", value: "シカミスト", delta: "Qoo10検索 +218%", up: true },
-      { label: "売れ筋価格帯(Qoo10)", value: "¥1,980", delta: "前月 ¥2,180", up: false },
-      { label: "Qoo10 レビュー分析件数", value: "48,200", delta: "+8,400 / 週", up: true },
+      { label: "追跡商品数", value: "12,480", delta: "+320 / 週", up: true },
+      { label: "急上昇キーワード", value: "シカミスト", delta: "検索 +218%", up: true },
+      { label: "売れ筋価格帯", value: "¥1,980", delta: "前月 ¥2,180", up: false },
+      { label: "レビュー分析件数", value: "48,200", delta: "+8,400 / 週", up: true },
     ],
     rank: [
-      { name: "シカ成分スキンケアミスト", src: "Qoo10 ビューティー 1位", growth: "+218%", tags: ["敏感肌", "携帯用"], hot: true },
-      { name: "クッションファンデ(ツヤ肌系)", src: "Qoo10 メガ割 上位", growth: "+142%", tags: ["メガ割", "崩れにくい"], hot: true },
-      { name: "レチノール アイクリーム", src: "Qoo10 スキンケア", growth: "+118%", tags: ["エイジング"], hot: false },
-      { name: "弱酸性 頭皮ケアシャンプー", src: "Qoo10 ヘアケア", growth: "+96%", tags: ["ヘアケア"], hot: false },
-      { name: "リップスリーピングマスク", src: "Qoo10 × SNS言及", growth: "+87%", tags: ["ナイトケア"], hot: false },
+      { name: "シカ成分スキンケアミスト", src: "ECモール ビューティー 1位", growth: "+218%", tags: ["敏感肌", "携帯用"], hot: true },
+      { name: "クッションファンデ(ツヤ肌系)", src: "ECモール 大型セール上位", growth: "+142%", tags: ["メガ割", "崩れにくい"], hot: true },
+      { name: "レチノール アイクリーム", src: "ECモール スキンケア", growth: "+118%", tags: ["エイジング"], hot: false },
+      { name: "弱酸性 頭皮ケアシャンプー", src: "ECモール ヘアケア", growth: "+96%", tags: ["ヘアケア"], hot: false },
+      { name: "リップスリーピングマスク", src: "ECモール × SNS言及", growth: "+87%", tags: ["ナイトケア"], hot: false },
     ],
     bars: [
       { label: "スキンケア", val: 34 }, { label: "ベースメイク", val: 26 },
@@ -802,17 +798,17 @@ const TREND = {
   },
   food: {
     kpi: [
-      { label: "Qoo10 追跡商品数", value: "8,940", delta: "+210 / 週", up: true },
-      { label: "急上昇キーワード", value: "高タンパク", delta: "Qoo10検索 +164%", up: true },
-      { label: "売れ筋価格帯(Qoo10)", value: "¥1,280", delta: "前月 ¥1,150", up: true },
-      { label: "Qoo10 レビュー分析件数", value: "31,600", delta: "+5,100 / 週", up: true },
+      { label: "追跡商品数", value: "8,940", delta: "+210 / 週", up: true },
+      { label: "急上昇キーワード", value: "高タンパク", delta: "検索 +164%", up: true },
+      { label: "売れ筋価格帯", value: "¥1,280", delta: "前月 ¥1,150", up: true },
+      { label: "レビュー分析件数", value: "31,600", delta: "+5,100 / 週", up: true },
     ],
     rank: [
-      { name: "高タンパク グラノーラバー", src: "Qoo10 フード 1位", growth: "+164%", tags: ["プロテイン", "個包装"], hot: true },
-      { name: "冷凍キンパ(韓国海苔巻き)", src: "Qoo10 × TikTok言及", growth: "+139%", tags: ["時短", "冷凍"], hot: true },
-      { name: "ゼロシュガー韓国スナック", src: "Qoo10 韓国食品", growth: "+104%", tags: ["低糖質"], hot: false },
-      { name: "トゥンカロン(太っちょマカロン)", src: "Qoo10 スイーツ", growth: "+92%", tags: ["映え", "ギフト"], hot: false },
-      { name: "コンブチャ(炭酸飲料タイプ)", src: "Qoo10 ドリンク", growth: "+78%", tags: ["健康飲料"], hot: false },
+      { name: "高タンパク グラノーラバー", src: "ECモール フード 1位", growth: "+164%", tags: ["プロテイン", "個包装"], hot: true },
+      { name: "冷凍キンパ(韓国海苔巻き)", src: "ECモール × SNS言及", growth: "+139%", tags: ["時短", "冷凍"], hot: true },
+      { name: "ゼロシュガー韓国スナック", src: "ECモール 韓国食品", growth: "+104%", tags: ["低糖質"], hot: false },
+      { name: "トゥンカロン(太っちょマカロン)", src: "ECモール スイーツ", growth: "+92%", tags: ["映え", "ギフト"], hot: false },
+      { name: "コンブチャ(炭酸飲料タイプ)", src: "ECモール ドリンク", growth: "+78%", tags: ["健康飲料"], hot: false },
     ],
     bars: [
       { label: "健康食品", val: 31 }, { label: "冷凍食品", val: 27 },
@@ -825,17 +821,17 @@ const TREND = {
   },
   living: {
     kpi: [
-      { label: "Qoo10 追跡商品数", value: "15,220", delta: "+410 / 週", up: true },
-      { label: "急上昇キーワード", value: "卓上加湿器", delta: "Qoo10検索 +121%", up: true },
-      { label: "売れ筋価格帯(Qoo10)", value: "¥3,480", delta: "前月 ¥3,900", up: false },
-      { label: "Qoo10 レビュー分析件数", value: "52,900", delta: "+9,200 / 週", up: true },
+      { label: "追跡商品数", value: "15,220", delta: "+410 / 週", up: true },
+      { label: "急上昇キーワード", value: "卓上加湿器", delta: "検索 +121%", up: true },
+      { label: "売れ筋価格帯", value: "¥3,480", delta: "前月 ¥3,900", up: false },
+      { label: "レビュー分析件数", value: "52,900", delta: "+9,200 / 週", up: true },
     ],
     rank: [
-      { name: "卓上加湿器(アロマ対応)", src: "Qoo10 生活/家電 1位", growth: "+121%", tags: ["在宅ワーク", "静音"], hot: true },
-      { name: "姿勢サポートクッション", src: "Qoo10 × SNS言及", growth: "+97%", tags: ["デスクワーク"], hot: true },
-      { name: "折りたたみ ドライヤースタンド", src: "Qoo10 生活雑貨", growth: "+85%", tags: ["時短", "省スペース"], hot: false },
-      { name: "珪藻土 キッチン水切りマット", src: "Qoo10 キッチン", growth: "+73%", tags: ["キッチン"], hot: false },
-      { name: "LEDデスクライト(調色機能)", src: "Qoo10 家電", growth: "+66%", tags: ["目に優しい"], hot: false },
+      { name: "卓上加湿器(アロマ対応)", src: "ECモール 生活/家電 1位", growth: "+121%", tags: ["在宅ワーク", "静音"], hot: true },
+      { name: "姿勢サポートクッション", src: "ECモール × SNS言及", growth: "+97%", tags: ["デスクワーク"], hot: true },
+      { name: "折りたたみ ドライヤースタンド", src: "ECモール 生活雑貨", growth: "+85%", tags: ["時短", "省スペース"], hot: false },
+      { name: "珪藻土 キッチン水切りマット", src: "ECモール キッチン", growth: "+73%", tags: ["キッチン"], hot: false },
+      { name: "LEDデスクライト(調色機能)", src: "ECモール 家電", growth: "+66%", tags: ["目に優しい"], hot: false },
     ],
     bars: [
       { label: "デスク周り", val: 33 }, { label: "キッチン", val: 24 },
@@ -857,13 +853,13 @@ const PROPOSALS = {
     packageLabel: "VEIL MER",
     packageSub: "SOOTHING MIST 50mL",
     lead: "レビュー分析で判明した「粒子が粗くメイクの上から使えない」という不満を解決する、超微粒子ノズル採用の携帯用ミスト。",
-    target: ["25〜39歳・オフィスワーカーの敏感肌層", "Qoo10メガ割でK-Beautyを購入する層", "「メイク直しの時短」ニーズ"],
+    target: ["25〜39歳・オフィスワーカーの敏感肌層", "ECモールの大型セールでK-Beautyを購入する層", "「メイク直しの時短」ニーズ"],
     spec: ["センテラアジアティカ+セラミド配合", "超微粒子ノズル(メイクの上からOK)", "50mL携帯サイズ+150mL詰替の2SKU"],
-    price: ["想定売価 ¥1,980(税込)", "目標原価率 28%(1st lot 5,000個)", "Qoo10メガ割時 ¥1,680 の値付け余地"],
+    price: ["想定売価 ¥1,980(税込)", "目標原価率 28%(1st lot 5,000個)", "大型セール時 ¥1,680 の値付け余地"],
     regulatory: ["化粧品輸入:製造販売業者経由の届出が必要", "「肌荒れを防ぐ」は医薬部外品でのみ訴求可", "全成分表示ラベル(日本語)必須"],
     images: [
       { name: "A案 ナチュラルグリーン", desc: "成分の誠実さを打ち出す低彩度グリーン", colors: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
-      { name: "B案 ソフトピンク", desc: "Qoo10メガ割で強いK-Beautyらしい柔らかさ", colors: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
+      { name: "B案 ソフトピンク", desc: "大型セールで強いK-Beautyらしい柔らかさ", colors: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
       { name: "C案 クリーンブルー", desc: "皮膚科学系ブランドを想起する清潔感", colors: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
     ],
     factories: [
@@ -901,7 +897,7 @@ const PROPOSALS = {
     lead: "「給水が面倒・カビが心配」というレビュー最多の不満を、上部給水+抗菌カートリッジで解決するデスク向け加湿器。",
     target: ["在宅ワーク・オフィスのデスク利用者", "乾燥・肌ケアに関心の高い20〜40代女性", "「デスクに置けるかわいい家電」ニーズ"],
     spec: ["上部給水式(タンク取り外し不要)", "抗菌カートリッジ+週1洗いでOK設計", "くすみカラー3色 / 静音25dB / USB-C給電"],
-    price: ["想定売価 ¥3,480(税込)", "Makuake先行価格 ¥2,780(20%オフ)", "目標原価率 35%(1st lot 3,000台)"],
+    price: ["想定売価 ¥3,480(税込)", "クラウドファンディング先行価格 ¥2,780(20%オフ)", "目標原価率 35%(1st lot 3,000台)"],
     regulatory: ["電気用品安全法(PSE)対象部品の確認", "USB給電機器の技適・表示要件", "取扱説明書(日本語)とPL保険の手配"],
     images: [
       { name: "A案 グレージュ", desc: "インテリアに馴染む日本で人気のくすみ色", colors: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
@@ -1015,7 +1011,7 @@ const MOODS = [
     cat: "beauty", label: "PURE CICA", sub: "SOOTHING MIST",
     colors: ["#e8f0e4", "#f7f3ea", "#c9d8c5", "#8fae8b", "#5c7a58"],
     title: "ナチュラル・クリーン(スキンケア向け)",
-    desc: "無印良品的な引き算の美学。低彩度グリーン×生成りで「成分の誠実さ」を伝える。日本のセンシティブスキン市場で最も支持されるトンマナ。",
+    desc: "引き算の美学。低彩度グリーン×生成りで「成分の誠実さ」を伝える。日本のセンシティブスキン市場で最も支持されるトンマナ。",
     tags: ["余白多め", "細めのゴシック体", "成分名を主役に"],
     refEn: "skincare packaging natural minimal design",
     refJa: "スキンケア ナチュラル パッケージ",
@@ -1042,7 +1038,7 @@ const MOODS = [
     cat: "living", label: "CALM DESK", sub: "AROMA HUMIDIFIER",
     colors: ["#eef2f7", "#dfe7f0", "#b8c9dd", "#8aa3c0", "#5b7897"],
     title: "ミニマル・テック(デスク家電向け)",
-    desc: "ニュアンスブルーグレー。BALMUDA以降の日本市場では「家電=白物」から「インテリアに馴染む低彩度」へ移行。",
+    desc: "ニュアンスブルーグレー。近年の日本の家電市場では「家電=白物」から「インテリアに馴染む低彩度」へ移行。",
     tags: ["余白と直線", "小さめロゴ", "ライフスタイル写真"],
     refEn: "minimal home appliance product design",
     refJa: "卓上 加湿器 家電 デザイン",
@@ -1060,7 +1056,7 @@ const MOODS = [
     cat: "food", label: "POP BURST", sub: "TRIAL PACK",
     colors: ["#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"],
     title: "フレッシュ・ポップ(SNS拡散狙い)",
-    desc: "彩度高めのブルー系。TikTok/リールで映える「開封動画向け」パッケージ。Z世代向けトライアル商品で有効。",
+    desc: "彩度高めのブルー系。SNSショート動画で映える「開封動画向け」パッケージ。Z世代向けトライアル商品で有効。",
     tags: ["大胆な色面", "絵文字的アイコン", "開封体験"],
     refEn: "colorful pop packaging design unboxing",
     refJa: "ポップ カラフル パッケージ デザイン",
@@ -1071,10 +1067,10 @@ function buildRefLinks(m) {
   const en = encodeURIComponent(m.refEn);
   const qooImg = encodeURIComponent(m.refJa + " site:qoo10.jp");
   return [
-    { label: "📌 Pinterestで見る", url: `https://www.pinterest.com/search/pins/?q=${en}` },
-    { label: "🎨 Behanceで見る", url: `https://www.behance.net/search/projects?search=${en}` },
-    { label: "🏀 Dribbbleで見る", url: `https://dribbble.com/search/${en}` },
-    { label: "🛍️ Qoo10の実商品を見る", url: `https://www.google.com/search?tbm=isch&q=${qooImg}` },
+    { key: "design", label: "🔍 画像で探す", url: `https://www.pinterest.com/search/pins/?q=${en}` },
+    { key: "portfolio1", label: "🎨 作品集を見る", url: `https://www.behance.net/search/projects?search=${en}` },
+    { key: "portfolio2", label: "✏️ デザイン事例を見る", url: `https://dribbble.com/search/${en}` },
+    { key: "product", label: "🛍️ 類似商品を探す", url: `https://www.google.com/search?tbm=isch&q=${qooImg}` },
   ];
 }
 
@@ -1087,10 +1083,10 @@ document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
       <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
       <div class="pin-board-head">
         <span class="pin-board-title">📌 実際の参考写真</span>
-        <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(m.refEn)}" target="_blank" rel="noopener">Pinterestで見る</a>
+        <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(m.refEn)}" target="_blank" rel="noopener">画像で探す</a>
       </div>
       <div class="pin-board" id="pinboard-mood-${i}"><div class="pin-loading">画像を読み込んでいます…</div></div>
-      <div class="ref-links">${buildRefLinks(m).filter(l => !l.label.includes("Pinterest")).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
+      <div class="ref-links">${buildRefLinks(m).filter(l => l.key !== "design").map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
     </div>
   </div>`).join("");
 MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat, "design"));
@@ -1125,8 +1121,8 @@ function buildDesignPrompt(productName, cat, keywords) {
 
 重要な制約:
 - 出力は必ず以下のJSON形式のみとし、それ以外の文字列(説明文・前置き・コードフェンス等)は一切含めないでください。
-- enKeywordsはPinterest・Behance・Dribbbleでの画像検索に適した英語のキーワード(3〜6語程度)にしてください。
-- jaKeywordsはQoo10で類似の実商品を探すのに適した日本語キーワード(2〜4語程度)にしてください。
+- enKeywordsはデザイン参考サイトでの画像検索に適した英語のキーワード(3〜6語程度)にしてください。
+- jaKeywordsは国内ECモールで類似の実商品を探すのに適した日本語キーワード(2〜4語程度)にしてください。
 - colorsのhex値は必ず "#rrggbb" 形式にしてください。
 
 {
@@ -1172,9 +1168,9 @@ function normalizeDirections(cat, raw, keywords) {
 
 function renderDesignSuggestions(cat, productName, directions, liveMode, errorNote) {
   const links = d => ([
-    { label: "🎨 Behanceで見る", url: `https://www.behance.net/search/projects?search=${encodeURIComponent(d.enKeywords)}` },
-    { label: "🏀 Dribbbleで見る", url: `https://dribbble.com/search/${encodeURIComponent(d.enKeywords)}` },
-    { label: "🛍️ Qoo10の実商品を見る", url: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(d.jaKeywords + " site:qoo10.jp")}` },
+    { label: "🎨 作品集を見る", url: `https://www.behance.net/search/projects?search=${encodeURIComponent(d.enKeywords)}` },
+    { label: "✏️ デザイン事例を見る", url: `https://dribbble.com/search/${encodeURIComponent(d.enKeywords)}` },
+    { label: "🛍️ 類似商品を探す", url: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(d.jaKeywords + " site:qoo10.jp")}` },
   ]);
   const boxId = i => "pinboard-ds-" + i;
 
@@ -1191,7 +1187,7 @@ function renderDesignSuggestions(cat, productName, directions, liveMode, errorNo
         <div class="mood-tags" style="margin-top:8px">${(d.tags || []).map((t, j) => `<span class="tag b${(j % 3) + 1}">${escapeHtml(t)}</span>`).join("")}</div>
         <div class="pin-board-head" style="margin-top:14px">
           <span class="pin-board-title">📌 実際の参考写真</span>
-          <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}" target="_blank" rel="noopener">Pinterestで見る</a>
+          <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}" target="_blank" rel="noopener">画像で探す</a>
         </div>
         <div class="pin-board" id="${boxId(i)}"><div class="pin-loading">画像を読み込んでいます…</div></div>
         <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
@@ -1355,7 +1351,7 @@ function refreshGoogleStatus() {
   const has = !!(getGoogleKey() && getGoogleCx());
   const statusEl = document.getElementById("googleStatus");
   statusEl.textContent = has
-    ? "📌 実画像検索が有効です — Pinterest等のデザイン画像/Qoo10等の実商品写真を優先表示します"
+    ? "📌 実画像検索が有効です — デザイン参考画像/実商品写真を優先表示します"
     : "🖼️ CC素材(Openverse)で表示中 — 実画像検索は未設定";
   statusEl.classList.toggle("on", has);
   document.getElementById("googleKeyInput").value = getGoogleKey();
@@ -1415,7 +1411,7 @@ function buildPrompt(cat, priceLabel, channelLabel) {
   };
 
   const system = `あなたは韓国企業の日本向けOEM商品開発を支援する優秀なプロダクトマネージャー兼マーケターです。
-与えられた日本市場(Qoo10)のトレンドデータをもとに、独自性の高いOEM商品コンセプトを1件提案してください。
+与えられた日本市場(国内ECモール)のトレンドデータをもとに、独自性の高いOEM商品コンセプトを1件提案してください。
 
 重要な制約:
 - ブランド名・商品名は、日本や韓国で実在する可能性がある有名ブランド名・商品名とは一切重複・類似させず、完全にオリジナルな造語にしてください。既存の実在商品を模倣した名称は禁止です。
@@ -1439,7 +1435,7 @@ function buildPrompt(cat, priceLabel, channelLabel) {
   ]
 }`;
 
-  const user = `以下の条件・Qoo10トレンドデータをもとに、OEM商品コンセプトをJSON形式で1件提案してください。
+  const user = `以下の条件・ECモールのトレンドデータをもとに、OEM商品コンセプトをJSON形式で1件提案してください。
 
 ${JSON.stringify(context, null, 2)}`;
 
@@ -1721,8 +1717,8 @@ document.getElementById("genBtn").addEventListener("click", async () => {
   btn.disabled = true;
   box.classList.remove("show");
   loadingText.textContent = hasKey
-    ? "Claude APIでQoo10トレンドデータを分析し、商品コンセプトを生成しています…"
-    : "Qoo10のトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…(サンプルモード)";
+    ? "Claude APIでECモールのトレンドデータを分析し、商品コンセプトを生成しています…"
+    : "ECモールのトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…(サンプルモード)";
   loading.classList.add("show");
 
   let liveMode = false;
