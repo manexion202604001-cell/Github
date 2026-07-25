@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旧字体OCR転記ツール | 旧字体の文書をスプレッドシートへ自動転記</title>
+<style>
+  :root {
+    --ink: #1f2430;
+    --sub: #5b6270;
+    --bg: #f4f2ec;
+    --card: #ffffff;
+    --line: #e3ded2;
+    --accent: #8a2be2;
+    --accent-dark: #6a1fb0;
+    --ok: #1d8a4e;
+    --warn: #c47f17;
+    --err: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+  }
+  header {
+    background: linear-gradient(135deg, #2b1a4a 0%, #4a2a7a 60%, #6a3ab0 100%);
+    color: #fff;
+    padding: 34px 20px 28px;
+    text-align: center;
+  }
+  header h1 { font-size: 26px; letter-spacing: .06em; }
+  header h1 .badge {
+    display: inline-block; font-size: 12px; vertical-align: middle;
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.4);
+    border-radius: 999px; padding: 2px 10px; margin-left: 10px; letter-spacing: .1em;
+  }
+  header p { margin-top: 8px; font-size: 13.5px; opacity: .88; }
+  main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 80px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; margin-top: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .card h2 {
+    font-size: 16.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .step-no {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 13px; flex: none;
+  }
+  .hint { font-size: 12.5px; color: var(--sub); }
+  /* ---- タブ ---- */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab {
+    border: 1px solid var(--line); background: #faf9f5; border-radius: 8px 8px 0 0;
+    padding: 7px 16px; font-size: 13.5px; cursor: pointer;
+  }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  /* ---- ドロップゾーン ---- */
+  #dropzone {
+    border: 2px dashed #c9bfe0; border-radius: 12px; background: #faf8ff;
+    padding: 34px 16px; text-align: center; cursor: pointer; transition: .15s;
+  }
+  #dropzone.drag { background: #efe6ff; border-color: var(--accent); }
+  #dropzone .big { font-size: 15.5px; font-weight: 600; }
+  #dropzone .sub { font-size: 12.5px; color: var(--sub); margin-top: 6px; }
+  /* ---- ボタン ---- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: none; border-radius: 8px; padding: 9px 18px;
+    font-size: 14px; cursor: pointer; font-weight: 600;
+    background: #e9e5da; color: var(--ink); transition: .15s;
+  }
+  .btn:hover { filter: brightness(.96); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-dark); filter: none; }
+  .btn.green { background: var(--ok); color: #fff; }
+  .btn.danger { background: #f6e4e2; color: var(--err); }
+  .btn.small { padding: 5px 12px; font-size: 12.5px; }
+  /* ---- ファイル一覧 ---- */
+  #fileList { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .thumb {
+    width: 132px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+    background: #fff; position: relative; font-size: 11px;
+  }
+  .thumb img { width: 100%; height: 90px; object-fit: cover; display: block; background: #eee; }
+  .thumb .name { padding: 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--sub); }
+  .thumb .status {
+    position: absolute; top: 4px; left: 4px; border-radius: 999px;
+    padding: 1px 8px; font-size: 10.5px; background: rgba(255,255,255,.92); border: 1px solid var(--line);
+  }
+  .thumb .status.done { color: var(--ok); border-color: var(--ok); }
+  .thumb .status.run { color: var(--accent); border-color: var(--accent); }
+  .thumb .status.err { color: var(--err); border-color: var(--err); }
+  .thumb .rm {
+    position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%;
+    border: none; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; font-size: 11px; line-height: 1;
+  }
+  /* ---- オプション ---- */
+  .opts { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 4px; }
+  .opts label { font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .opts select, .opts input[type=text] {
+    border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-size: 13px;
+  }
+  fieldset.optgroup {
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px 12px; min-width: 240px; flex: 1;
+  }
+  fieldset.optgroup legend { font-size: 12.5px; color: var(--sub); padding: 0 6px; }
+  /* ---- 進捗 ---- */
+  #progressWrap { display: none; margin-top: 14px; }
+  #progressBar {
+    height: 10px; background: #eee8f7; border-radius: 999px; overflow: hidden;
+  }
+  #progressBar > div {
+    height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #b57ce8);
+    transition: width .2s;
+  }
+  #progressText { font-size: 12.5px; color: var(--sub); margin-top: 5px; }
+  /* ---- 結果テーブル ---- */
+  .tablewrap { overflow-x: auto; margin-top: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: #fff; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f3eefb; font-size: 12.5px; white-space: nowrap; }
+  td.num { text-align: right; color: var(--sub); white-space: nowrap; }
+  td.editable { min-width: 200px; }
+  td.editable:focus { outline: 2px solid var(--accent); background: #fdfbff; }
+  td .conf-hi { color: var(--ok); }
+  td .conf-mid { color: var(--warn); }
+  td .conf-lo { color: var(--err); }
+  .changed { background: #fff3c4; border-radius: 3px; padding: 0 1px; }
+  #emptyMsg { text-align: center; color: var(--sub); font-size: 13px; padding: 26px 0; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+  .toolbar .spacer { flex: 1; }
+  /* ---- テキスト貼り付けタブ ---- */
+  textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-size: 14px; font-family: inherit; resize: vertical;
+  }
+  .paste-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .paste-grid { grid-template-columns: 1fr; } }
+  /* ---- 辞書 ---- */
+  details.dict summary { cursor: pointer; font-size: 13.5px; font-weight: 600; }
+  #dictPreview {
+    margin-top: 10px; max-height: 180px; overflow-y: auto; font-size: 13px;
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+  }
+  #dictPreview span { white-space: nowrap; color: var(--sub); }
+  #dictPreview b { color: var(--ink); font-weight: 600; }
+  /* ---- 通知 ---- */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(31,36,48,.94); color: #fff; padding: 10px 22px; border-radius: 999px;
+    font-size: 13.5px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50; max-width: 90vw;
+  }
+  #toast.show { opacity: 1; }
+  footer { text-align: center; font-size: 12px; color: var(--sub); padding: 30px 10px 40px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>旧字体OCR転記ツール<span class="badge">舊字體 → 新字体</span></h1>
+  <p>旧字体で書かれた文書の画像・PDFを読み取り、新字体に変換してスプレッドシートへ自動転記します。<br>すべてブラウザ内で処理され、画像が外部サーバーへ送信されることはありません。</p>
+</header>
+
+<main>
+
+  <!-- ステップ1: 入力 -->
+  <div class="card">
+    <h2><span class="step-no">1</span>旧字体の文書を読み込む</h2>
+    <div class="tabs">
+      <button class="tab active" data-tab="imageTab">画像・PDFからOCR</button>
+      <button class="tab" data-tab="textTab">テキストを貼り付けて変換</button>
+    </div>
+
+    <!-- 画像タブ -->
+    <div id="imageTab">
+      <div id="dropzone">
+        <div class="big">ここに画像 / PDF をドラッグ&ドロップ</div>
+        <div class="sub">またはクリックしてファイルを選択(JPG / PNG / GIF / BMP / WebP / PDF、複数可)<br>スクリーンショットを <b>Ctrl+V / ⌘V</b> で直接貼り付けることもできます</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,.pdf" multiple hidden>
+      <div id="fileList"></div>
+
+      <div class="toolbar">
+        <button class="btn small" id="sampleBtn">サンプル画像で試す</button>
+        <span class="hint">※ 初回のOCRは認識エンジン(約15MB)のダウンロードに少し時間がかかります</span>
+      </div>
+    </div>
+
+    <!-- テキストタブ -->
+    <div id="textTab" style="display:none">
+      <div class="paste-grid">
+        <div>
+          <div class="hint" style="margin-bottom:4px">旧字体のテキスト(1行が表の1行になります)</div>
+          <textarea id="pasteInput" rows="7" placeholder="例)舊字體の文字を含む學校の歷史資料を轉記する&#10;例)當時の帳簿には金壹萬圓と記載されてゐた"></textarea>
+        </div>
+        <div>
+          <div class="hint" style="margin-bottom:4px">変換プレビュー(新字体)</div>
+          <textarea id="pastePreview" rows="7" readonly style="background:#faf9f5"></textarea>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="pasteAddBtn">表に追加する</button>
+        <span class="hint">貼り付けたテキストは即座に新字体へ変換されます</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ステップ2: 設定と実行 -->
+  <div class="card">
+    <h2><span class="step-no">2</span>読み取り設定 → OCR実行</h2>
+    <div class="opts">
+      <fieldset class="optgroup">
+        <legend>文字の向き</legend>
+        <label><input type="radio" name="direction" value="auto" checked> 自動判定(横+縦)</label>
+        <label><input type="radio" name="direction" value="horizontal"> 横書き</label>
+        <label><input type="radio" name="direction" value="vertical"> 縦書き</label>
+      </fieldset>
+      <fieldset class="optgroup">
+        <legend>行の扱い</legend>
+        <label><input type="radio" name="rowmode" value="line" checked> 1行ごとに表の1行にする</label>
+        <label><input type="radio" name="rowmode" value="file"> 画像/ページごとに1行にまとめる</label>
+      </fieldset>
+      <fieldset class="optgroup">
+        <legend>変換オプション</legend>
+        <label><input type="checkbox" id="optConvert" checked> 旧字体 → 新字体に変換する</label>
+        <label><input type="checkbox" id="optItaiji"> 人名異体字も変換(髙→高、﨑→崎 など)</label>
+        <label><input type="checkbox" id="optKana" checked> 変体仮名を変換(ゐ→い、ゑ→え)</label>
+        <label><input type="checkbox" id="optStripSpace" checked> 日本語文中の不要な空白を除去</label>
+      </fieldset>
+    </div>
+    <div class="toolbar">
+      <button class="btn primary" id="runBtn">▶ OCRを実行して表へ転記</button>
+      <button class="btn danger small" id="cancelBtn" style="display:none">中止</button>
+    </div>
+    <div id="progressWrap">
+      <div id="progressBar"><div></div></div>
+      <div id="progressText"></div>
+    </div>
+  </div>
+
+  <!-- ステップ3: 結果 -->
+  <div class="card">
+    <h2><span class="step-no">3</span>結果を確認・修正する</h2>
+    <p class="hint">セルはクリックして直接編集できます。<span class="changed">黄色</span>の文字は旧字体から変換された箇所です。信頼度が低い行は原本と照合してください。</p>
+    <div class="tablewrap">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th style="width:44px">No.</th>
+            <th>ファイル / ページ</th>
+            <th>原文(旧字体)</th>
+            <th>変換後(新字体)</th>
+            <th style="width:70px">信頼度</th>
+            <th>備考</th>
+            <th style="width:44px"></th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+      <div id="emptyMsg">まだデータがありません。上のステップで文書を読み込んでください。</div>
+    </div>
+    <div class="toolbar">
+      <button class="btn small" id="reconvertBtn">原文列から再変換</button>
+      <button class="btn danger small" id="clearBtn">すべて削除</button>
+    </div>
+  </div>
+
+  <!-- ステップ4: 出力 -->
+  <div class="card">
+    <h2><span class="step-no">4</span>スプレッドシートへ出力</h2>
+    <div class="toolbar">
+      <button class="btn green" id="xlsxBtn">Excelファイル(.xlsx)を保存</button>
+      <button class="btn" id="csvBtn">CSVを保存</button>
+      <button class="btn" id="tsvBtn">コピー(Googleスプレッドシートに貼り付け)</button>
+    </div>
+    <details style="margin-top:16px">
+      <summary style="cursor:pointer;font-size:13.5px;font-weight:600">🔗 Googleスプレッドシートへ直接自動転記する(任意設定)</summary>
+      <div style="margin-top:10px">
+        <p class="hint">
+          Google Apps Script のWebアプリURLを設定すると、ボタン1つでシートに行を追記できます。
+          設定方法は <a href="https://github.com/manexion202604001-cell/github/tree/main/kyujitai-ocr" target="_blank" rel="noopener">README</a> を参照(所要5分)。URLはこのブラウザにのみ保存されます。
+        </p>
+        <div class="toolbar">
+          <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1;min-width:260px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px">
+          <button class="btn primary" id="gasSendBtn">シートへ送信</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- 辞書 -->
+  <div class="card">
+    <details class="dict">
+      <summary>📖 変換辞書を確認・カスタマイズする</summary>
+      <p class="hint" style="margin-top:8px">
+        標準辞書には常用漢字の旧字体 約330字を収録しています。下の欄に「<b>旧字=新字</b>」の形式で1行ずつ追加すると、独自の変換ルール(複数文字の語句も可)を登録できます。このブラウザに自動保存されます。
+      </p>
+      <textarea id="customDict" rows="4" placeholder="例)&#10;麴=麹&#10;凛=凜&#10;株式會社=株式会社" style="margin-top:10px"></textarea>
+      <div class="toolbar">
+        <button class="btn small" id="saveDictBtn">カスタム辞書を保存</button>
+        <span class="hint" id="dictCount"></span>
+      </div>
+      <div id="dictPreview"></div>
+    </details>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<footer>旧字体OCR転記ツール — 画像処理・変換はすべてお使いのブラウザ内で完結します</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+'use strict';
+
+/* =========================================================
+ * 旧字体 → 新字体 変換辞書
+ * 常用漢字表の旧字体(いわゆる康熙字典体)を中心に収録。
+ * 文字列は [旧, 新, 旧, 新, ...] の交互ペア。
+ * ======================================================= */
+const KYU_PAIRS =
+  '亞亜惡悪壓圧圍囲爲為醫医壹壱稻稲飮飲隱隠' +
+  '營営榮栄衞衛驛駅圓円緣縁艷艶鹽塩奧奥應応橫横歐欧毆殴黃黄溫温穩穏' +
+  '假仮價価畫画會会壞壊懷懐繪絵擴拡殼殻覺覚學学嶽岳樂楽渴渇罐缶卷巻陷陥' +
+  '勸勧寬寛歡歓觀観關関巖巌顏顔歸帰氣気龜亀僞偽戲戯犧犠舊旧據拠擧挙舉挙' +
+  '虛虚峽峡挾挟狹狭鄕郷曉暁區区驅駆勳勲薰薫' +
+  '徑径惠恵揭掲溪渓經経螢蛍輕軽繼継鷄鶏藝芸擊撃缺欠儉倹劍剣圈圏檢検權権' +
+  '獻献縣県險険顯顕驗験嚴厳效効廣広恆恒鑛鉱號号國国黑黒' +
+  '濟済碎砕齋斎劑剤櫻桜雜雑參参慘惨棧桟蠶蚕贊賛殘残' +
+  '絲糸齒歯兒児辭辞濕湿實実寫写釋釈壽寿收収從従澁渋獸獣縱縦肅粛處処緖緒' +
+  '敍叙將将稱称涉渉燒焼證証奬奨條条狀状乘乗淨浄剩剰疊畳繩縄壤壌孃嬢讓譲' +
+  '釀醸觸触囑嘱眞真寢寝愼慎盡尽圖図粹粋醉酔穗穂隨随髓髄樞枢數数瀨瀬' +
+  '聲声靜静齊斉攝摂竊窃專専淺浅戰戦踐践錢銭潛潜纖繊禪禅雙双壯壮爭争莊荘' +
+  '搜捜插挿巢巣曾曽瘦痩裝装總総騷騒增増藏蔵臟臓卽即屬属續続' +
+  '墮堕對対體体帶帯滯滞臺台瀧滝擇択澤沢擔担單単膽胆團団斷断彈弾遲遅癡痴' +
+  '蟲虫晝昼鑄鋳廳庁徵徴聽聴敕勅鎭鎮遞逓鐵鉄鐡鉄點点轉転傳伝燈灯當当黨党' +
+  '盜盗鬪闘德徳獨独讀読屆届貳弐惱悩腦脳' +
+  '霸覇廢廃拜拝賣売麥麦發発髮髪拔抜晚晩蠻蛮祕秘濱浜甁瓶拂払佛仏倂併變変' +
+  '邊辺辨弁瓣弁辯弁步歩寶宝豐豊襃褒飜翻每毎萬万麵麺默黙' +
+  '彌弥藥薬譯訳豫予餘余與与譽誉搖揺樣様謠謡' +
+  '來来賴頼亂乱覽覧龍竜兩両獵猟綠緑淚涙壘塁禮礼勵励戾戻靈霊齡齢曆暦歷歴' +
+  '戀恋鍊錬爐炉勞労郞郎錄録灣湾' +
+  '沒没稅税說説靑青淸清鄰隣舘館銳鋭隸隷亙亘遙遥彥彦內内卻却徃往' +
+  '攜携頰頬顚顛噓嘘醬醤蟬蝉邨村萠萌壺壷';
+
+/* 人名・地名などでよく使われる異体字(初期設定ではOFF) */
+const ITAIJI_PAIRS =
+  '髙高﨑崎嵜崎濵浜邉辺栁柳嶋島嶌島峯峰曾曽舩船藪薮籔薮凞熙冨富靍鶴' +
+  '瀧滝澤沢濤涛國国齊斉齋斎';
+
+/* 変体仮名・旧仮名 */
+const KANA_PAIRS = 'ゐいゑえヰイヱエ';
+
+function buildMap(pairs) {
+  const m = new Map();
+  for (let i = 0; i < pairs.length; i += 2) {
+    if (pairs[i] !== pairs[i + 1]) m.set(pairs[i], pairs[i + 1]);
+  }
+  return m;
+}
+const KYU_MAP = buildMap(KYU_PAIRS);
+const ITAIJI_MAP = buildMap(ITAIJI_PAIRS);
+const KANA_MAP = buildMap(KANA_PAIRS);
+
+/* ---- カスタム辞書(localStorage保存、複数文字キー対応) ---- */
+const LS_DICT = 'kyujitai_custom_dict';
+const LS_GAS = 'kyujitai_gas_url';
+
+function parseCustomDict(text) {
+  const entries = [];
+  (text || '').split('\n').forEach(line => {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) return;
+    const idx = t.indexOf('=');
+    if (idx <= 0) return;
+    const from = t.slice(0, idx).trim();
+    const to = t.slice(idx + 1).trim();
+    if (from && from !== to) entries.push([from, to]);
+  });
+  // 長い語句を先に置換する
+  entries.sort((a, b) => b[0].length - a[0].length);
+  return entries;
+}
+let customEntries = parseCustomDict(localStorage.getItem(LS_DICT) || '');
+
+/* ---- 変換本体 ---- */
+function isCJK(ch) {
+  if (!ch) return false;
+  const c = ch.codePointAt(0);
+  return (c >= 0x3000 && c <= 0x30FF) || (c >= 0x3400 && c <= 0x9FFF) ||
+         (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFF00 && c <= 0xFFEF) ||
+         (c >= 0x20000 && c <= 0x2FA1F);
+}
+
+function stripJapaneseSpaces(s) {
+  // OCRが日本語文中に混入させる半角/全角スペースを、前後がCJKの場合のみ除去
+  return s.replace(/([　-鿿豈-﫿＀-￯])[ 　]+(?=[　-鿿豈-﫿＀-￯])/g, '$1');
+}
+
+function convertText(src, opts) {
+  let s = src;
+  if (opts.stripSpace) s = stripJapaneseSpaces(s);
+  if (!opts.convert) return s;
+  // カスタム辞書(語句)を先に適用
+  for (const [from, to] of customEntries) s = s.split(from).join(to);
+  // 1文字ずつ辞書変換
+  let out = '';
+  for (const ch of s) {
+    if (KYU_MAP.has(ch)) out += KYU_MAP.get(ch);
+    else if (opts.itaiji && ITAIJI_MAP.has(ch)) out += ITAIJI_MAP.get(ch);
+    else if (opts.kana && KANA_MAP.has(ch)) out += KANA_MAP.get(ch);
+    else out += ch;
+  }
+  return out;
+}
+
+/* 変換箇所をハイライトしたHTMLを返す(表示用) */
+function convertTextHtml(src, opts) {
+  let s = opts.stripSpace ? stripJapaneseSpaces(src) : src;
+  if (!opts.convert) return escapeHtml(s);
+  for (const [from, to] of customEntries) {
+    s = s.split(from).join('\u0001' + to + '\u0002');
+  }
+  let html = '';
+  let buf = '';
+  const flush = () => { html += escapeHtml(buf); buf = ''; };
+  let inMark = false;
+  for (const ch of s) {
+    if (ch === '\u0001') { flush(); html += '<span class="changed">'; inMark = true; continue; }
+    if (ch === '\u0002') { flush(); html += '</span>'; inMark = false; continue; }
+    let rep = null;
+    if (KYU_MAP.has(ch)) rep = KYU_MAP.get(ch);
+    else if (opts.itaiji && ITAIJI_MAP.has(ch)) rep = ITAIJI_MAP.get(ch);
+    else if (opts.kana && KANA_MAP.has(ch)) rep = KANA_MAP.get(ch);
+    if (rep !== null && !inMark) {
+      flush();
+      html += '<span class="changed">' + escapeHtml(rep) + '</span>';
+    } else {
+      buf += rep !== null ? rep : ch;
+    }
+  }
+  flush();
+  return html;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+}
+
+function currentOpts() {
+  return {
+    convert: document.getElementById('optConvert').checked,
+    itaiji: document.getElementById('optItaiji').checked,
+    kana: document.getElementById('optKana').checked,
+    stripSpace: document.getElementById('optStripSpace').checked,
+  };
+}
+
+/* =========================================================
+ * 状態管理
+ * ======================================================= */
+const files = [];   // {id, name, blob, url, pages:[{label, blob}], status, el}
+const rows = [];    // {source, orig, conv, conf, note}
+let fileSeq = 0;
+let cancelRequested = false;
+let running = false;
+
+const $ = id => document.getElementById(id);
+const toastEl = $('toast');
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
+}
+
+/* =========================================================
+ * タブ切り替え
+ * ======================================================= */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    $('imageTab').style.display = tab.dataset.tab === 'imageTab' ? '' : 'none';
+    $('textTab').style.display = tab.dataset.tab === 'textTab' ? '' : 'none';
+  });
+});
+
+/* =========================================================
+ * ファイル入力(ドラッグ&ドロップ / 選択 / クリップボード)
+ * ======================================================= */
+const dropzone = $('dropzone');
+dropzone.addEventListener('click', () => $('fileInput').click());
+$('fileInput').addEventListener('change', e => { addFiles([...e.target.files]); e.target.value = ''; });
+['dragover', 'dragenter'].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.classList.add('drag');
+}));
+['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+}));
+dropzone.addEventListener('drop', e => addFiles([...e.dataTransfer.files]));
+document.addEventListener('paste', e => {
+  const items = [...(e.clipboardData?.items || [])];
+  const imgs = items.filter(i => i.type.startsWith('image/')).map(i => i.getAsFile()).filter(Boolean);
+  if (imgs.length) {
+    addFiles(imgs.map((f, i) => new File([f], `貼り付け画像${Date.now() % 10000}-${i + 1}.png`, { type: f.type })));
+    toast('クリップボードの画像を追加しました');
+  }
+});
+
+async function addFiles(list) {
+  for (const f of list) {
+    const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+    const isImg = f.type.startsWith('image/');
+    if (!isPdf && !isImg) { toast(`対応していない形式です: ${f.name}`); continue; }
+    const entry = { id: ++fileSeq, name: f.name, blob: f, isPdf, pages: null, status: 'wait', el: null };
+    files.push(entry);
+    renderThumb(entry, isImg ? URL.createObjectURL(f) : null);
+    if (isPdf) preparePdf(entry).catch(err => setThumbStatus(entry, 'err', 'PDF読込失敗'));
+  }
+}
+
+function renderThumb(entry, imgUrl) {
+  const div = document.createElement('div');
+  div.className = 'thumb';
+  div.innerHTML =
+    `<img alt="">` +
+    `<span class="status">待機中</span>` +
+    `<button class="rm" title="削除">×</button>` +
+    `<div class="name" title="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</div>`;
+  if (imgUrl) div.querySelector('img').src = imgUrl;
+  else div.querySelector('img').alt = 'PDF';
+  div.querySelector('.rm').addEventListener('click', () => {
+    const i = files.indexOf(entry);
+    if (i >= 0) files.splice(i, 1);
+    div.remove();
+  });
+  $('fileList').appendChild(div);
+  entry.el = div;
+}
+
+function setThumbStatus(entry, cls, text) {
+  entry.status = cls;
+  const s = entry.el?.querySelector('.status');
+  if (s) { s.className = 'status ' + cls; s.textContent = text; }
+}
+
+/* ---- PDF → ページ画像化 ---- */
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+async function preparePdf(entry) {
+  setThumbStatus(entry, 'run', 'PDF展開中');
+  const buf = await entry.blob.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  entry.pages = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    entry.pages.push({ label: `${entry.name} p.${p}`, blob });
+    if (p === 1) entry.el.querySelector('img').src = canvas.toDataURL('image/jpeg', 0.6);
+  }
+  setThumbStatus(entry, 'wait', `${entry.pages.length}ページ`);
+}
+
+/* ---- サンプル画像(旧字体テキストをCanvasに描画) ---- */
+$('sampleBtn').addEventListener('click', () => {
+  const lines = [
+    '舊字體資料 轉記見本',
+    '一、學校の歷史に關する記錄',
+    '一、金壹萬圓也 領收證',
+    '一、藝術と經濟の發展',
+  ];
+  const canvas = document.createElement('canvas');
+  canvas.width = 900; canvas.height = 400;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fdfaf2';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#222';
+  ctx.font = '42px "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif';
+  lines.forEach((t, i) => ctx.fillText(t, 50, 90 + i * 80));
+  canvas.toBlob(blob => {
+    addFiles([new File([blob], 'サンプル(旧字体).png', { type: 'image/png' })]);
+    toast('サンプル画像を追加しました。「OCRを実行」を押してください');
+  }, 'image/png');
+});
+
+/* =========================================================
+ * OCR 実行(Tesseract.js)
+ * ======================================================= */
+let workerCache = {};   // lang → worker
+async function getWorker(lang, onProgress) {
+  if (workerCache[lang]) return workerCache[lang];
+  const worker = await Tesseract.createWorker(lang, 1, {
+    logger: m => {
+      if (m.status === 'recognizing text' && onProgress) onProgress(m.progress);
+    },
+  });
+  workerCache[lang] = worker;
+  return worker;
+}
+
+function langFor(direction) {
+  if (direction === 'vertical') return 'jpn_vert';
+  if (direction === 'horizontal') return 'jpn';
+  return 'jpn+jpn_vert';
+}
+
+function extractLines(data) {
+  // tesseract.js のバージョン差異に耐える行抽出
+  let lines = [];
+  if (Array.isArray(data.lines) && data.lines.length) {
+    lines = data.lines.map(l => ({ text: l.text || '', conf: l.confidence }));
+  } else if (Array.isArray(data.blocks) && data.blocks.length) {
+    for (const b of data.blocks) {
+      for (const par of (b.paragraphs || [])) {
+        for (const l of (par.lines || [])) {
+          lines.push({ text: l.text || '', conf: l.confidence });
+        }
+      }
+    }
+  }
+  if (!lines.length) {
+    lines = (data.text || '').split('\n').map(t => ({ text: t, conf: data.confidence }));
+  }
+  return lines
+    .map(l => ({ text: l.text.replace(/\s+$/g, ''), conf: l.conf }))
+    .filter(l => l.text.trim().length > 0);
+}
+
+$('runBtn').addEventListener('click', runOcr);
+$('cancelBtn').addEventListener('click', () => { cancelRequested = true; toast('中止しています…'); });
+
+async function runOcr() {
+  if (running) return;
+  // OCR対象(未処理 or エラーのもの)を集める
+  const targets = [];
+  for (const f of files) {
+    if (f.isPdf) {
+      if (!f.pages) { toast(`${f.name} はまだ展開中です。少し待ってから実行してください`); continue; }
+      f.pages.forEach(p => targets.push({ entry: f, label: p.label, blob: p.blob }));
+    } else {
+      targets.push({ entry: f, label: f.name, blob: f.blob });
+    }
+  }
+  if (!targets.length) { toast('先に画像またはPDFを追加してください'); return; }
+
+  running = true;
+  cancelRequested = false;
+  $('runBtn').disabled = true;
+  $('cancelBtn').style.display = '';
+  $('progressWrap').style.display = '';
+  const bar = document.querySelector('#progressBar > div');
+  const ptext = $('progressText');
+  const direction = document.querySelector('input[name=direction]:checked').value;
+  const rowmode = document.querySelector('input[name=rowmode]:checked').value;
+  const opts = currentOpts();
+
+  try {
+    ptext.textContent = '認識エンジンを準備しています…(初回はダウンロードに時間がかかります)';
+    const worker = await getWorker(langFor(direction));
+
+    let done = 0;
+    for (const t of targets) {
+      if (cancelRequested) break;
+      setThumbStatus(t.entry, 'run', '認識中');
+      ptext.textContent = `OCR実行中 (${done + 1}/${targets.length}): ${t.label}`;
+      try {
+        const { data } = await worker.recognize(t.blob, {}, { text: true, blocks: true });
+        const lines = extractLines(data);
+        if (rowmode === 'file') {
+          const orig = lines.map(l => l.text).join('');
+          addRow(t.label, orig, data.confidence, opts);
+        } else {
+          for (const l of lines) addRow(t.label, l.text, l.conf, opts);
+        }
+        setThumbStatus(t.entry, 'done', '完了');
+      } catch (err) {
+        console.error(err);
+        setThumbStatus(t.entry, 'err', '失敗');
+        toast(`${t.label} の認識に失敗しました`);
+      }
+      done++;
+      bar.style.width = Math.round(done / targets.length * 100) + '%';
+    }
+    ptext.textContent = cancelRequested
+      ? `中止しました(${done}/${targets.length} 件処理済み)`
+      : `完了:${targets.length} 件を処理し、表に転記しました`;
+    if (!cancelRequested) toast('OCRが完了しました。表を確認してください');
+  } catch (err) {
+    console.error(err);
+    ptext.textContent = 'エラー: ' + (err.message || err);
+    toast('OCRエンジンの起動に失敗しました。通信環境を確認して再試行してください');
+  } finally {
+    running = false;
+    $('runBtn').disabled = false;
+    $('cancelBtn').style.display = 'none';
+  }
+}
+
+/* =========================================================
+ * 結果テーブル
+ * ======================================================= */
+function addRow(source, orig, conf, opts) {
+  const row = {
+    source,
+    orig,
+    conv: convertText(orig, opts),
+    conf: typeof conf === 'number' ? Math.round(conf) : null,
+    note: '',
+  };
+  rows.push(row);
+  renderTable();
+}
+
+function confHtml(conf) {
+  if (conf === null || conf === undefined) return '<span class="hint">—</span>';
+  const cls = conf >= 85 ? 'conf-hi' : conf >= 60 ? 'conf-mid' : 'conf-lo';
+  return `<span class="${cls}">${conf}%</span>`;
+}
+
+function renderTable() {
+  const body = $('resultBody');
+  const opts = currentOpts();
+  body.innerHTML = '';
+  rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="num">${i + 1}</td>` +
+      `<td class="hint" style="max-width:160px;word-break:break-all">${escapeHtml(r.source)}</td>` +
+      `<td class="editable" contenteditable data-field="orig" data-i="${i}">${escapeHtml(r.orig)}</td>` +
+      `<td class="editable" contenteditable data-field="conv" data-i="${i}">${convertTextHtml(r.orig, opts) === escapeHtml(r.conv) || r.convEdited ? escapeHtml(r.conv) : convertTextHtml(r.orig, opts)}</td>` +
+      `<td class="num">${confHtml(r.conf)}</td>` +
+      `<td class="editable" contenteditable data-field="note" data-i="${i}">${escapeHtml(r.note)}</td>` +
+      `<td><button class="btn danger small" data-del="${i}" title="この行を削除">×</button></td>`;
+    body.appendChild(tr);
+  });
+  $('emptyMsg').style.display = rows.length ? 'none' : '';
+}
+
+$('resultBody').addEventListener('input', e => {
+  const td = e.target.closest('td.editable');
+  if (!td) return;
+  const i = +td.dataset.i;
+  const field = td.dataset.field;
+  if (rows[i]) {
+    rows[i][field] = td.innerText.replace(/\n+$/, '');
+    if (field === 'conv') rows[i].convEdited = true;
+  }
+});
+$('resultBody').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-del]');
+  if (!btn) return;
+  rows.splice(+btn.dataset.del, 1);
+  renderTable();
+});
+
+$('reconvertBtn').addEventListener('click', () => {
+  const opts = currentOpts();
+  rows.forEach(r => { r.conv = convertText(r.orig, opts); r.convEdited = false; });
+  renderTable();
+  toast('原文列から再変換しました');
+});
+$('clearBtn').addEventListener('click', () => {
+  if (!rows.length) return;
+  if (!confirm('表のデータをすべて削除しますか?')) return;
+  rows.length = 0;
+  renderTable();
+});
+
+/* =========================================================
+ * テキスト貼り付けタブ
+ * ======================================================= */
+$('pasteInput').addEventListener('input', () => {
+  $('pastePreview').value = convertText($('pasteInput').value, currentOpts());
+});
+['optConvert', 'optItaiji', 'optKana', 'optStripSpace'].forEach(id => {
+  $(id).addEventListener('change', () => {
+    $('pastePreview').value = convertText($('pasteInput').value, currentOpts());
+  });
+});
+$('pasteAddBtn').addEventListener('click', () => {
+  const text = $('pasteInput').value;
+  const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!lines.length) { toast('テキストを入力してください'); return; }
+  const opts = currentOpts();
+  lines.forEach(l => addRow('テキスト貼り付け', l, null, opts));
+  toast(`${lines.length} 行を表に追加しました`);
+});
+
+/* =========================================================
+ * 出力(XLSX / CSV / TSV / Google Apps Script)
+ * ======================================================= */
+const HEADER = ['No.', 'ファイル/ページ', '原文(旧字体)', '変換後(新字体)', '信頼度(%)', '備考'];
+function exportRows() {
+  return rows.map((r, i) => [i + 1, r.source, r.orig, r.conv, r.conf ?? '', r.note]);
+}
+function requireRows() {
+  if (!rows.length) { toast('出力するデータがありません'); return false; }
+  return true;
+}
+function stamp() {
+  const d = new Date();
+  const z = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}`;
+}
+
+$('xlsxBtn').addEventListener('click', () => {
+  if (!requireRows()) return;
+  const ws = XLSX.utils.aoa_to_sheet([HEADER, ...exportRows()]);
+  ws['!cols'] = [{ wch: 5 }, { wch: 24 }, { wch: 44 }, { wch: 44 }, { wch: 9 }, { wch: 20 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '旧字体転記');
+  XLSX.writeFile(wb, `旧字体転記_${stamp()}.xlsx`);
+  toast('Excelファイルを保存しました');
+});
+
+function download(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function csvCell(v) {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+$('csvBtn').addEventListener('click', () => {
+  if (!requireRows()) return;
+  const lines = [HEADER, ...exportRows()].map(r => r.map(csvCell).join(','));
+  download(`旧字体転記_${stamp()}.csv`, '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+  toast('CSVを保存しました(Excelでそのまま開けます)');
+});
+$('tsvBtn').addEventListener('click', async () => {
+  if (!requireRows()) return;
+  const tsv = [HEADER, ...exportRows()]
+    .map(r => r.map(v => String(v ?? '').replace(/\t/g, ' ').replace(/\n/g, ' ')).join('\t'))
+    .join('\n');
+  try {
+    await navigator.clipboard.writeText(tsv);
+    toast('コピーしました。Googleスプレッドシートのセルを選んで貼り付けてください');
+  } catch {
+    download(`旧字体転記_${stamp()}.tsv`, tsv, 'text/tab-separated-values;charset=utf-8');
+    toast('クリップボードが使えないためTSVファイルとして保存しました');
+  }
+});
+
+/* ---- Google Apps Script 連携 ---- */
+$('gasUrl').value = localStorage.getItem(LS_GAS) || '';
+$('gasUrl').addEventListener('change', () => localStorage.setItem(LS_GAS, $('gasUrl').value.trim()));
+$('gasSendBtn').addEventListener('click', async () => {
+  if (!requireRows()) return;
+  const url = $('gasUrl').value.trim();
+  if (!/^https:\/\/script\.google\.com\//.test(url)) {
+    toast('Google Apps Script のWebアプリURL(https://script.google.com/…)を入力してください');
+    return;
+  }
+  localStorage.setItem(LS_GAS, url);
+  const btn = $('gasSendBtn');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ header: HEADER, rows: exportRows() }),
+      redirect: 'follow',
+    });
+    let added = rows.length;
+    try {
+      const j = await res.json();
+      if (j && typeof j.added === 'number') added = j.added;
+      if (j && j.error) throw new Error(j.error);
+    } catch (e) { /* 応答が読めなくても送信自体は成功していることが多い */ }
+    toast(`Googleスプレッドシートへ ${added} 行を送信しました`);
+  } catch (err) {
+    console.error(err);
+    toast('送信に失敗しました。URLとデプロイ設定(全員がアクセス可)を確認してください');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'シートへ送信';
+  }
+});
+
+/* =========================================================
+ * 辞書UI
+ * ======================================================= */
+function renderDict() {
+  const prev = $('dictPreview');
+  const parts = [];
+  for (const [k, v] of KYU_MAP) parts.push(`<span>${k}→<b>${v}</b></span>`);
+  prev.innerHTML = parts.join('');
+  $('dictCount').textContent =
+    `標準辞書 ${KYU_MAP.size} 字 / 異体字 ${ITAIJI_MAP.size} 字 / カスタム ${customEntries.length} 件`;
+}
+$('customDict').value = localStorage.getItem(LS_DICT) || '';
+$('saveDictBtn').addEventListener('click', () => {
+  localStorage.setItem(LS_DICT, $('customDict').value);
+  customEntries = parseCustomDict($('customDict').value);
+  renderDict();
+  $('pastePreview').value = convertText($('pasteInput').value, currentOpts());
+  toast(`カスタム辞書を保存しました(${customEntries.length} 件)`);
+});
+renderDict();
+renderTable();
+</script>
+</body>
+</html>
