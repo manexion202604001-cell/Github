@@ -322,6 +322,12 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .flow-visual.img-missing { background: transparent; height: auto; margin: 0; }
 .flow-visual.img-missing img { display: none; }
 .flow-visual.img-missing .flow-icon-fb { display: block; }
+
+/* ===== Use case illustrations ===== */
+.case-visual img { width: 100%; height: 100%; object-fit: contain; padding: 10px; filter: drop-shadow(0 0 14px rgba(255,255,255,.12)); }
+.case-visual .case-fb { display: none; }
+.case-visual.img-missing img { display: none; }
+.case-visual.img-missing .case-fb { display: block; }
 /* ===== BorderGlow — マウス追従の縁グロー ===== */
 .glow-target { position: relative; }
 .glow-target::after {
@@ -531,7 +537,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
     <p class="sec-desc">* The following are illustrative model cases showing how the platform can be used.</p>
     <div class="cases">
       <div class="case">
-        <div class="case-visual v1">🧴</div>
+        <div class="case-visual v1"><img src="assets/case-1.png" alt="" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="case-fb">🧴</span></div>
         <div class="case-body">
           <span class="case-tag">K-BEAUTY → JAPAN</span>
           <h3>Cica mist for sensitive skin</h3>
@@ -543,7 +549,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
         </div>
       </div>
       <div class="case">
-        <div class="case-visual v2">🥣</div>
+        <div class="case-visual v2"><img src="assets/case-2.png" alt="" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="case-fb">🥣</span></div>
         <div class="case-body">
           <span class="case-tag">K-FOOD → JAPAN</span>
           <h3>High-protein Korean-style snack</h3>
@@ -555,7 +561,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
         </div>
       </div>
       <div class="case">
-        <div class="case-visual v3">💡</div>
+        <div class="case-visual v3"><img src="assets/case-3.png" alt="" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="case-fb">💡</span></div>
         <div class="case-body">
           <span class="case-tag">LIFESTYLE → JAPAN</span>
           <h3>Relaxing desk gadgets</h3>
