@@ -255,6 +255,11 @@
     width: 15px; height: 15px; flex: 0 0 auto; border-radius: 50%;
     border: 2px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite;
   }
+  .img-gen-error {
+    font-size: 10.5px; color: #c0392b; background: #fdf0ee;
+    border-top: 1px solid #f4d3ce; padding: 6px 10px; line-height: 1.5;
+    word-break: break-all;
+  }
   .img-card .ic-body { padding: 11px 13px; border-top: 1px solid var(--line); }
   .img-card .ic-name { font-size: 12.5px; font-weight: 800; }
   .img-card .ic-desc { font-size: 11px; color: var(--sub); margin-top: 2px; }
@@ -1399,11 +1404,30 @@ function refreshImageApiStatus() {
 document.getElementById("imageApiToggleBtn").addEventListener("click", () => {
   document.getElementById("imageApiPanel").classList.toggle("show");
 });
-document.getElementById("imageApiSaveBtn").addEventListener("click", () => {
+document.getElementById("imageApiSaveBtn").addEventListener("click", async () => {
   const v = document.getElementById("imageApiKeyInput").value.trim();
-  if (v) {
-    setImageKey(v);
-    document.getElementById("imageApiPanel").classList.remove("show");
+  if (!v) return;
+  setImageKey(v);
+  document.getElementById("imageApiPanel").classList.remove("show");
+  // 保存と同時にキーの疎通確認を行い、結果をステータスに表示する
+  const statusEl = document.getElementById("imageApiStatus");
+  statusEl.textContent = "⏳ 画像生成APIへの接続を確認中…";
+  try {
+    const res = await fetch("https://api.openai.com/v1/models", {
+      headers: { "authorization": `Bearer ${v}` },
+    });
+    if (res.ok) {
+      statusEl.textContent = "✅ 画像生成APIキー設定済み — 接続確認OK。生成時に実際のAI画像を作成します";
+      statusEl.classList.add("on");
+    } else {
+      let detail = "";
+      try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
+      statusEl.textContent = `⚠️ キーは保存しましたが、接続確認に失敗しました(${res.status})${detail ? ": " + detail.slice(0, 80) : ""}`;
+      statusEl.classList.remove("on");
+    }
+  } catch (err) {
+    statusEl.textContent = "⚠️ キーは保存しましたが、ブラウザから画像生成APIへ接続できませんでした(ネットワーク/CORS制限の可能性)";
+    statusEl.classList.remove("on");
   }
 });
 document.getElementById("imageApiClearBtn").addEventListener("click", () => {
@@ -1464,8 +1488,16 @@ async function generateProductImage(prompt) {
 
 let currentImageRenderToken = 0;
 
-function generateProposalImages(cat, catLabel, data, token) {
-  data.images.forEach(async (img, i) => {
+function describeImageError(err) {
+  if (err && err.name === "AbortError") return "画像生成APIへの接続がタイムアウトしました。";
+  if (err instanceof TypeError) return "ブラウザから画像生成APIへ直接接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
+  return (err && err.message) ? err.message : String(err);
+}
+
+async function generateProposalImages(cat, catLabel, data, token) {
+  // レートリミット(1分あたりの生成枚数)に触れにくいよう、3案を並列ではなく順番に生成する
+  for (let i = 0; i < data.images.length; i++) {
+    const img = data.images[i];
     try {
       const dataUrl = await generateProductImage(buildImagePrompt(catLabel, data, img));
       if (token !== currentImageRenderToken) return;
@@ -1478,11 +1510,12 @@ function generateProposalImages(cat, catLabel, data, token) {
       const visual = document.getElementById(`img-visual-${i}`);
       const badge = document.getElementById(`img-badge-${i}`);
       if (visual) {
-        visual.innerHTML = SVG_BY_CAT[cat]("_" + cat + i + "_fallback" + token, img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge });
+        visual.innerHTML = SVG_BY_CAT[cat]("_" + cat + i + "_fallback" + token, img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })
+          + `<div class="img-gen-error">⚠️ ${escapeHtml(describeImageError(err))}</div>`;
       }
       if (badge) badge.textContent = "🧪 SAMPLE(画像生成に失敗)";
     }
-  });
+  }
 }
 
 // ================= 実商品検索の設定パネル =================
