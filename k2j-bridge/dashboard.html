@@ -245,6 +245,16 @@
   .img-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; transition: transform .15s ease, box-shadow .15s ease; }
   .img-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(20,30,70,.12); }
   .img-card svg { display: block; width: 100%; height: auto; }
+  .img-card img.ic-photo { display: block; width: 100%; height: 220px; object-fit: cover; background: #f2f3f8; }
+  .img-photo-loading {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: 220px; background: #f2f3f8; color: var(--sub);
+    font-size: 11.5px; font-weight: 700; text-align: center; padding: 0 14px;
+  }
+  .mini-spinner {
+    width: 15px; height: 15px; flex: 0 0 auto; border-radius: 50%;
+    border: 2px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite;
+  }
   .img-card .ic-body { padding: 11px 13px; border-top: 1px solid var(--line); }
   .img-card .ic-name { font-size: 12.5px; font-weight: 800; }
   .img-card .ic-desc { font-size: 11px; color: var(--sub); margin-top: 2px; }
@@ -422,7 +432,7 @@
   <!-- ================= Planner ================= -->
   <section class="panel" id="panel-plan">
     <h2 class="page-title">AI商品企画ジェネレーター</h2>
-    <p class="page-sub">条件を選ぶと、ECモールのトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>AI APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
+    <p class="page-sub">条件を選ぶと、ECモールのトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>AI APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。<b>画像生成APIキーも設定すると、商品イメージ画像はパッケージのモックアップ図ではなく実際にAIが生成した画像</b>になります。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
 
     <div class="api-bar">
       <span class="api-status" id="apiStatus">🧪 サンプルモードで動作中(AI APIキー未設定)</span>
@@ -439,6 +449,24 @@
         <input type="text" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
         <button class="btn-save" id="apiSaveBtn" type="button">保存</button>
         <button class="btn-clear" id="apiClearBtn" type="button">削除</button>
+      </div>
+    </div>
+
+    <div class="api-bar">
+      <span class="api-status" id="imageApiStatus">🧪 モックアップ表示中(画像生成APIキー未設定)</span>
+      <button class="api-toggle" id="imageApiToggleBtn" type="button">⚙️ 商品イメージ生成設定</button>
+    </div>
+    <div class="api-panel" id="imageApiPanel">
+      <p class="api-desc">
+        お持ちの画像生成APIキーを入力すると、商品イメージ画像をパッケージのモックアップ図ではなく<b>AIが生成した実際の画像</b>として作成します。<br>
+        <b>キーはこのブラウザ(localStorage)にのみ保存され、画像生成APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
+        API利用料はご自身のAPIアカウントに発生します。共有PCでは使用しないでください。<br>
+        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">APIキーの取得はこちら →</a>
+      </p>
+      <div class="api-row">
+        <input type="text" id="imageApiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+        <button class="btn-save" id="imageApiSaveBtn" type="button">保存</button>
+        <button class="btn-clear" id="imageApiClearBtn" type="button">削除</button>
       </div>
     </div>
 
@@ -649,7 +677,7 @@
     </div>
   </section>
 
-  <p class="note">⚠️ このページはプロダクトのデモです。トレンド数値・工場情報は説明用のサンプルデータです。「AI商品企画」タブでAI APIキーを設定した場合のみ、実際にAIが商品コンセプトを生成します(API利用料はお客様のAPIアカウントに発生します)。生成される商品画像はイメージモックアップであり、実際の商品写真ではありません。</p>
+  <p class="note">⚠️ このページはプロダクトのデモです。トレンド数値・工場情報は説明用のサンプルデータです。「AI商品企画」タブでAI APIキーを設定した場合のみ、実際にAIが商品コンセプトを生成します(API利用料はお客様のAPIアカウントに発生します)。商品イメージ画像は、画像生成APIキー未設定時はパッケージ形状のイメージモックアップ(SVG)、設定時はAIが生成した画像を表示しますが、いずれも実際の商品写真ではありません。</p>
 </main>
 
 <script>
@@ -1346,6 +1374,117 @@ document.getElementById("apiClearBtn").addEventListener("click", () => {
 });
 refreshApiStatus();
 
+// ================= 商品イメージ生成APIの設定(ブラウザのみに保存 / BYOK) =================
+const IMAGE_KEY_STORAGE = "k2j_image_api_key";
+const IMAGE_MODEL = "dall-e-3";
+
+function getImageKey() {
+  return localStorage.getItem(IMAGE_KEY_STORAGE) || "";
+}
+function setImageKey(v) {
+  if (v) localStorage.setItem(IMAGE_KEY_STORAGE, v);
+  else localStorage.removeItem(IMAGE_KEY_STORAGE);
+  refreshImageApiStatus();
+}
+function refreshImageApiStatus() {
+  const has = !!getImageKey();
+  const statusEl = document.getElementById("imageApiStatus");
+  if (!statusEl) return;
+  statusEl.textContent = has
+    ? "✨ 画像生成APIキー設定済み — 生成時に実際のAI画像を作成します"
+    : "🧪 モックアップ表示中(画像生成APIキー未設定)";
+  statusEl.classList.toggle("on", has);
+  document.getElementById("imageApiKeyInput").value = has ? getImageKey() : "";
+}
+document.getElementById("imageApiToggleBtn").addEventListener("click", () => {
+  document.getElementById("imageApiPanel").classList.toggle("show");
+});
+document.getElementById("imageApiSaveBtn").addEventListener("click", () => {
+  const v = document.getElementById("imageApiKeyInput").value.trim();
+  if (v) {
+    setImageKey(v);
+    document.getElementById("imageApiPanel").classList.remove("show");
+  }
+});
+document.getElementById("imageApiClearBtn").addEventListener("click", () => {
+  setImageKey("");
+});
+refreshImageApiStatus();
+
+function buildImagePrompt(catLabel, data, img) {
+  const colorWords = Object.values(img.colors || {}).filter(Boolean).join(", ");
+  return [
+    `Professional commercial product photograph of an original ${catLabel} product package design concept.`,
+    `Product concept name: "${data.productName}"; design direction "${img.name}": ${img.desc}.`,
+    `Color palette to use on the packaging: ${colorWords}.`,
+    "Clean white or softly gradient studio background, soft even studio lighting, realistic packaging mockup, high detail, centered composition.",
+    "Do not depict any real, existing brand names, logos, or trademarks — the packaging text should be generic or illegible.",
+  ].join(" ");
+}
+
+async function generateProductImage(prompt) {
+  const key = getImageKey();
+  if (!key) return null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+  let res;
+  try {
+    res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "authorization": `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: IMAGE_MODEL,
+        prompt,
+        size: "1024x1024",
+        quality: "standard",
+        n: 1,
+        response_format: "b64_json",
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
+    throw new Error(`画像生成APIエラー(${res.status})${detail ? ": " + detail : ""}`);
+  }
+
+  const resData = await res.json();
+  const b64 = resData.data && resData.data[0] && resData.data[0].b64_json;
+  if (!b64) throw new Error("画像生成APIの応答が不正です");
+  return `data:image/png;base64,${b64}`;
+}
+
+let currentImageRenderToken = 0;
+
+function generateProposalImages(cat, catLabel, data, token) {
+  data.images.forEach(async (img, i) => {
+    try {
+      const dataUrl = await generateProductImage(buildImagePrompt(catLabel, data, img));
+      if (token !== currentImageRenderToken) return;
+      const visual = document.getElementById(`img-visual-${i}`);
+      const badge = document.getElementById(`img-badge-${i}`);
+      if (visual) visual.innerHTML = `<img class="ic-photo" src="${dataUrl}" alt="${escapeHtml(img.name)}">`;
+      if (badge) badge.textContent = "✨ AI GENERATED IMAGE";
+    } catch (err) {
+      if (token !== currentImageRenderToken) return;
+      const visual = document.getElementById(`img-visual-${i}`);
+      const badge = document.getElementById(`img-badge-${i}`);
+      if (visual) {
+        visual.innerHTML = SVG_BY_CAT[cat]("_" + cat + i + "_fallback" + token, img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge });
+      }
+      if (badge) badge.textContent = "🧪 SAMPLE(画像生成に失敗)";
+    }
+  });
+}
+
 // ================= 実商品検索の設定パネル =================
 function refreshGoogleStatus() {
   const has = !!(getGoogleKey() && getGoogleCx());
@@ -1624,6 +1763,8 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
   ];
   const defaultPrice = parseYen((data.price || [])[0]) || 2000;
   const tmQuery = encodeURIComponent(`"${data.brandName || data.productName}" 商標`);
+  const imgLiveMode = !!getImageKey();
+  const myImageToken = ++currentImageRenderToken;
 
   document.getElementById("proposal").innerHTML = `
     <div class="prop-head">
@@ -1672,14 +1813,18 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
         </div>
       </div>
 
-      <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(${liveMode ? "AI生成" : "サンプル"}・3案)</h3>
-      <p class="img-note">${liveMode ? "AIが提案したデザイン方向性(配色)をもとにモックアップを生成しました。" : "トレンド分析とデザインリファレンスを反映したコンセプト画像です。"} ※実際の商品写真ではなく、パッケージ形状を模したイメージモックアップです。</p>
+      <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(${imgLiveMode ? "AI生成" : "サンプル"}・3案)</h3>
+      <p class="img-note">${imgLiveMode ? "AIが商品コンセプト(デザイン方向性・配色)をもとに実際の画像を生成します。生成には数十秒かかる場合があります。" : "トレンド分析とデザインリファレンスを反映したパッケージ形状のモックアップです。"} ※AI生成画像も含め、実際の商品写真ではなくコンセプトイメージです。</p>
       <div class="img-grid">
         ${data.images.map((img, i) => `
           <div class="img-card">
-            ${SVG_BY_CAT[cat]("_" + cat + i + (liveMode ? "_live" : ""), img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })}
+            <div class="img-visual" id="img-visual-${i}">
+              ${imgLiveMode
+                ? `<div class="img-photo-loading"><span class="mini-spinner"></span>AI画像を生成中…</div>`
+                : SVG_BY_CAT[cat]("_" + cat + i + (liveMode ? "_live" : ""), img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })}
+            </div>
             <div class="ic-body">
-              <span class="ai-badge">${liveMode ? "✨ AI GENERATED" : "🧪 SAMPLE"}</span>
+              <span class="ai-badge" id="img-badge-${i}">${imgLiveMode ? "🎨 生成中…" : "🧪 SAMPLE"}</span>
               <div class="ic-name">${escapeHtml(img.name)}</div>
               <div class="ic-desc">${escapeHtml(img.desc)}</div>
             </div>
@@ -1701,6 +1846,7 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
       <p class="pin-note no-print">📋 見積依頼文は、クリップボードにコピーされた文面を実際の工場担当者のメールに貼り付けてお使いください(上記の工場情報はサンプルです)。</p>
     </div>`;
   updateProfitSim();
+  if (imgLiveMode) generateProposalImages(cat, catLabel, data, myImageToken);
 }
 
 // ================= 企画ジェネレーター(ボタン押下時) =================
