@@ -238,6 +238,81 @@
     .nav-links { display: none; }
   }
 </style>
+
+<style id="modern-theme">
+/* ===== Modern theme overlay — Aurora / Glass ===== */
+body {
+  background:
+    radial-gradient(1100px 700px at 88% -12%, rgba(124,92,255,.30), transparent 62%),
+    radial-gradient(900px 600px at -12% 18%, rgba(79,110,247,.26), transparent 58%),
+    radial-gradient(900px 650px at 55% 115%, rgba(45,212,168,.12), transparent 60%),
+    var(--navy);
+}
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  opacity: .035; background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44IiBudW1PY3RhdmVzPSIyIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbHRlcj0idXJsKCNuKSIgb3BhY2l0eT0iMC40Ii8+PC9zdmc+");
+}
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(11,16,38,.55) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.hero h1 {
+  background: linear-gradient(100deg, #ffffff 25%, #c9d2ff 55%, #9fb0ff 80%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -.02em;
+}
+.hero::before { filter: blur(20px); }
+h2 { letter-spacing: -.015em; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 10px 34px rgba(99,102,241,.45);
+  transition: transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 16px 44px rgba(124,92,255,.55); }
+.btn-ghost { border-radius: 14px !important; transition: .2s; }
+.btn-ghost:hover { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); }
+.feature, .case, .plan, .step {
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.09) !important;
+  border-radius: 20px !important;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
+}
+.feature:hover, .case:hover, .step:hover {
+  transform: translateY(-5px);
+  border-color: rgba(124,92,255,.45) !important;
+  box-shadow: 0 24px 64px rgba(4,6,24,.55), 0 0 0 1px rgba(124,92,255,.18);
+}
+.case { overflow: hidden; }
+.plan.popular {
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(rgba(17,22,50,.92), rgba(17,22,50,.92)) padding-box,
+    linear-gradient(135deg, #4f6ef7, #7c5cff, #ff5d73) border-box !important;
+  box-shadow: 0 0 70px rgba(124,92,255,.28);
+}
+.plan:hover { transform: translateY(-5px); }
+.sec-label {
+  display: inline-block; padding: 5px 14px; border-radius: 999px;
+  background: rgba(124,92,255,.14); border: 1px solid rgba(124,92,255,.35);
+  color: #b9a8ff !important; letter-spacing: .14em;
+}
+details {
+  border-radius: 16px !important; border: 1px solid rgba(255,255,255,.08) !important;
+  background: rgba(255,255,255,.04) !important; transition: border-color .25s;
+}
+details[open] { border-color: rgba(124,92,255,.4) !important; }
+footer { border-top: 1px solid rgba(255,255,255,.06); }
+body.reveal-init .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+body.reveal-init .reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  body.reveal-init .reveal { opacity: 1; transform: none; transition: none; }
+  .feature, .case, .plan, .step, .btn-primary { transition: none; }
+}
+</style>
 </head>
 <body>
 
@@ -583,5 +658,23 @@
   </div>
 </footer>
 
+
+<script id="modern-reveal">
+(function () {
+  var targets = document.querySelectorAll(".feature, .case, .plan, .step, .faq details");
+  if (!targets.length || !("IntersectionObserver" in window)) return;
+  document.body.classList.add("reveal-init");
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px" });
+  targets.forEach(function (t, i) {
+    t.classList.add("reveal");
+    t.style.transitionDelay = (i % 4) * 60 + "ms";
+    io.observe(t);
+  });
+})();
+</script>
 </body>
 </html>
