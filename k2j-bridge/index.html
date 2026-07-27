@@ -358,7 +358,11 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   display: grid; place-items: center;
   transform: var(--tf) scale(0); opacity: 0;
 }
-.bounce-card img { width: 78%; filter: drop-shadow(0 0 16px rgba(160,170,255,.2)); }
+.bounce-card img { width: 74%; margin-top: -18px; filter: drop-shadow(0 0 16px rgba(160,170,255,.2)); }
+.bc-title {
+  position: absolute; bottom: 20px; left: 12px; right: 12px;
+  text-align: center; font-size: 15px; font-weight: 800; color: #fff; line-height: 1.25;
+}
 .bc-label { position: absolute; top: 16px; left: 20px; font-size: 11px; font-weight: 800; letter-spacing: .14em; color: #A9AFD0; }
 .bc-1 { --tf: rotate(6deg) translateX(-165px); z-index: 1; --i: 0; }
 .bc-2 { --tf: rotate(-3deg) translateX(-56px); z-index: 2; --i: 1; }
@@ -502,26 +506,22 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
     <h2>From data analysis to sales, in four steps</h2>
     <p class="sec-desc">From learning "what's selling in Japan" to building a system that keeps your products selling — previously fragmented steps, now unified on a single platform.</p>
     <div class="bounce-stack" id="bounceStack" aria-hidden="true">
-      <div class="bounce-card bc-1"><span class="bc-label">STEP 01</span><img src="assets/step-1.png" alt=""></div>
-      <div class="bounce-card bc-2"><span class="bc-label">STEP 02</span><img src="assets/step-2.png" alt=""></div>
-      <div class="bounce-card bc-3"><span class="bc-label">STEP 03</span><img src="assets/step-3.png" alt=""></div>
-      <div class="bounce-card bc-4"><span class="bc-label">STEP 04</span><img src="assets/step-4.png" alt=""></div>
+      <div class="bounce-card bc-1"><span class="bc-label">STEP 01</span><img src="assets/step-1.png" alt=""><span class="bc-title">Trend Analysis</span></div>
+      <div class="bounce-card bc-2"><span class="bc-label">STEP 02</span><img src="assets/step-2.png" alt=""><span class="bc-title">OEM Product Planning</span></div>
+      <div class="bounce-card bc-3"><span class="bc-label">STEP 03</span><img src="assets/step-3.png" alt=""><span class="bc-title">Design Proposals</span></div>
+      <div class="bounce-card bc-4"><span class="bc-label">STEP 04</span><img src="assets/step-4.png" alt=""><span class="bc-title">Marketing</span></div>
     </div>
     <div class="flow-texts">
       <div>
-        <h3>Trend Analysis</h3>
         <p>Our AI gathers data daily, focusing on rankings, mega sales, and reviews from <b>major Japanese e-commerce malls</b>. See at a glance which products are growing in each category — and why.</p>
       </div>
       <div>
-        <h3>OEM Product Planning</h3>
         <p>AI generates product concepts and <b>product concept images</b> reverse-engineered from best-seller data. We match you with partner OEM/ODM factories in Korea and support you from prototyping through mass production.</p>
       </div>
       <div>
-        <h3>Design Proposals</h3>
         <p>Cross-analysis of packaging, landing pages, and ad creatives from popular Japanese products. Get concrete design directions that Japanese consumers actually choose.</p>
       </div>
       <div>
-        <h3>Marketing</h3>
         <p>Channel selection (e-commerce, wholesale, crowdfunding), pricing strategy, social media and influencer campaigns, and ad operations. Data-driven improvement cycles continue after launch.</p>
       </div>
     </div>
