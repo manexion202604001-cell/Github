@@ -251,11 +251,24 @@ body::after {
   opacity: .035; background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44IiBudW1PY3RhdmVzPSIyIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbHRlcj0idXJsKCNuKSIgb3BhY2l0eT0iMC40Ii8+PC9zdmc+");
 }
 header {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(11,16,38,.55) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
-  border-bottom: 1px solid rgba(255,255,255,.07);
+  position: sticky; top: 14px; z-index: 100;
+  background: transparent !important;
+  border-bottom: none !important;
+  pointer-events: none;
 }
+header .nav {
+  pointer-events: auto;
+  width: fit-content; max-width: calc(100% - 24px);
+  margin: 0 auto; height: auto !important;
+  gap: 26px; padding: 8px 10px 8px 24px;
+  background: rgba(13,18,42,.66);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  box-shadow: 0 14px 40px rgba(4,6,24,.5);
+}
+header .nav-links { display: flex; gap: 22px; }
+header .btn-primary { padding: 10px 22px !important; }
 .hero h1 {
   background: linear-gradient(100deg, #ffffff 25%, #c9d2ff 55%, #9fb0ff 80%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
@@ -352,7 +365,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 
 <header>
   <div class="wrap nav">
-    <a class="logo" href="#"><span class="mark">K2</span>K2J Bridge</a>
+    <a class="logo" href="#">K2J Bridge</a>
     <nav class="nav-links">
       <a href="#flow">How It Works</a>
       <a href="#features">Features</a>
