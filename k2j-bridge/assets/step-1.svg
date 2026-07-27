@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#ffffff"/>
+  <g stroke="#1c2030" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- board on tripod -->
+    <g>
+      <line x1="830" y1="180" x2="830" y2="140"/>
+      <rect x="620" y="180" width="420" height="290" rx="18" fill="#1c2030"/>
+      <line x1="700" y1="470" x2="640" y2="640"/>
+      <line x1="960" y1="470" x2="1020" y2="640"/>
+      <g stroke="#ffffff" fill="#ffffff">
+        <rect x="680" y="360" width="42" height="70" rx="6"/>
+        <rect x="748" y="310" width="42" height="120" rx="6"/>
+        <rect x="816" y="260" width="42" height="170" rx="6"/>
+        <circle cx="950" cy="270" r="52" fill="none" stroke-width="14"/>
+        <path d="M950 270 L950 218 A52 52 0 0 1 996 296 Z" stroke="none"/>
+      </g>
+    </g>
+    <!-- hedgehog: spiky back (dark zigzag) -->
+    <path d="M515 303 L488 233 L430 280 L372 233 L345 303 L271 291 L283 365 L213 392 L260 450 L213 508 L283 535 L262 590 L330 585"
+          fill="#1c2030" stroke="#1c2030" stroke-width="14"/>
+    <!-- body -->
+    <path d="M515 303 C560 288 605 305 630 345 C655 340 672 352 676 366 C670 382 652 388 632 384 C645 420 650 470 640 510 C632 560 600 600 555 620 L470 645 C400 660 330 640 300 600 C270 560 262 500 275 450 C288 395 330 340 390 315 C430 298 480 296 515 303 Z" fill="#ffffff"/>
+    <!-- face -->
+    <circle cx="600" cy="335" r="9" fill="#1c2030" stroke="none"/>
+    <ellipse cx="674" cy="366" rx="13" ry="11" fill="#1c2030" stroke="none"/>
+    <!-- arm + pointer -->
+    <path d="M560 430 C600 420 630 410 660 400" fill="none"/>
+    <line x1="660" y1="400" x2="810" y2="335"/>
+    <!-- legs -->
+    <path d="M450 645 C450 672 464 684 484 686" fill="none"/>
+    <path d="M545 622 C548 650 562 664 582 664" fill="none"/>
+  </g>
+</svg>

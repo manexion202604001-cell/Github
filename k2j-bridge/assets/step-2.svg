@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#ffffff"/>
+  <g stroke="#1c2030" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- lightbulb -->
+    <g>
+      <circle cx="760" cy="170" r="70"/>
+      <path d="M735 225 L785 225 L778 268 L742 268 Z"/>
+      <path d="M746 160 C746 140 774 140 774 160 L768 225 M752 225 L746 160" stroke-width="10"/>
+      <line x1="760" y1="55" x2="760" y2="20"/>
+      <line x1="680" y1="80" x2="655" y2="55"/>
+      <line x1="840" y1="80" x2="865" y2="55"/>
+      <line x1="650" y1="170" x2="615" y2="170"/>
+      <line x1="870" y1="170" x2="905" y2="170"/>
+    </g>
+    <!-- cat -->
+    <g fill="#ffffff">
+      <!-- tail -->
+      <path d="M415 640 C355 660 300 645 290 610 C282 580 310 560 340 575 C365 587 395 590 420 580"/>
+      <!-- body -->
+      <path d="M420 640 C370 560 380 440 450 380 C420 360 415 320 440 295 L470 320 C490 310 515 310 535 320 L565 295 C590 320 585 360 555 380 C625 440 640 560 590 640 Z"/>
+      <!-- ears redraw on head -->
+      <!-- eye / cheek -->
+      <circle cx="530" cy="360" r="8" fill="#1c2030" stroke="none"/>
+      <path d="M560 380 L585 372 M560 396 L588 393" stroke-width="9"/>
+      <!-- thinking paw -->
+      <path d="M560 430 C595 425 615 440 612 465 C580 470 560 458 552 445"/>
+      <!-- legs front -->
+      <path d="M470 640 C468 610 476 585 492 570"/>
+    </g>
+    <!-- notepad with tools -->
+    <g fill="#ffffff">
+      <path d="M640 620 L810 585 L830 660 L660 695 Z"/>
+      <circle cx="700" cy="620" r="26"/>
+      <g stroke-width="9">
+        <circle cx="700" cy="620" r="10"/>
+        <line x1="700" y1="586" x2="700" y2="576"/>
+        <line x1="700" y1="654" x2="700" y2="664"/>
+        <line x1="666" y1="620" x2="656" y2="620"/>
+        <line x1="734" y1="620" x2="744" y2="620"/>
+      </g>
+      <path d="M755 640 L775 620 L790 635 L770 655 Z" stroke-width="10"/>
+      <line x1="775" y1="620" x2="790" y2="605" stroke-width="10"/>
+    </g>
+  </g>
+</svg>
