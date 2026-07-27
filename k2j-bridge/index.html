@@ -333,19 +333,16 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .case-visual .case-fb { display: none; }
 .case-visual.img-missing img { display: none; }
 .case-visual.img-missing .case-fb { display: block; }
-/* ===== BorderGlow — マウス追従の縁グロー ===== */
+/* ===== BorderGlow — マウス追従の縁グロー(border-box二層背景方式) ===== */
 .glow-target { position: relative; }
-.glow-target::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px;
-  background: radial-gradient(260px circle at var(--gx, 50%) var(--gy, 50%),
-    #c084fc 0%, #f472b6 35%, #38bdf8 65%, transparent 78%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  opacity: 0; transition: opacity .35s ease; pointer-events: none; z-index: 2;
+.glow-target:hover {
+  border-color: transparent !important;
+  background:
+    linear-gradient(rgba(21,25,48,.96), rgba(21,25,48,.96)) padding-box,
+    radial-gradient(300px circle at var(--gx, 50%) var(--gy, 50%),
+      #c084fc 0%, #f472b6 40%, #38bdf8 70%, rgba(255,255,255,.16) 82%) border-box !important;
+  box-shadow: 0 0 44px -10px rgba(192,132,252,.35);
 }
-.glow-target:hover::after { opacity: 1; }
-.glow-target:hover { box-shadow: 0 0 44px -10px rgba(192,132,252,.35); }
 @media (prefers-reduced-motion: reduce), (hover: none) {
   .glow-target::after { transition: none; }
 }
