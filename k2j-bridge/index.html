@@ -379,11 +379,13 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   animation: none !important; transform: var(--tf) scale(1); opacity: 1;
   transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
 }
+/* ホバーで下のテキスト4カラムの定位置まで完全展開(回転もゼロに) */
+.bounce-stack { --colw: calc((min(100vw, 1120px) - 126px) / 4); --sp: calc(var(--colw) + 26px); }
 @media (hover: hover) {
-  .bounce-stack:hover .bc-1.settled { --tf: rotate(8deg) translateX(-255px); }
-  .bounce-stack:hover .bc-2.settled { --tf: rotate(-5deg) translateX(-88px); }
-  .bounce-stack:hover .bc-3.settled { --tf: rotate(5deg) translateX(88px); }
-  .bounce-stack:hover .bc-4.settled { --tf: rotate(-8deg) translateX(255px); }
+  .bounce-stack:hover .bc-1.settled { --tf: rotate(0deg) translateX(calc(var(--sp) * -1.5)); }
+  .bounce-stack:hover .bc-2.settled { --tf: rotate(0deg) translateX(calc(var(--sp) * -0.5)); }
+  .bounce-stack:hover .bc-3.settled { --tf: rotate(0deg) translateX(calc(var(--sp) * 0.5)); }
+  .bounce-stack:hover .bc-4.settled { --tf: rotate(0deg) translateX(calc(var(--sp) * 1.5)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .bounce-card, .bounce-stack.play .bounce-card { animation: none; transform: var(--tf) scale(1); opacity: 1; }
