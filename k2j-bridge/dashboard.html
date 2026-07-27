@@ -1381,7 +1381,8 @@ refreshApiStatus();
 
 // ================= 商品イメージ生成APIの設定(ブラウザのみに保存 / BYOK) =================
 const IMAGE_KEY_STORAGE = "k2j_image_api_key";
-const IMAGE_MODEL = "dall-e-3";
+// 先頭のモデルで生成を試み、モデル/パラメーター起因のエラー時のみ後続モデルで再試行する
+const IMAGE_MODELS = ["dall-e-3", "gpt-image-1"];
 
 function getImageKey() {
   return localStorage.getItem(IMAGE_KEY_STORAGE) || "";
@@ -1446,14 +1447,13 @@ function buildImagePrompt(catLabel, data, img) {
   ].join(" ");
 }
 
-async function generateProductImage(prompt) {
-  const key = getImageKey();
-  if (!key) return null;
+async function requestImageWithModel(key, model, prompt) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   let res;
   try {
+    // モデルごとに使える任意パラメーターが異なるため、全モデル共通で有効な最小構成のみ送る
     res = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -1461,12 +1461,10 @@ async function generateProductImage(prompt) {
         "authorization": `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: IMAGE_MODEL,
+        model,
         prompt,
         size: "1024x1024",
-        quality: "standard",
         n: 1,
-        response_format: "b64_json",
       }),
       signal: controller.signal,
     });
@@ -1481,9 +1479,35 @@ async function generateProductImage(prompt) {
   }
 
   const resData = await res.json();
-  const b64 = resData.data && resData.data[0] && resData.data[0].b64_json;
-  if (!b64) throw new Error("画像生成APIの応答が不正です");
-  return `data:image/png;base64,${b64}`;
+  const item = resData.data && resData.data[0];
+  if (item && item.b64_json) return `data:image/png;base64,${item.b64_json}`;
+  if (item && item.url) return item.url;
+  throw new Error("画像生成APIの応答が不正です");
+}
+
+function isModelSpecificError(err) {
+  return /model|parameter|verified|organization/i.test((err && err.message) || "");
+}
+
+let imageModelStartIdx = 0; // 非対応と判明したモデルを次回以降スキップするための開始位置
+
+async function generateProductImage(prompt) {
+  const key = getImageKey();
+  if (!key) return null;
+  let lastErr = null;
+  for (let m = imageModelStartIdx; m < IMAGE_MODELS.length; m++) {
+    try {
+      const out = await requestImageWithModel(key, IMAGE_MODELS[m], prompt);
+      imageModelStartIdx = m;
+      return out;
+    } catch (err) {
+      lastErr = err;
+      // キー無効・残高不足など、モデルを変えても解決しないエラーは即座に中断する
+      if (!isModelSpecificError(err)) throw err;
+      if (m + 1 < IMAGE_MODELS.length) imageModelStartIdx = m + 1;
+    }
+  }
+  throw lastErr;
 }
 
 let currentImageRenderToken = 0;
