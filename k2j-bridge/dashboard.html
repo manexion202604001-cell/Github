@@ -451,11 +451,32 @@ body {
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
 .tabs {
-  position: sticky; top: 56px; z-index: 90;
-  background: rgba(255,255,255,.72) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
-  border-bottom: 1px solid rgba(120,130,180,.14);
+  position: sticky; top: 66px; z-index: 90;
+  width: fit-content; max-width: calc(100% - 24px);
+  margin: 14px auto 4px; padding: 6px !important;
+  background: rgba(255,255,255,.78) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(120,130,180,.18); border-bottom: 1px solid rgba(120,130,180,.18) !important;
+  border-radius: 999px;
+  box-shadow: 0 12px 34px rgba(23,25,60,.14);
 }
+.tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px !important; border-radius: 999px;
+  border-bottom: none !important;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+.tab:hover { transform: translateY(-1px); }
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(99,102,241,.4);
+}
+.tab-ico {
+  width: 30px; height: 22px; object-fit: contain; flex: 0 0 auto;
+  filter: invert(.72); opacity: .8;
+}
+.tab.active .tab-ico { filter: none; opacity: 1; }
 .card {
   border-radius: 18px !important;
   background: rgba(255,255,255,.78) !important;
@@ -512,10 +533,10 @@ input:focus, select:focus, textarea:focus {
 </div>
 
 <nav class="tabs">
-  <button class="tab active" data-panel="trend">📊 Trend Analysis</button>
-  <button class="tab" data-panel="plan">💡 AI Product Planning</button>
-  <button class="tab" data-panel="design">🎨 Design Inspiration</button>
-  <button class="tab" data-panel="marketing">🚀 Marketing</button>
+  <button class="tab active" data-panel="trend"><img class="tab-ico" src="assets/step-1.png" alt="">Trend Analysis</button>
+  <button class="tab" data-panel="plan"><img class="tab-ico" src="assets/step-2.png" alt="">AI Product Planning</button>
+  <button class="tab" data-panel="design"><img class="tab-ico" src="assets/step-3.png" alt="">Design Inspiration</button>
+  <button class="tab" data-panel="marketing"><img class="tab-ico" src="assets/step-4.png" alt="">Marketing</button>
 </nav>
 
 <main class="page">
