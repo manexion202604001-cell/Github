@@ -312,6 +312,23 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   body.reveal-init .reveal { opacity: 1; transform: none; transition: none; }
   .feature, .case, .plan, .step, .btn-primary { transition: none; }
 }
+
+/* ===== BorderGlow — マウス追従の縁グロー ===== */
+.glow-target { position: relative; }
+.glow-target::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px;
+  background: radial-gradient(260px circle at var(--gx, 50%) var(--gy, 50%),
+    #c084fc 0%, #f472b6 35%, #38bdf8 65%, transparent 78%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity .35s ease; pointer-events: none; z-index: 2;
+}
+.glow-target:hover::after { opacity: 1; }
+.glow-target:hover { box-shadow: 0 0 44px -10px rgba(192,132,252,.35); }
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .glow-target::after { transition: none; }
+}
 </style>
 </head>
 <body>
@@ -673,6 +690,20 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
     t.classList.add("reveal");
     t.style.transitionDelay = (i % 4) * 60 + "ms";
     io.observe(t);
+  });
+})();
+</script>
+
+<script id="border-glow">
+(function () {
+  var els = document.querySelectorAll(".feature, .case, .plan, .step, .faq details, .mock");
+  els.forEach(function (el) {
+    el.classList.add("glow-target");
+    el.addEventListener("pointermove", function (e) {
+      var r = el.getBoundingClientRect();
+      el.style.setProperty("--gx", (e.clientX - r.left) + "px");
+      el.style.setProperty("--gy", (e.clientY - r.top) + "px");
+    });
   });
 })();
 </script>
