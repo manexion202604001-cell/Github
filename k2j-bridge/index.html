@@ -348,6 +348,46 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .case-visual.img-missing .case-fb { display: block; }
 
 
+
+/* ===== InfiniteMenu (Use Cases) ===== */
+.infmenu { position: relative; height: 600px; margin-top: 30px; }
+.inf-stage { position: absolute; inset: 0; perspective: 1300px; overflow: hidden; border-radius: 24px; cursor: grab; touch-action: pan-y; }
+.inf-stage.dragging { cursor: grabbing; }
+.inf-ring { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; }
+.inf-tile {
+  position: absolute; width: 250px; height: 320px; left: -125px; top: -160px;
+  border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.12);
+  background: #0d1226; box-shadow: 0 24px 60px rgba(4,6,24,.55);
+  transition: box-shadow .3s;
+}
+.inf-tile img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); pointer-events: none; }
+.inf-tile.front { box-shadow: 0 30px 80px rgba(99,102,241,.35), 0 0 0 1px rgba(124,92,255,.4); }
+.inf-caption {
+  position: absolute; left: 26px; bottom: 26px; max-width: 420px; pointer-events: none; z-index: 5;
+  background: rgba(8,11,30,.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 20px 24px;
+}
+.inf-tag { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: var(--accent); }
+.inf-caption h3 { font-size: 24px; font-weight: 800; margin: 6px 0 8px; transition: opacity .25s; }
+.inf-caption p { font-size: 13px; color: #aab1cf; line-height: 1.7; transition: opacity .25s; }
+.inf-stats { display: flex; gap: 26px; margin-top: 14px; }
+.inf-stats b { display: block; font-size: 20px; color: var(--mint); }
+.inf-stats span { font-size: 11px; color: var(--muted); }
+.inf-go {
+  position: absolute; right: 30px; bottom: 30px; width: 56px; height: 56px;
+  border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; font-size: 22px; font-weight: 800;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), 0 10px 30px rgba(99,102,241,.45);
+  transition: transform .2s;
+}
+.inf-go:hover { transform: translateY(-3px) scale(1.05); }
+.inf-hint { position: absolute; top: 22px; right: 30px; font-size: 11px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+@media (max-width: 700px) {
+  .infmenu { height: 520px; }
+  .inf-tile { width: 180px; height: 230px; left: -90px; top: -115px; }
+  .inf-caption { left: 20px; bottom: 20px; max-width: 70%; }
+}
 /* ===== Stepper (Features) ===== */
 .stepper {
   max-width: 780px; margin: 44px auto 0;
@@ -664,43 +704,18 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
     <span class="sec-label">Use cases</span>
     <h2>Product development like this becomes possible</h2>
     <p class="sec-desc">* The following are illustrative model cases showing how the platform can be used.</p>
-    <div class="cases">
-      <div class="case">
-        <div class="case-visual v1"><img src="assets/case-1.jpg" alt="" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="case-fb">🧴</span></div>
-        <div class="case-body">
-          <span class="case-tag">K-BEAUTY → JAPAN</span>
-          <h3>Cica mist for sensitive skin</h3>
-          <p>Review analysis on beauty review sites surfaced complaints about "portable hydrating mists." A Korean OEM factory developed the formula, launched with Japan-tailored packaging.</p>
-          <div class="case-stat">
-            <div><b>3 mo</b><span>Concept → prototype</span></div>
-            <div><b>2.4x</b><span>Launch sales (vs. forecast)</span></div>
-          </div>
-        </div>
+    <div class="infmenu" id="infMenu">
+      <div class="inf-stage">
+        <div class="inf-ring" id="infRing"></div>
       </div>
-      <div class="case">
-        <div class="case-visual v2"><img src="assets/case-2.jpg" alt="" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="case-fb">🥣</span></div>
-        <div class="case-body">
-          <span class="case-tag">K-FOOD → JAPAN</span>
-          <h3>High-protein Korean-style snack</h3>
-          <p>Detected rapid growth in "protein snacks" on e-commerce malls. Recipe development compliant with Japan's Food Labeling Act, through to convenience-store wholesale proposals — all in one flow.</p>
-          <div class="case-stat">
-            <div><b>5 mo</b><span>Concept → mass production</span></div>
-            <div><b>3 deals</b><span>Wholesale agreements</span></div>
-          </div>
-        </div>
+      <div class="inf-caption">
+        <span class="inf-tag" id="infTag"></span>
+        <h3 id="infTitle"></h3>
+        <p id="infDesc"></p>
+        <div class="inf-stats" id="infStats"></div>
       </div>
-      <div class="case">
-        <div class="case-visual v3"><img src="assets/case-3.jpg" alt="" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="case-fb">💡</span></div>
-        <div class="case-body">
-          <span class="case-tag">LIFESTYLE → JAPAN</span>
-          <h3>Relaxing desk gadgets</h3>
-          <p>Cross-analysis of e-commerce malls and social media identified a "work-from-home comfort" need. Validated demand through a crowdfunding test launch, then rolled out fully on e-commerce malls.</p>
-          <div class="case-stat">
-            <div><b>$57K</b><span>Crowdfunding raised</span></div>
-            <div><b>92%</b><span>Above funding goal</span></div>
-          </div>
-        </div>
-      </div>
+      <a class="inf-go" id="infGo" href="dashboard.html" aria-label="Open demo">→</a>
+      <span class="inf-hint">Drag to spin</span>
     </div>
   </div>
 </section>
@@ -832,6 +847,97 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
       if (en.isIntersecting) { stack.classList.add("play"); io.disconnect(); }
     });
   }, { rootMargin: "0px 0px -15% 0px" }).observe(stack);
+})();
+</script>
+<script id="infinite-menu">
+(function () {
+  var ring = document.getElementById("infRing");
+  if (!ring) return;
+  var stage = ring.parentElement;
+  var ITEMS = [
+    { image: "assets/case-1.jpg", tag: "K-BEAUTY \u2192 JAPAN", title: "Cica mist for sensitive skin",
+      desc: "Review analysis on beauty review sites surfaced complaints about \u201cportable hydrating mists.\u201d A Korean OEM factory developed the formula, launched with Japan-tailored packaging.",
+      stats: [["3 mo", "Concept \u2192 prototype"], ["2.4x", "Launch sales (vs. forecast)"]] },
+    { image: "assets/case-2.jpg", tag: "K-FOOD \u2192 JAPAN", title: "High-protein Korean-style snack",
+      desc: "Detected rapid growth in \u201cprotein snacks\u201d on e-commerce malls. Recipe development compliant with Japan\u2019s Food Labeling Act, through to convenience-store wholesale proposals.",
+      stats: [["5 mo", "Concept \u2192 mass production"], ["3 deals", "Wholesale agreements"]] },
+    { image: "assets/case-3.jpg", tag: "LIFESTYLE \u2192 JAPAN", title: "Relaxing desk gadgets",
+      desc: "Cross-analysis of e-commerce malls and social media identified a \u201cwork-from-home comfort\u201d need. Validated through a crowdfunding test launch, then rolled out on e-commerce malls.",
+      stats: [["$57K", "Crowdfunding raised"], ["92%", "Above funding goal"]] },
+  ];
+  var COPIES = 3;
+  var N = ITEMS.length * COPIES;
+  var STEP = 360 / N;
+  var RADIUS = 480;
+  var tiles = [];
+  for (var i = 0; i < N; i++) {
+    var t = document.createElement("div");
+    t.className = "inf-tile";
+    t.style.transform = "rotateY(" + (i * STEP) + "deg) translateZ(" + RADIUS + "px)";
+    var im = document.createElement("img");
+    im.src = ITEMS[i % ITEMS.length].image;
+    im.alt = "";
+    t.appendChild(im);
+    ring.appendChild(t);
+    tiles.push(t);
+  }
+
+  var rot = 0, vel = 0, dragging = false, lastX = 0, active = -1;
+  var tagEl = document.getElementById("infTag");
+  var titleEl = document.getElementById("infTitle");
+  var descEl = document.getElementById("infDesc");
+  var statsEl = document.getElementById("infStats");
+
+  function setCaption(idx) {
+    if (idx === active) return;
+    active = idx;
+    var it = ITEMS[idx % ITEMS.length];
+    tagEl.textContent = it.tag;
+    titleEl.textContent = it.title;
+    descEl.textContent = it.desc;
+    statsEl.innerHTML = it.stats.map(function (st) {
+      return "<div><b>" + st[0] + "</b><span>" + st[1] + "</span></div>";
+    }).join("");
+  }
+  function mod(a, n) { return ((a % n) + n) % n; }
+
+  function frame() {
+    if (!dragging) {
+      rot += vel;
+      vel *= 0.94;
+      if (Math.abs(vel) < 0.05) {
+        // 最寄りのタイルへスナップ
+        var target = Math.round(rot / STEP) * STEP;
+        rot += (target - rot) * 0.12;
+      }
+    }
+    ring.style.transform = "rotateY(" + rot + "deg)";
+    var frontIdx = mod(Math.round(-rot / STEP), N);
+    tiles.forEach(function (t, i) {
+      var diff = Math.abs(mod(i * STEP + rot + 180, 360) - 180); // 正面=0
+      t.style.opacity = diff > 115 ? 0 : (1 - diff / 170);
+      t.classList.toggle("front", i === frontIdx);
+    });
+    setCaption(frontIdx % ITEMS.length);
+    requestAnimationFrame(frame);
+  }
+
+  stage.addEventListener("pointerdown", function (e) {
+    dragging = true; lastX = e.clientX; vel = 0;
+    stage.classList.add("dragging");
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", function (e) {
+    if (!dragging) return;
+    var dx = e.clientX - lastX;
+    lastX = e.clientX;
+    rot += dx * 0.25;
+    vel = dx * 0.25;
+  });
+  function endDrag() { dragging = false; stage.classList.remove("dragging"); }
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+  requestAnimationFrame(frame);
 })();
 </script>
 <script id="feat-stepper">
