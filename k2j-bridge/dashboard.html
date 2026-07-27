@@ -260,17 +260,6 @@
     border-top: 1px solid #f4d3ce; padding: 6px 10px; line-height: 1.5;
     word-break: break-all;
   }
-  .ai-offer {
-    text-align: center; padding: 22px 16px; background: #f8f7ff;
-    border: 1px dashed #d6cffb; border-radius: 12px;
-  }
-  .ai-offer p { font-size: 11.5px; color: var(--sub); line-height: 1.7; margin-bottom: 10px; }
-  .ai-board-btn {
-    border: none; border-radius: 9px; padding: 9px 18px; cursor: pointer;
-    font-size: 12.5px; font-weight: 800; color: #fff;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  }
-  .ai-board-btn:hover { opacity: .9; }
   .img-card .ic-body { padding: 11px 13px; border-top: 1px solid var(--line); }
   .img-card .ic-name { font-size: 12.5px; font-weight: 800; }
   .img-card .ic-desc { font-size: 11px; color: var(--sub); margin-top: 2px; }
@@ -791,91 +780,12 @@ function renderImagesInto(containerId, images, sourceTag) {
     </div>`).join("")}</div>`;
 }
 
-// ================= 参考イメージのAI生成(実画像検索が未設定の場合の高品質代替) =================
-const AI_BOARD_COUNT = 3;
-const boardImageCache = {}; // 同じボードの再生成による二重課金を防ぐセッション内キャッシュ
-
-function buildBoardImagePrompt(query, mode, colorsCsv, variant) {
-  const base = mode === "design"
-    ? `Professional packaging design reference photograph for a mood board: ${query}.`
-    : `Professional commercial product photograph, e-commerce style: ${query}.`;
-  const variants = [
-    "Studio close-up shot of the package on a clean seamless background, soft even lighting.",
-    "Flat lay composition from above with a few tasteful props, natural light.",
-    "In-context lifestyle shot on a shelf or table, shallow depth of field.",
-  ];
-  return [
-    base,
-    variants[variant % variants.length],
-    colorsCsv ? `Color palette: ${colorsCsv}.` : "",
-    "High detail, aesthetically pleasing, magazine quality.",
-    "Unbranded concept only — no readable text, no real existing brand names or logos.",
-  ].filter(Boolean).join(" ");
-}
-
-function markBoardAsAi(containerId) {
-  const board = document.getElementById(containerId);
-  const title = board && board.previousElementSibling && board.previousElementSibling.querySelector(".pin-board-title");
-  if (title) title.textContent = "✨ AI生成の参考イメージ";
-}
-
-function renderAiImagesInto(containerId, srcs) {
-  markBoardAsAi(containerId);
-  const target = document.getElementById(containerId);
-  if (!target) return;
-  target.innerHTML = `<div class="pin-masonry">${srcs.map(src => `
-    <div class="pin-card">
-      <img src="${src}" alt="AI生成の参考イメージ" loading="lazy">
-      <div class="pin-credit">✨ AI生成イメージ(実在の商品ではありません)</div>
-    </div>`).join("")}</div>`;
-}
-
-async function generateBoardImages(containerId, query, mode, colorsCsv) {
-  const cacheKey = mode + "|" + query;
-  const target = document.getElementById(containerId);
-  if (!target) return;
-  markBoardAsAi(containerId);
-  target.innerHTML = `<div class="pin-masonry">${Array.from({ length: AI_BOARD_COUNT }, (_, i) => `
-    <div class="pin-card"><div class="img-photo-loading" id="${containerId}-ai-${i}"><span class="mini-spinner"></span>AI画像を生成中…(${i + 1}/${AI_BOARD_COUNT})</div></div>`).join("")}</div>`;
-
-  const done = [];
-  for (let i = 0; i < AI_BOARD_COUNT; i++) {
-    const slot = document.getElementById(`${containerId}-ai-${i}`);
-    try {
-      const src = await generateProductImage(buildBoardImagePrompt(query, mode, colorsCsv, i));
-      done.push(src);
-      if (slot) slot.closest(".pin-card").innerHTML = `
-        <img src="${src}" alt="AI生成の参考イメージ" loading="lazy">
-        <div class="pin-credit">✨ AI生成イメージ(実在の商品ではありません)</div>`;
-    } catch (err) {
-      if (slot) slot.closest(".pin-card").innerHTML = `<div class="img-gen-error">⚠️ ${escapeHtml(describeImageError(err))}</div>`;
-    }
-  }
-  if (done.length) boardImageCache[cacheKey] = done;
-}
-
-function renderAiBoardOffer(containerId, query, mode, colorsCsv) {
-  const cacheKey = mode + "|" + query;
-  if (boardImageCache[cacheKey]) {
-    renderAiImagesInto(containerId, boardImageCache[cacheKey]);
-    return;
-  }
-  const target = document.getElementById(containerId);
-  if (!target) return;
-  target.innerHTML = `
-    <div class="ai-offer">
-      <p>✨ この方向性の参考イメージを、画像生成AIでその場で作成できます(${AI_BOARD_COUNT}枚)。<br>生成料金はお客様のAPIアカウントに発生します。</p>
-      <button class="ai-board-btn" type="button">✨ 参考イメージをAI生成する</button>
-    </div>`;
-  target.querySelector(".ai-board-btn").addEventListener("click", () => {
-    generateBoardImages(containerId, query, mode, colorsCsv);
-  });
-}
-
-function renderPinBoard(containerId, query, count, cat, mode, colorsCsv) {
+function renderPinBoard(containerId, query, count, cat, mode) {
   const el = document.getElementById(containerId);
   if (!el) return;
   // mode: "design"(デザイン参考サイト) or "product"(ECモールの実商品)
+  // このボードは「実在するデザイン・実商品からインスピレーションを得る場」であるため、
+  // AI生成画像は使わず、実画像検索(未設定時はCC素材)のみを表示する
   const searchQuery = mode === "design" ? buildDesignQuery(query) : buildProductQuery(query, cat);
   const sourceTag = mode === "design" ? "📌 実際のデザイン画像" : "🛍️ 実商品";
 
@@ -884,16 +794,11 @@ function renderPinBoard(containerId, query, count, cat, mode, colorsCsv) {
       renderImagesInto(containerId, realImages, sourceTag);
       return;
     }
-    // 実画像検索が未設定/0件でも、画像生成キーがあれば高品質なAI生成イメージを提示できる
-    if (getImageKey()) {
-      renderAiBoardOffer(containerId, query, mode, colorsCsv);
-      return;
-    }
     fetchReferenceImages(query, count).then(images => {
       const target = document.getElementById(containerId);
       if (!target) return;
       if (!images.length) {
-        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "実画像検索を設定すると実際の画像が、「AI商品企画」タブで画像生成APIキーを設定するとAI生成の参考イメージが表示されます。" : "参考画像を取得できませんでした。"}上部のボタンから外部サイトで直接検索してください。</div>`;
+        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "上部「⚙️ 実画像検索の設定」を設定すると、実在するデザイン・実商品の画像がここに表示されます。" : "参考画像を取得できませんでした。"}上部のボタンから外部サイトで直接検索してください。</div>`;
         return;
       }
       renderImagesInto(containerId, images, "🖼️ CC素材");
@@ -1219,7 +1124,7 @@ document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
       <div class="ref-links">${buildRefLinks(m).filter(l => l.key !== "design").map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
     </div>
   </div>`).join("");
-MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat, "design", (m.colors || []).join(", ")));
+MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat, "design"));
 
 // ================= 商品を読み込んでデザインを探す =================
 document.querySelectorAll(".loader-tab").forEach(btn => {
@@ -1323,7 +1228,7 @@ function renderDesignSuggestions(cat, productName, directions, liveMode, errorNo
         <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
       </div>`).join("")}`;
 
-  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6, cat, "product", Object.values(d.colors || {}).join(", ")));
+  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6, cat, "product"));
 }
 
 document.getElementById("designGenBtn").addEventListener("click", async () => {
@@ -1645,10 +1550,8 @@ function refreshGoogleStatus() {
   const statusEl = document.getElementById("googleStatus");
   statusEl.textContent = has
     ? "📌 実画像検索が有効です — デザイン参考画像/実商品写真を優先表示します"
-    : (getImageKey()
-      ? "✨ AI生成イメージが利用可能 — 各ボードのボタンから参考イメージを生成できます"
-      : "🖼️ CC素材で表示中 — 実画像検索は未設定");
-  statusEl.classList.toggle("on", has || !!getImageKey());
+    : "🖼️ CC素材で表示中 — 実画像検索を設定すると実在するデザイン・実商品の画像が表示されます";
+  statusEl.classList.toggle("on", has);
   document.getElementById("googleKeyInput").value = getGoogleKey();
   document.getElementById("googleCxInput").value = getGoogleCx();
 }
