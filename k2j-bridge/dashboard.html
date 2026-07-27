@@ -321,6 +321,10 @@
     padding: 7px 14px; border-radius: 999px; border: none;
   }
   .pin-open-btn:hover { background: #ad081b; }
+  .pin-open-btn.cse-run { background: var(--accent-2); cursor: pointer; font-family: inherit; }
+  .pin-open-btn.cse-run:hover { background: var(--accent); }
+  .cse-note { font-size: 12px; color: var(--sub); line-height: 1.7; margin: 4px 0 12px; }
+  #gcseBox .gsc-control-cse { padding: 0; border: none; }
   .pin-masonry { column-count: 2; column-gap: 10px; }
   @media (min-width: 1050px) { .pin-masonry { column-count: 3; } }
   .pin-card {
@@ -538,6 +542,12 @@
       </div>
     </div>
     <p class="pin-note">📌 主要な外部サービスは画像検索APIを公開していないため、実画像検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる<a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">CCライセンス画像サービス</a>で代用しています。各写真には出典を表示し、上部のボタンから外部サイトでの検索結果も確認できます。</p>
+
+    <div class="card no-print" id="cseCard">
+      <h3>🔎 実在デザインの画面内検索(キー設定不要)</h3>
+      <p class="cse-note">実在するデザイン・商品の画像検索結果を、このページを離れずにそのまま表示します。各ボードの「▶ 画面内で検索」ボタンを押すか、下の検索窓に直接キーワードを入力してください(公式の検索ウィジェットを利用)。</p>
+      <div id="gcseBox"><div class="pin-loading">検索ウィジェットを読み込んでいます…</div></div>
+    </div>
 
     <div class="card">
       <div class="loader-tabs">
@@ -1118,7 +1128,10 @@ document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
       <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
       <div class="pin-board-head">
         <span class="pin-board-title">📌 実際の参考写真</span>
-        <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(m.refEn)}" target="_blank" rel="noopener">画像で探す</a>
+        <span style="display:flex;gap:6px">
+          <button class="pin-open-btn cse-run" type="button" data-q="${escapeHtml(m.refEn)}">▶ 画面内で検索</button>
+          <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(m.refEn)}" target="_blank" rel="noopener">画像で探す</a>
+        </span>
       </div>
       <div class="pin-board" id="pinboard-mood-${i}"><div class="pin-loading">画像を読み込んでいます…</div></div>
       <div class="ref-links">${buildRefLinks(m).filter(l => l.key !== "design").map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
@@ -1222,7 +1235,10 @@ function renderDesignSuggestions(cat, productName, directions, liveMode, errorNo
         <div class="mood-tags" style="margin-top:8px">${(d.tags || []).map((t, j) => `<span class="tag b${(j % 3) + 1}">${escapeHtml(t)}</span>`).join("")}</div>
         <div class="pin-board-head" style="margin-top:14px">
           <span class="pin-board-title">📌 実際の参考写真</span>
-          <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}" target="_blank" rel="noopener">画像で探す</a>
+          <span style="display:flex;gap:6px">
+            <button class="pin-open-btn cse-run" type="button" data-q="${escapeHtml(d.jaKeywords || d.enKeywords)}">▶ 画面内で検索</button>
+            <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}" target="_blank" rel="noopener">画像で探す</a>
+          </span>
         </div>
         <div class="pin-board" id="${boxId(i)}"><div class="pin-loading">画像を読み込んでいます…</div></div>
         <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
@@ -1295,7 +1311,73 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
     tab.classList.add("active");
     document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
+    if (tab.dataset.panel === "design") ensureCseLoaded();
   });
+});
+
+// ================= 画面内検索ウィジェット(公式埋め込み。APIキー不要、cxのみで動作) =================
+const CSE_CX = "1070a72d70a484f1e";
+let cseState = "idle"; // idle | loading | ready | failed
+let pendingCseQuery = "";
+
+function cseFailed() {
+  cseState = "failed";
+  const box = document.getElementById("gcseBox");
+  if (box) box.innerHTML = `<div class="pin-empty">検索ウィジェットを読み込めませんでした(ネットワーク制限の可能性)。各ボードの外部リンクから検索結果をご確認ください。</div>`;
+}
+
+function cseReady() {
+  if (cseState === "ready") return;
+  try {
+    window.google.search.cse.element.render({
+      div: "gcseBox",
+      tag: "search",
+      gname: "k2jcse",
+      attributes: {
+        enableImageSearch: true,
+        defaultToImageSearchLayout: true,
+        imageSearchLayout: "column",
+        imageSearchResultSetSize: 8,
+      },
+    });
+    cseState = "ready";
+    if (pendingCseQuery) {
+      const q = pendingCseQuery;
+      pendingCseQuery = "";
+      const el = window.google.search.cse.element.getElement("k2jcse");
+      if (el) el.execute(q);
+    }
+  } catch (e) {
+    cseFailed();
+  }
+}
+
+function ensureCseLoaded() {
+  if (cseState !== "idle") return;
+  cseState = "loading";
+  window.__gcse = { parsetags: "explicit", callback: cseReady, initializationCallback: cseReady };
+  const s = document.createElement("script");
+  s.src = "https://cse.google.com/cse.js?cx=" + encodeURIComponent(CSE_CX);
+  s.async = true;
+  s.onerror = cseFailed;
+  document.head.appendChild(s);
+}
+
+function executeCseQuery(query) {
+  ensureCseLoaded();
+  if (cseState === "ready") {
+    const el = window.google.search.cse.element.getElement("k2jcse");
+    if (el) el.execute(query);
+  } else if (cseState !== "failed") {
+    pendingCseQuery = query; // 読み込み完了後に自動実行される
+  }
+  const card = document.getElementById("cseCard");
+  if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".cse-run");
+  if (btn && btn.dataset.q) executeCseQuery(btn.dataset.q);
 });
 
 // ================= トレンドタブ描画 =================
