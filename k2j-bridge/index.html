@@ -375,11 +375,6 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .st-body ul { margin-top: 12px; font-size: 13px; color: #9aa1c0; list-style: none; }
 .st-body li { padding-left: 20px; position: relative; margin-top: 6px; line-height: 1.6; }
 .st-body li::before { content: "✓"; position: absolute; left: 0; color: var(--mint); font-weight: 800; }
-.st-complete { justify-content: center; }
-.st-done-box { text-align: center; padding: 26px 10px 18px; }
-.st-done-emoji { font-size: 40px; margin-bottom: 10px; }
-.st-done-box h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
-.st-done-box p { font-size: 13.5px; color: #aab1cf; margin-bottom: 20px; max-width: 34em; margin-left: auto; margin-right: auto; }
 .stepper-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
 .st-btn {
   border: none; border-radius: 12px; padding: 11px 24px; cursor: pointer;
@@ -645,14 +640,6 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
             </ul>
           </div>
         </section>
-        <section class="st-panel st-complete">
-          <div class="st-done-box">
-            <div class="st-done-emoji">🎉</div>
-            <h3>All steps completed!</h3>
-            <p>You have seen everything K2J Bridge does. Try it yourself with sample data — no sign-up needed.</p>
-            <a class="btn btn-primary" href="dashboard.html">Open the demo dashboard</a>
-          </div>
-        </section>
         </div>
       </div>
       <div class="stepper-foot">
@@ -857,7 +844,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   var lines = Array.prototype.slice.call(stepper.querySelectorAll(".st-line"));
   var backBtn = document.getElementById("stBack");
   var nextBtn = document.getElementById("stNext");
-  var total = 4; // コンテンツステップ数(+完了パネル)
+  var total = 4;
   var cur = 0;
 
   function setHeight() {
@@ -868,17 +855,15 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
     panels.style.transform = "translateX(-" + (cur * 100) + "%)";
     inds.forEach(function (b, i) {
       b.classList.toggle("active", i === cur);
-      b.classList.toggle("done", i < cur || cur >= total);
-      b.textContent = (i < cur || cur >= total) ? "✓" : String(i + 1);
+      b.classList.toggle("done", i < cur);
+      b.textContent = i < cur ? "✓" : String(i + 1);
     });
-    lines.forEach(function (l, i) { l.classList.toggle("done", i < cur || cur >= total); });
+    lines.forEach(function (l, i) { l.classList.toggle("done", i < cur); });
     backBtn.classList.toggle("hidden", cur === 0);
-    nextBtn.classList.toggle("hidden", cur >= total);
-    nextBtn.textContent = cur === total - 1 ? "Complete" : "Next";
-    backBtn.textContent = "Previous";
+    nextBtn.classList.toggle("hidden", cur === total - 1);
     setHeight();
   }
-  nextBtn.addEventListener("click", function () { if (cur <= total - 1) { cur++; render(); } });
+  nextBtn.addEventListener("click", function () { if (cur < total - 1) { cur++; render(); } });
   backBtn.addEventListener("click", function () { if (cur > 0) { cur--; render(); } });
   inds.forEach(function (b) {
     b.addEventListener("click", function () { cur = parseInt(b.dataset.s, 10); render(); });
