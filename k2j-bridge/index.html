@@ -375,8 +375,19 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   86% { transform: var(--tf) scale(1.05); }
   100% { transform: var(--tf) scale(1); opacity: 1; }
 }
+.bounce-card.settled {
+  animation: none !important; transform: var(--tf) scale(1); opacity: 1;
+  transition: transform .5s cubic-bezier(.34, 1.56, .64, 1);
+}
+@media (hover: hover) {
+  .bounce-stack:hover .bc-1.settled { --tf: rotate(8deg) translateX(-255px); }
+  .bounce-stack:hover .bc-2.settled { --tf: rotate(-5deg) translateX(-88px); }
+  .bounce-stack:hover .bc-3.settled { --tf: rotate(5deg) translateX(88px); }
+  .bounce-stack:hover .bc-4.settled { --tf: rotate(-8deg) translateX(255px); }
+}
 @media (prefers-reduced-motion: reduce) {
   .bounce-card, .bounce-stack.play .bounce-card { animation: none; transform: var(--tf) scale(1); opacity: 1; }
+  .bounce-card.settled { transition: none; }
 }
 @media (max-width: 700px) {
   .bounce-stack { height: 240px; }
@@ -751,7 +762,11 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 <script id="bounce-cards">
 (function () {
   var stack = document.getElementById("bounceStack");
-  if (!stack || !("IntersectionObserver" in window)) { if (stack) stack.classList.add("play"); return; }
+  if (!stack) return;
+  stack.querySelectorAll(".bounce-card").forEach(function (c) {
+    c.addEventListener("animationend", function () { c.classList.add("settled"); });
+  });
+  if (!("IntersectionObserver" in window)) { stack.classList.add("play"); return; }
   new IntersectionObserver(function (entries, io) {
     entries.forEach(function (en) {
       if (en.isIntersecting) { stack.classList.add("play"); io.disconnect(); }
