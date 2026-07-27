@@ -321,10 +321,59 @@
     padding: 7px 14px; border-radius: 999px; border: none;
   }
   .pin-open-btn:hover { background: #ad081b; }
-  .pin-open-btn.cse-run { background: var(--accent-2); cursor: pointer; font-family: inherit; }
-  .pin-open-btn.cse-run:hover { background: var(--accent); }
-  .cse-note { font-size: 12px; color: var(--sub); line-height: 1.7; margin: 4px 0 12px; }
-  #gcseBox .gsc-control-cse { padding: 0; border: none; }
+  /* ===== デザインフィード(マソンリー) ===== */
+  .feed-search { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .feed-search input {
+    flex: 1; margin: 0; border: none; border-radius: 999px; padding: 13px 22px;
+    background: #eef0f5; font-size: 14px; font-weight: 600;
+  }
+  .feed-search input:focus { outline: 2px solid var(--accent); background: #fff; }
+  .feed-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 8px; scrollbar-width: none; }
+  .feed-chips::-webkit-scrollbar { display: none; }
+  .feed-chip {
+    flex: 0 0 auto; padding: 9px 18px; border-radius: 999px; border: none; cursor: pointer;
+    background: #eef0f5; color: #1a1c26; font-size: 13px; font-weight: 800; font-family: inherit;
+    transition: background .12s ease;
+  }
+  .feed-chip:hover { background: #e2e5ee; }
+  .feed-chip.active { background: #14161f; color: #fff; }
+  .feed-masonry { column-count: 2; column-gap: 14px; }
+  @media (min-width: 760px) { .feed-masonry { column-count: 3; } }
+  @media (min-width: 1080px) { .feed-masonry { column-count: 4; } }
+  @media (min-width: 1480px) { .feed-masonry { column-count: 5; } }
+  .feed-card { break-inside: avoid; margin-bottom: 18px; position: relative; }
+  .feed-card a { display: block; position: relative; }
+  .feed-card img {
+    width: 100%; display: block; border-radius: 16px; background: #eef0f5; min-height: 60px;
+  }
+  .feed-overlay {
+    position: absolute; inset: 0; border-radius: 16px; opacity: 0;
+    background: rgba(0,0,0,.28); transition: opacity .12s ease;
+    display: flex; align-items: flex-start; justify-content: flex-end; padding: 12px;
+  }
+  .feed-card:hover .feed-overlay { opacity: 1; }
+  .feed-open {
+    background: #E60023; color: #fff; font-size: 12px; font-weight: 800;
+    padding: 8px 14px; border-radius: 999px;
+  }
+  .feed-title {
+    font-size: 12.5px; font-weight: 700; color: #1a1c26; margin: 7px 4px 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .feed-src { font-size: 10.5px; color: var(--sub); margin: 2px 4px 0; }
+  .feed-skel {
+    break-inside: avoid; margin-bottom: 18px; border-radius: 16px;
+    background: linear-gradient(100deg, #ecedf3 30%, #f7f8fc 50%, #ecedf3 70%);
+    background-size: 400% 100%; animation: skel 1.1s ease infinite;
+  }
+  @keyframes skel { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+  .feed-more { text-align: center; margin: 20px 0 8px; }
+  #feedMoreBtn {
+    border: none; border-radius: 999px; padding: 12px 28px; cursor: pointer;
+    background: #eef0f5; color: #1a1c26; font-size: 13.5px; font-weight: 800; font-family: inherit;
+  }
+  #feedMoreBtn:hover { background: #e2e5ee; }
+  #feedMoreBtn:disabled { opacity: .5; cursor: default; }
   .pin-masonry { column-count: 2; column-gap: 10px; }
   @media (min-width: 1050px) { .pin-masonry { column-count: 3; } }
   .pin-card {
@@ -519,16 +568,13 @@
 
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
-    <h2 class="page-title">デザインリファレンス</h2>
-    <p class="page-sub">AI商品企画で生成した商品、または自社の商品情報を読み込ませると、タイル状(マスonry)レイアウトで<b>実際の写真</b>を並べます。業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>を、商品専用の参考は<b>主要ECモールの実商品写真</b>を表示(いずれも実画像検索設定時)。イラストではなく実物での参考資料としてご利用ください。</p>
-
-    <div class="api-bar">
-      <span class="api-status" id="googleStatus">🖼️ CC素材で表示中 — 実画像検索は未設定</span>
-      <button class="api-toggle" id="googleToggleBtn" type="button">⚙️ 実画像検索の設定</button>
+    <div class="feed-search">
+      <input type="text" id="feedSearch" placeholder="&#128269; 気になるデザインを検索(例: コスメ パッケージ ミニマル)" autocomplete="off">
+      <button class="api-toggle" id="googleToggleBtn" type="button" title="実画像検索の設定">⚙️ 実画像検索の設定</button>
     </div>
     <div class="api-panel" id="googlePanel">
       <p class="api-desc">
-        <b>画像検索エンジン</b>のAPIキーと検索エンジンIDを設定すると、業界共通のデザイントレンドは<b>デザイン参考サイトに実在する画像</b>、商品専用の参考は<b>主要ECモール・口コミサイトの実商品写真</b>を表示します(未設定時は一般的なCCライセンス写真で代用します)。<br>
+        <b>画像検索エンジン</b>のAPIキーと検索エンジンIDを設定すると、フィードにデザイン参考サイト・実商品の<b>実画像検索結果</b>が優先的に流れるようになります(未設定でもキー不要の実在写真ソースでフィードは動作します)。<br>
         <b>キーはこのブラウザ(localStorage)にのみ保存され、検索APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
         APIコンソールでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
         <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① 検索エンジンを作成(cxを取得)</a> ・
@@ -541,79 +587,9 @@
         <button class="btn-clear" id="googleClearBtn" type="button">削除</button>
       </div>
     </div>
-    <p class="pin-note">📌 主要な外部サービスは画像検索APIを公開していないため、実画像検索が未設定の場合は著作権フリー/クリエイティブ・コモンズの実写真を検索できる<a href="https://openverse.org" target="_blank" rel="noopener" style="color:var(--accent)">CCライセンス画像サービス</a>で代用しています。各写真には出典を表示し、上部のボタンから外部サイトでの検索結果も確認できます。</p>
-
-    <div class="card no-print" id="cseCard">
-      <h3>🔎 実在デザインの画面内検索(キー設定不要)</h3>
-      <p class="cse-note">実在するデザイン・商品の画像検索結果を、このページを離れずにそのまま表示します。各ボードの「▶ 画面内で検索」ボタンを押すか、下の検索窓に直接キーワードを入力してください(公式の検索ウィジェットを利用)。</p>
-      <div id="gcseBox"><div class="pin-loading">検索ウィジェットを読み込んでいます…</div></div>
-    </div>
-
-    <div class="card">
-      <div class="loader-tabs">
-        <button class="loader-tab active" data-mode="ai" type="button">🤖 AI商品企画で生成した商品を読み込む</button>
-        <button class="loader-tab" data-mode="manual" type="button">✍️ 自社商品を入力する</button>
-      </div>
-
-      <div class="loader-pane active" id="loaderAi">
-        <label class="fld">生成済みの商品</label>
-        <select id="productSelect"></select>
-      </div>
-      <div class="loader-pane" id="loaderManual">
-        <div class="form-row" style="grid-template-columns:1fr 1fr 2fr">
-          <div>
-            <label class="fld">商品名</label>
-            <input type="text" id="manualName" placeholder="例: 潤いフェイスミスト">
-          </div>
-          <div>
-            <label class="fld">カテゴリー</label>
-            <select id="manualCat">
-              <option value="beauty">美容・コスメ</option>
-              <option value="food">食品</option>
-              <option value="living">生活雑貨・家電</option>
-            </select>
-          </div>
-          <div>
-            <label class="fld">特徴・キーワード(任意)</label>
-            <input type="text" id="manualKeywords" placeholder="例: オーガニック, パステルカラー, ミニマル">
-          </div>
-        </div>
-      </div>
-
-      <button class="gen-btn mt" id="designGenBtn" type="button">🔍 この商品のデザインを探す</button>
-    </div>
-
-    <div class="loading" id="designLoading">
-      <div class="spinner"></div>
-      <span id="designLoadingText">デザインの方向性を分析しています…</span>
-    </div>
-
-    <div id="designSuggestBox"></div>
-
-    <h3 class="subhead mt">業界共通のデザイントレンド</h3>
-    <p class="page-sub">カテゴリー横断で押さえておきたい6つのデザイン方向性です。</p>
-    <div class="grid g3" id="moodGrid"></div>
-
-    <div class="grid g2 mt">
-      <div class="card">
-        <h3>✍️ 日本語コピーの傾向(美容カテゴリー例)</h3>
-        <ul class="ref-list">
-          <li>「肌荒れを防ぐ」「うるおいを守る」など<b>効能は控えめ・具体的</b>に(薬機法対応の言い回しが主流)</li>
-          <li>数字訴求が効く:「92%が保湿力を実感」「1本で7役」</li>
-          <li>ひらがな多めの柔らかい語感:「ゆらぎ肌に、そっと。」</li>
-          <li>成分名を前面に:「シカ」「レチノール」「セラミド」などの指名検索が増加中</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h3>📐 パッケージ設計チェックリスト</h3>
-        <ul class="ref-list">
-          <li>日本語表記(全成分・使用方法・注意書き)のスペース確保</li>
-          <li>ドラッグストア棚を想定した正面フェイスの視認性</li>
-          <li>EC商品画像1枚目のレギュレーション(モールごとに異なる)</li>
-          <li>リサイクル識別表示マーク・バーコード位置</li>
-        </ul>
-      </div>
-    </div>
+    <div class="feed-chips" id="feedChips"></div>
+    <div class="feed-masonry" id="feedMasonry"></div>
+    <div class="feed-more"><button id="feedMoreBtn" type="button">もっと見る</button></div>
   </section>
 
   <!-- ================= Marketing ================= -->
@@ -729,91 +705,6 @@ function buildProductQuery(keywords, cat) {
 }
 function buildDesignQuery(keywords) {
   return `${keywords} (${DESIGN_SITES.map(s => `site:${s}`).join(" OR ")})`;
-}
-
-// 実際の通販サイトの商品写真(画像検索エンジンでの画像検索。要ユーザー自身のAPIキー)
-async function fetchRealProductImages(query, count) {
-  const key = getGoogleKey();
-  const cx = getGoogleCx();
-  if (!key || !cx) return null; // 未設定 = フォールバックへ
-  try {
-    const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&searchType=image&safe=active&num=${Math.min(count, 10)}&q=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const items = (data.items || [])
-      .map(it => ({
-        thumb: it.image?.thumbnailLink || it.link || "",
-        landingUrl: it.image?.contextLink || it.link || "#",
-        title: it.title || "実商品",
-        creator: "",
-        license: "",
-      }))
-      .filter(img => img.thumb);
-    return items;
-  } catch (e) {
-    return null; // ネットワークエラー等もフォールバックへ
-  }
-}
-
-// 著作権フリー/CCライセンスの実写真(APIキー不要。実商品検索が未設定/0件の場合のフォールバック)
-async function fetchReferenceImages(query, count) {
-  try {
-    const res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${count}&mature=false`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.results || [])
-      .map(r => ({
-        thumb: r.thumbnail || r.url || "",
-        landingUrl: r.foreign_landing_url || r.url || "#",
-        title: r.title || "参考画像",
-        creator: r.creator || "",
-        license: (r.license || "").toUpperCase(),
-      }))
-      .filter(img => img.thumb)
-      .slice(0, count);
-  } catch (e) {
-    return [];
-  }
-}
-
-function renderImagesInto(containerId, images, sourceTag) {
-  const target = document.getElementById(containerId);
-  if (!target) return;
-  target.innerHTML = `<div class="pin-masonry">${images.map(img => `
-    <div class="pin-card">
-      <a href="${img.landingUrl}" target="_blank" rel="noopener">
-        <img src="${img.thumb}" alt="${escapeHtml(img.title)}" loading="lazy">
-        <div class="pin-overlay"><span class="pin-save-btn">元ページを見る</span></div>
-      </a>
-      <div class="pin-credit">${sourceTag} ${img.creator ? `・ <b>${escapeHtml(img.creator)}</b>` : ""}${img.license ? ` ・ ${escapeHtml(img.license)}` : ""}</div>
-    </div>`).join("")}</div>`;
-}
-
-function renderPinBoard(containerId, query, count, cat, mode) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  // mode: "design"(デザイン参考サイト) or "product"(ECモールの実商品)
-  // このボードは「実在するデザイン・実商品からインスピレーションを得る場」であるため、
-  // AI生成画像は使わず、実画像検索(未設定時はCC素材)のみを表示する
-  const searchQuery = mode === "design" ? buildDesignQuery(query) : buildProductQuery(query, cat);
-  const sourceTag = mode === "design" ? "📌 実際のデザイン画像" : "🛍️ 実商品";
-
-  fetchRealProductImages(searchQuery, count).then(realImages => {
-    if (realImages && realImages.length) {
-      renderImagesInto(containerId, realImages, sourceTag);
-      return;
-    }
-    fetchReferenceImages(query, count).then(images => {
-      const target = document.getElementById(containerId);
-      if (!target) return;
-      if (!images.length) {
-        target.innerHTML = `<div class="pin-empty">${realImages === null && !getGoogleKey() ? "上部「⚙️ 実画像検索の設定」を設定すると、実在するデザイン・実商品の画像がここに表示されます。" : "参考画像を取得できませんでした。"}上部のボタンから外部サイトで直接検索してください。</div>`;
-        return;
-      }
-      renderImagesInto(containerId, images, "🖼️ CC素材");
-    });
-  });
 }
 
 // ================= サンプルデータ(トレンド分析) =================
@@ -1050,260 +941,6 @@ function svgLiving(id, p, pkg) {
 
 const SVG_BY_CAT = { beauty: svgBeauty, food: svgFood, living: svgLiving };
 
-// ================= デザインムードボード + 実例参照リンク =================
-const MOODS = [
-  {
-    cat: "beauty", label: "PURE CICA", sub: "SOOTHING MIST",
-    colors: ["#e8f0e4", "#f7f3ea", "#c9d8c5", "#8fae8b", "#5c7a58"],
-    title: "ナチュラル・クリーン(スキンケア向け)",
-    desc: "引き算の美学。低彩度グリーン×生成りで「成分の誠実さ」を伝える。日本のセンシティブスキン市場で最も支持されるトンマナ。",
-    tags: ["余白多め", "細めのゴシック体", "成分名を主役に"],
-    refEn: "skincare packaging natural minimal design",
-    refJa: "スキンケア ナチュラル パッケージ",
-  },
-  {
-    cat: "beauty", label: "SOFT GLOW", sub: "TINT & CUSHION",
-    colors: ["#fde8ec", "#fff5f7", "#f9c8d4", "#e88aa0", "#c25b76"],
-    title: "ソフト・フェミニン(メイク・リップ向け)",
-    desc: "くすみピンク基調。K-Beautyらしさを残しつつ、日本では原色より1〜2トーン落とした配色がドラッグストア棚で強い。",
-    tags: ["丸ゴシック", "手書き風アクセント", "ツヤ感の写真"],
-    refEn: "k-beauty cosmetics packaging pastel pink design",
-    refJa: "コスメ パッケージ ピンク",
-  },
-  {
-    cat: "food", label: "POWER FUEL", sub: "PROTEIN SNACK", big: "15g",
-    colors: ["#1f2937", "#111827", "#f59e0b", "#fbbf24", "#f3f4f6"],
-    title: "パフォーマンス(高タンパク食品向け)",
-    desc: "ダーク×イエローの高コントラスト。「タンパク質15g」など数値を最大サイズで配置するのが日本のプロテイン市場の定石。",
-    tags: ["極太ゴシック", "数値ドーン", "黒背景"],
-    refEn: "protein snack packaging bold black yellow design",
-    refJa: "プロテイン スナック パッケージ",
-  },
-  {
-    cat: "living", label: "CALM DESK", sub: "AROMA HUMIDIFIER",
-    colors: ["#eef2f7", "#dfe7f0", "#b8c9dd", "#8aa3c0", "#5b7897"],
-    title: "ミニマル・テック(デスク家電向け)",
-    desc: "ニュアンスブルーグレー。近年の日本の家電市場では「家電=白物」から「インテリアに馴染む低彩度」へ移行。",
-    tags: ["余白と直線", "小さめロゴ", "ライフスタイル写真"],
-    refEn: "minimal home appliance product design",
-    refJa: "卓上 加湿器 家電 デザイン",
-  },
-  {
-    cat: "beauty", label: "GILT GIFT", sub: "PREMIUM EDITION",
-    colors: ["#fdf6e3", "#f5e6c8", "#e8c87e", "#d4a24c", "#8b6a2e"],
-    title: "プレミアム・ギフト(高価格帯向け)",
-    desc: "生成り×ゴールド。日本の贈答文化(お中元・お歳暮・自分へのご褒美)を狙うなら箔押し・上質紙の質感表現が必須。",
-    tags: ["明朝体", "箔押し表現", "化粧箱"],
-    refEn: "premium gift box packaging gold luxury design",
-    refJa: "ギフトボックス 高級 パッケージ",
-  },
-  {
-    cat: "food", label: "POP BURST", sub: "TRIAL PACK",
-    colors: ["#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0284c7"],
-    title: "フレッシュ・ポップ(SNS拡散狙い)",
-    desc: "彩度高めのブルー系。SNSショート動画で映える「開封動画向け」パッケージ。Z世代向けトライアル商品で有効。",
-    tags: ["大胆な色面", "絵文字的アイコン", "開封体験"],
-    refEn: "colorful pop packaging design unboxing",
-    refJa: "ポップ カラフル パッケージ デザイン",
-  },
-];
-
-function buildRefLinks(m) {
-  const en = encodeURIComponent(m.refEn);
-  const qooImg = encodeURIComponent(m.refJa + " site:qoo10.jp");
-  return [
-    { key: "design", label: "🔍 画像で探す", url: `https://www.pinterest.com/search/pins/?q=${en}` },
-    { key: "portfolio1", label: "🎨 作品集を見る", url: `https://www.behance.net/search/projects?search=${en}` },
-    { key: "portfolio2", label: "✏️ デザイン事例を見る", url: `https://dribbble.com/search/${en}` },
-    { key: "product", label: "🛍️ 類似商品を探す", url: `https://www.google.com/search?tbm=isch&q=${qooImg}` },
-  ];
-}
-
-document.getElementById("moodGrid").innerHTML = MOODS.map((m, i) => `
-  <div class="mood">
-    <div class="mood-body">
-      <h4>${m.title}</h4>
-      <p>${m.desc}</p>
-      <div class="mini-swatch">${m.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
-      <div class="mood-tags">${m.tags.map((t, j) => `<span class="tag b${(j % 3) + 1}">${t}</span>`).join("")}</div>
-      <div class="pin-board-head">
-        <span class="pin-board-title">📌 実際の参考写真</span>
-        <span style="display:flex;gap:6px">
-          <button class="pin-open-btn cse-run" type="button" data-q="${escapeHtml(m.refEn)}">▶ 画面内で検索</button>
-          <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(m.refEn)}" target="_blank" rel="noopener">画像で探す</a>
-        </span>
-      </div>
-      <div class="pin-board" id="pinboard-mood-${i}"><div class="pin-loading">画像を読み込んでいます…</div></div>
-      <div class="ref-links">${buildRefLinks(m).filter(l => l.key !== "design").map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
-    </div>
-  </div>`).join("");
-MOODS.forEach((m, i) => renderPinBoard("pinboard-mood-" + i, m.refEn, 4, m.cat, "design"));
-
-// ================= 商品を読み込んでデザインを探す =================
-document.querySelectorAll(".loader-tab").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".loader-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".loader-pane").forEach(p => p.classList.remove("active"));
-    document.getElementById(btn.dataset.mode === "ai" ? "loaderAi" : "loaderManual").classList.add("active");
-  });
-});
-
-function getFallbackDirections(cat, keywords) {
-  const catEnBase = { beauty: "cosmetics packaging design", food: "snack food packaging design", living: "home appliance product design" }[cat];
-  const catJaBase = { beauty: "コスメ パッケージ", food: "スナック パッケージ", living: "生活家電 パッケージ" }[cat];
-  const kwList = (keywords || "").split(/[,、\s]+/).filter(Boolean).slice(0, 4);
-  return PROPOSALS[cat].images.map(img => ({
-    name: img.name,
-    desc: img.desc,
-    tags: kwList,
-    enKeywords: [catEnBase, keywords].filter(Boolean).join(" "),
-    jaKeywords: [catJaBase, keywords].filter(Boolean).join(" "),
-    colors: img.colors,
-  }));
-}
-
-function buildDesignPrompt(productName, cat, keywords) {
-  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
-  const system = `あなたは日本市場向けOEM商品のデザインディレクターです。与えられた商品情報をもとに、日本の消費者に響くデザインの方向性を3パターン提案してください。
-
-重要な制約:
-- 出力は必ず以下のJSON形式のみとし、それ以外の文字列(説明文・前置き・コードフェンス等)は一切含めないでください。
-- enKeywordsはデザイン参考サイトでの画像検索に適した英語のキーワード(3〜6語程度)にしてください。
-- jaKeywordsは国内ECモールで類似の実商品を探すのに適した日本語キーワード(2〜4語程度)にしてください。
-- colorsのhex値は必ず "#rrggbb" 形式にしてください。
-
-{
-  "directions": [
-    {"name": "方向性A案の名称", "desc": "デザイン意図の説明(40字程度)", "tags": ["キーワード1","キーワード2","キーワード3"], "enKeywords": "...", "jaKeywords": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
-    {"name": "方向性B案の名称", "desc": "...", "tags": [...], "enKeywords": "...", "jaKeywords": "...", "colors": {...}},
-    {"name": "方向性C案の名称", "desc": "...", "tags": [...], "enKeywords": "...", "jaKeywords": "...", "colors": {...}}
-  ]
-}`;
-  const user = `商品名: ${productName}
-カテゴリー: ${catLabel}
-特徴・キーワード: ${keywords || "(指定なし)"}
-
-上記の商品に合う日本市場向けデザインの方向性をJSON形式で3パターン提案してください。`;
-  return { system, user };
-}
-
-async function generateDesignDirections(productName, cat, keywords) {
-  const { system, user } = buildDesignPrompt(productName, cat, keywords);
-  return callClaudeAPI(system, user, 1400);
-}
-
-function normalizeDirections(cat, raw, keywords) {
-  const fb = getFallbackDirections(cat, keywords);
-  const hexRe = /^#[0-9a-fA-F]{3,8}$/;
-  const arr = Array.isArray(raw && raw.directions) ? raw.directions : [];
-  return [0, 1, 2].map(i => {
-    const src = arr[i] || {};
-    const def = fb[i % fb.length];
-    const c = src.colors || {};
-    const colors = {};
-    ["bg1", "bg2", "body", "cap", "text", "mist"].forEach(k => { colors[k] = hexRe.test(c[k]) ? c[k] : def.colors[k]; });
-    return {
-      name: (src.name || def.name).toString().slice(0, 40),
-      desc: (src.desc || def.desc).toString().slice(0, 100),
-      tags: Array.isArray(src.tags) && src.tags.length ? src.tags.slice(0, 4).map(String) : def.tags,
-      enKeywords: (src.enKeywords || def.enKeywords || "").toString().slice(0, 140),
-      jaKeywords: (src.jaKeywords || def.jaKeywords || "").toString().slice(0, 80),
-      colors,
-    };
-  });
-}
-
-function renderDesignSuggestions(cat, productName, directions, liveMode, errorNote) {
-  const links = d => ([
-    { label: "🎨 作品集を見る", url: `https://www.behance.net/search/projects?search=${encodeURIComponent(d.enKeywords)}` },
-    { label: "✏️ デザイン事例を見る", url: `https://dribbble.com/search/${encodeURIComponent(d.enKeywords)}` },
-    { label: "🛍️ 類似商品を探す", url: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(d.jaKeywords + " site:qoo10.jp")}` },
-  ]);
-  const boxId = i => "pinboard-ds-" + i;
-
-  document.getElementById("designSuggestBox").innerHTML = `
-    <div class="ds-head">
-      <span class="p-tag2">📌「${escapeHtml(productName)}」のためのデザイン提案</span>
-      <span class="gen-badge light ${liveMode ? "live" : ""}">${liveMode ? "✨ AIが方向性を提案" : "🧪 サンプルの方向性"}</span>
-    </div>
-    ${errorNote ? `<div class="api-error">⚠️ AI APIの呼び出しに失敗したため、サンプルの方向性を表示しています: ${escapeHtml(errorNote)}</div>` : ""}
-    ${directions.map((d, i) => `
-      <div class="card mt">
-        <b style="font-size:14px">${escapeHtml(d.name)}</b>
-        <p style="font-size:12.5px;color:var(--sub);margin-top:4px">${escapeHtml(d.desc)}</p>
-        <div class="mood-tags" style="margin-top:8px">${(d.tags || []).map((t, j) => `<span class="tag b${(j % 3) + 1}">${escapeHtml(t)}</span>`).join("")}</div>
-        <div class="pin-board-head" style="margin-top:14px">
-          <span class="pin-board-title">📌 実際の参考写真</span>
-          <span style="display:flex;gap:6px">
-            <button class="pin-open-btn cse-run" type="button" data-q="${escapeHtml(d.jaKeywords || d.enKeywords)}">▶ 画面内で検索</button>
-            <a class="pin-open-btn" href="https://www.pinterest.com/search/pins/?q=${encodeURIComponent(d.enKeywords)}" target="_blank" rel="noopener">画像で探す</a>
-          </span>
-        </div>
-        <div class="pin-board" id="${boxId(i)}"><div class="pin-loading">画像を読み込んでいます…</div></div>
-        <div class="ref-links">${links(d).map(l => `<a class="ref-btn" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>
-      </div>`).join("")}`;
-
-  directions.forEach((d, i) => renderPinBoard(boxId(i), d.enKeywords, 6, cat, "product"));
-}
-
-document.getElementById("designGenBtn").addEventListener("click", async () => {
-  const activeMode = document.querySelector(".loader-tab.active").dataset.mode;
-  let productName, cat, keywords;
-
-  if (activeMode === "ai") {
-    const idx = document.getElementById("productSelect").value;
-    const list = getGeneratedProducts();
-    if (idx === "" || !list[idx]) {
-      alert("読み込む商品がありません。先に「AI商品企画」タブで商品を生成してください。");
-      return;
-    }
-    productName = list[idx].productName;
-    cat = list[idx].cat;
-    keywords = list[idx].brandName || "";
-  } else {
-    productName = document.getElementById("manualName").value.trim();
-    cat = document.getElementById("manualCat").value;
-    keywords = document.getElementById("manualKeywords").value.trim();
-    if (!productName) {
-      alert("商品名を入力してください。");
-      return;
-    }
-  }
-
-  const btn = document.getElementById("designGenBtn");
-  const loading = document.getElementById("designLoading");
-  const loadingText = document.getElementById("designLoadingText");
-  const hasKey = !!getClaudeKey();
-
-  btn.disabled = true;
-  loadingText.textContent = hasKey
-    ? "AI APIでこの商品に合うデザインの方向性を分析しています…"
-    : "デザインの方向性を分析しています…(サンプルモード)";
-  loading.classList.add("show");
-
-  let liveMode = false;
-  let errorNote = "";
-  let raw = null;
-
-  if (hasKey) {
-    try {
-      raw = await generateDesignDirections(productName, cat, keywords);
-      liveMode = true;
-    } catch (err) {
-      errorNote = describeClaudeError(err);
-    }
-  } else {
-    await new Promise(r => setTimeout(r, 900));
-  }
-
-  const directions = normalizeDirections(cat, raw, keywords);
-  renderDesignSuggestions(cat, productName, directions, liveMode, errorNote);
-
-  loading.classList.remove("show");
-  btn.disabled = false;
-});
-
 // ================= タブ切替 =================
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
@@ -1311,74 +948,210 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
     tab.classList.add("active");
     document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
-    if (tab.dataset.panel === "design") ensureCseLoaded();
+    if (tab.dataset.panel === "design") initFeedOnce();
   });
 });
 
-// ================= 画面内検索ウィジェット(公式埋め込み。APIキー不要、cxのみで動作) =================
-const CSE_CX = "1070a72d70a484f1e";
-let cseState = "idle"; // idle | loading | ready | failed
-let pendingCseQuery = "";
+// ================= デザインフィード(実在画像のマソンリー) =================
+const FEED_CHIPS = [
+  { label: "おすすめ", en: ["packaging design inspiration", "product design"], tags: ["packagingdesign", "productdesign"] },
+  { label: "コスメ", en: ["cosmetics packaging design", "skincare packaging"], tags: ["cosmetics", "packaging"] },
+  { label: "食品パッケージ", en: ["food packaging design", "snack packaging colorful"], tags: ["foodpackaging", "packagingdesign"] },
+  { label: "家電・ガジェット", en: ["minimal electronics product design", "industrial design product"], tags: ["industrialdesign", "productdesign"] },
+  { label: "ミニマル", en: ["minimal packaging design white"], tags: ["minimalism", "minimaldesign"] },
+  { label: "ポップ・カラフル", en: ["colorful pop packaging design"], tags: ["colorful", "graphicdesign"] },
+  { label: "高級感", en: ["luxury packaging design gold"], tags: ["luxury", "packaging"] },
+  { label: "ブランディング", en: ["brand identity logo design"], tags: ["branding", "logodesign"] },
+  { label: "配色", en: ["color palette design inspiration"], tags: ["colorpalette", "colorscheme"] },
+];
 
-function cseFailed() {
-  cseState = "failed";
-  const box = document.getElementById("gcseBox");
-  if (box) box.innerHTML = `<div class="pin-empty">検索ウィジェットを読み込めませんでした(ネットワーク制限の可能性)。各ボードの外部リンクから検索結果をご確認ください。</div>`;
+let feedInited = false;
+let feedChip = FEED_CHIPS[0];
+let feedCustomQuery = "";
+let feedPage = 1;
+let feedBusy = false;
+const feedSeen = new Set();
+let jsonpSeq = 0;
+
+function hostOf(u) {
+  try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; }
 }
 
-function cseReady() {
-  if (cseState === "ready") return;
+// JSONP(コールバック方式)。CORSヘッダーを返さない公開フィードでも取得できる
+function jsonp(url, cbParam, timeoutMs) {
+  return new Promise((resolve) => {
+    const cb = "__k2jcb" + (jsonpSeq++);
+    let done = false;
+    const finish = (data) => {
+      if (done) return;
+      done = true;
+      delete window[cb];
+      if (sc.parentNode) sc.parentNode.removeChild(sc);
+      resolve(data);
+    };
+    window[cb] = finish;
+    const sc = document.createElement("script");
+    sc.src = url + "&" + cbParam + "=" + cb;
+    sc.onerror = () => finish(null);
+    setTimeout(() => finish(null), timeoutMs || 8000);
+    document.head.appendChild(sc);
+  });
+}
+
+// CCライセンス画像検索(キー不要・CORS対応)
+async function feedFetchOpenverse(query, page) {
   try {
-    window.google.search.cse.element.render({
-      div: "gcseBox",
-      tag: "search",
-      gname: "k2jcse",
-      attributes: {
-        enableImageSearch: true,
-        defaultToImageSearchLayout: true,
-        imageSearchLayout: "column",
-        imageSearchResultSetSize: 8,
-      },
-    });
-    cseState = "ready";
-    if (pendingCseQuery) {
-      const q = pendingCseQuery;
-      pendingCseQuery = "";
-      const el = window.google.search.cse.element.getElement("k2jcse");
-      if (el) el.execute(q);
-    }
-  } catch (e) {
-    cseFailed();
+    const res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=20&page=${page}&mature=false`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || []).map(r => ({
+      img: r.thumbnail || r.url || "",
+      landing: r.foreign_landing_url || r.url || "#",
+      title: (r.title || "").trim(),
+      src: hostOf(r.foreign_landing_url || r.url),
+      credit: [r.creator, (r.license || "").toUpperCase()].filter(Boolean).join(" / "),
+    })).filter(x => x.img);
+  } catch (e) { return []; }
+}
+
+// 写真共有サービスの公開フィード(キー不要・JSONP)。_m(240px)を_c(800px)に差し替えて高画質化
+async function feedFetchPhotoFeed(tags) {
+  const data = await jsonp(`https://api.flickr.com/services/feeds/photos_public.gne?format=json&tagmode=any&tags=${encodeURIComponent(tags)}`, "jsoncallback", 8000);
+  if (!data || !data.items) return [];
+  return data.items.map(it => ({
+    img: ((it.media && it.media.m) || "").replace("_m.", "_c."),
+    landing: it.link || "#",
+    title: (it.title || "").trim(),
+    src: hostOf(it.link),
+    credit: ((it.author || "").match(/\("?([^)"]+)"?\)/) || [])[1] || "",
+  })).filter(x => x.img);
+}
+
+// 実画像検索(任意設定・BYOK)。設定時はデザイン参考サイトの実画像がフィードに流れる
+async function feedFetchGoogle(query, start) {
+  const key = getGoogleKey();
+  const cx = getGoogleCx();
+  if (!key || !cx) return null;
+  try {
+    const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&searchType=image&safe=active&num=10&start=${start}&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.items || []).map(it => ({
+      img: it.link || "",
+      thumbFallback: (it.image && it.image.thumbnailLink) || "",
+      landing: (it.image && it.image.contextLink) || it.link || "#",
+      title: (it.title || "").trim(),
+      src: hostOf((it.image && it.image.contextLink) || it.link),
+      credit: "",
+    })).filter(x => x.img);
+  } catch (e) { return []; }
+}
+
+function feedImgError(el) {
+  const fb = el.dataset.fb;
+  if (fb) {
+    el.removeAttribute("data-fb");
+    el.src = fb;
+    return;
   }
+  const card = el.closest(".feed-card");
+  if (card) card.remove();
 }
 
-function ensureCseLoaded() {
-  if (cseState !== "idle") return;
-  cseState = "loading";
-  window.__gcse = { parsetags: "explicit", callback: cseReady, initializationCallback: cseReady };
-  const s = document.createElement("script");
-  s.src = "https://cse.google.com/cse.js?cx=" + encodeURIComponent(CSE_CX);
-  s.async = true;
-  s.onerror = cseFailed;
-  document.head.appendChild(s);
+function feedCardHtml(item) {
+  return `<div class="feed-card">
+    <a href="${escapeHtml(item.landing)}" target="_blank" rel="noopener">
+      <img src="${escapeHtml(item.img)}"${item.thumbFallback ? ` data-fb="${escapeHtml(item.thumbFallback)}"` : ""} alt="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="no-referrer" onerror="feedImgError(this)">
+      <div class="feed-overlay"><span class="feed-open">元ページ ↗</span></div>
+    </a>
+    ${item.title ? `<div class="feed-title">${escapeHtml(item.title)}</div>` : ""}
+    <div class="feed-src">${escapeHtml(item.src)}${item.credit ? " ・ " + escapeHtml(item.credit) : ""}</div>
+  </div>`;
 }
 
-function executeCseQuery(query) {
-  ensureCseLoaded();
-  if (cseState === "ready") {
-    const el = window.google.search.cse.element.getElement("k2jcse");
-    if (el) el.execute(query);
-  } else if (cseState !== "failed") {
-    pendingCseQuery = query; // 読み込み完了後に自動実行される
+async function loadFeedBatch(reset) {
+  if (feedBusy) return;
+  feedBusy = true;
+  const box = document.getElementById("feedMasonry");
+  const moreBtn = document.getElementById("feedMoreBtn");
+  if (reset) {
+    feedSeen.clear();
+    feedPage = 1;
+    box.innerHTML = "";
   }
-  const card = document.getElementById("cseCard");
-  if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  box.insertAdjacentHTML("beforeend", Array.from({ length: 12 }, () =>
+    `<div class="feed-skel" style="height:${160 + Math.floor(Math.random() * 220)}px"></div>`).join(""));
+  moreBtn.disabled = true;
+
+  const queries = feedCustomQuery ? [feedCustomQuery] : feedChip.en;
+  const tags = feedCustomQuery
+    ? feedCustomQuery.split(/[\s,、]+/).filter(Boolean).slice(0, 3).join(",")
+    : feedChip.tags.join(",");
+
+  const jobs = [];
+  if (getGoogleKey() && getGoogleCx()) {
+    queries.forEach(q => jobs.push(feedFetchGoogle(buildDesignQuery(q), (feedPage - 1) * 10 + 1)));
+  }
+  queries.forEach(q => jobs.push(feedFetchOpenverse(q, feedPage)));
+  if (feedPage <= 2) jobs.push(feedFetchPhotoFeed(tags)); // 公開フィードはページングなしのため序盤のみ
+
+  const results = (await Promise.all(jobs)).filter(Boolean).flat();
+  for (let i = results.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [results[i], results[j]] = [results[j], results[i]];
+  }
+  const fresh = results.filter(it => !feedSeen.has(it.img));
+  fresh.forEach(it => feedSeen.add(it.img));
+
+  box.querySelectorAll(".feed-skel").forEach(el => el.remove());
+  if (fresh.length) {
+    box.insertAdjacentHTML("beforeend", fresh.map(feedCardHtml).join(""));
+  } else if (reset) {
+    box.innerHTML = `<div class="pin-empty">画像を取得できませんでした。キーワードを変えて再度お試しください。</div>`;
+  }
+  feedPage++;
+  moreBtn.disabled = false;
+  feedBusy = false;
 }
 
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".cse-run");
-  if (btn && btn.dataset.q) executeCseQuery(btn.dataset.q);
+function renderFeedChips() {
+  document.getElementById("feedChips").innerHTML = FEED_CHIPS.map((c, i) =>
+    `<button class="feed-chip${!feedCustomQuery && c === feedChip ? " active" : ""}" type="button" data-i="${i}">${c.label}</button>`).join("");
+}
+
+document.getElementById("feedChips").addEventListener("click", (e) => {
+  const b = e.target.closest(".feed-chip");
+  if (!b) return;
+  feedChip = FEED_CHIPS[+b.dataset.i];
+  feedCustomQuery = "";
+  document.getElementById("feedSearch").value = "";
+  renderFeedChips();
+  loadFeedBatch(true);
 });
+
+document.getElementById("feedSearch").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  const v = e.target.value.trim();
+  feedCustomQuery = v;
+  renderFeedChips();
+  loadFeedBatch(true);
+});
+
+document.getElementById("feedMoreBtn").addEventListener("click", () => loadFeedBatch(false));
+
+function initFeedOnce() {
+  if (feedInited) return;
+  feedInited = true;
+  renderFeedChips();
+  loadFeedBatch(true);
+  // 下端に近づいたら自動で追加読み込み(無限スクロール)
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((entries) => {
+      if (entries.some(en => en.isIntersecting) && !feedBusy && feedInited) loadFeedBatch(false);
+    }, { rootMargin: "600px" }).observe(document.getElementById("feedMoreBtn"));
+  }
+}
 
 // ================= トレンドタブ描画 =================
 function renderTrend(cat) {
@@ -1628,12 +1401,6 @@ async function generateProposalImages(cat, catLabel, data, token) {
 
 // ================= 実商品検索の設定パネル =================
 function refreshGoogleStatus() {
-  const has = !!(getGoogleKey() && getGoogleCx());
-  const statusEl = document.getElementById("googleStatus");
-  statusEl.textContent = has
-    ? "📌 実画像検索が有効です — デザイン参考画像/実商品写真を優先表示します"
-    : "🖼️ CC素材で表示中 — 実画像検索を設定すると実在するデザイン・実商品の画像が表示されます";
-  statusEl.classList.toggle("on", has);
   document.getElementById("googleKeyInput").value = getGoogleKey();
   document.getElementById("googleCxInput").value = getGoogleCx();
 }
@@ -1646,6 +1413,7 @@ document.getElementById("googleSaveBtn").addEventListener("click", () => {
   if (key && cx) {
     setGoogleCreds(key, cx);
     document.getElementById("googlePanel").classList.remove("show");
+    if (feedInited) loadFeedBatch(true);
   }
 });
 document.getElementById("googleClearBtn").addEventListener("click", () => {
