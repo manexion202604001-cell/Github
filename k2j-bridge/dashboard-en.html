@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K2J Bridge — デモダッシュボード</title>
-<meta name="description" content="日本市場トレンド分析からOEM商品企画・デザイン提案・マーケティングまでのデモダッシュボード。AI APIキーを設定すると実際にAIが商品企画を生成します。">
+<title>K2J Bridge — Demo Dashboard</title>
+<meta name="description" content="A demo dashboard covering Japanese market trend analysis, OEM product planning, design proposals, and marketing. Set an AI API key and AI will actually generate product plans.">
 <style>
   :root {
     --bg: #f4f6fb;
@@ -208,14 +208,14 @@
   .rfq-btn:hover { background: var(--accent-2); }
   .rfq-fallback { width: 100%; margin-top: 10px; font-family: monospace; font-size: 12px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); }
 
-  /* 商標事前確認 */
+  /* Trademark pre-check */
   .tm-check {
     background: #fff8ec; border: 1px solid #f0e2b8; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;
   }
   .tm-check b { font-size: 13px; }
   .tm-check p { font-size: 12px; color: #7a6a3f; margin: 6px 0 10px; }
 
-  /* 収益シミュレーター */
+  /* Profit simulator */
   .sim-card { background: #f8f9fd; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 20px 0; }
   .sim-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
   .sim-grid input {
@@ -311,7 +311,7 @@
   .mini-swatch i { width: 16px; height: 16px; border-radius: 4px; display: block; }
   .subhead { font-size: 16px; font-weight: 900; margin-top: 8px; }
 
-  /* ===== マスonryグリッド(実写真の参考資料) ===== */
+  /* ===== Masonry grid (real photo references) ===== */
   .pin-board { margin-top: 14px; }
   .pin-board-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .pin-board-title { font-size: 12.5px; font-weight: 800; color: var(--sub); }
@@ -321,7 +321,7 @@
     padding: 7px 14px; border-radius: 999px; border: none;
   }
   .pin-open-btn:hover { background: #ad081b; }
-  /* ===== デザインフィード(マソンリー) ===== */
+  /* ===== Design feed (masonry) ===== */
   .feed-search { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
   .feed-search input {
     flex: 1; margin: 0; border: none; border-radius: 999px; padding: 13px 22px;
@@ -438,50 +438,50 @@
 <body>
 
 <div class="topbar">
-  <a class="logo" href="index.html"><span class="mark">K2</span>K2J Bridge</a>
-  <span class="demo-pill">DEMO — AI APIキー設定でライブ生成も可能</span>
+  <a class="logo" href="index-en.html"><span class="mark">K2</span>K2J Bridge</a>
+  <span class="demo-pill">DEMO — set an AI API key for live generation</span>
   <span class="spacer"></span>
-  <a class="back-link" href="dashboard-en.html" style="margin-right:14px">EN</a>
-  <a class="back-link" href="index.html">← サービス紹介へ戻る</a>
+  <a class="back-link" href="dashboard.html">日本語</a>
+  <a class="back-link" href="index-en.html">← Back to overview</a>
 </div>
 
 <nav class="tabs">
-  <button class="tab active" data-panel="trend">📊 トレンド分析</button>
-  <button class="tab" data-panel="plan">💡 AI商品企画</button>
-  <button class="tab" data-panel="design">🎨 デザイン提案</button>
-  <button class="tab" data-panel="marketing">🚀 マーケティング</button>
+  <button class="tab active" data-panel="trend">📊 Trend Analysis</button>
+  <button class="tab" data-panel="plan">💡 AI Product Planning</button>
+  <button class="tab" data-panel="design">🎨 Design Inspiration</button>
+  <button class="tab" data-panel="marketing">🚀 Marketing</button>
 </nav>
 
 <main class="page">
 
   <!-- ================= Trend ================= -->
   <section class="panel active" id="panel-trend">
-    <h2 class="page-title">ECトレンドレーダー</h2>
-    <p class="page-sub">日本市場の参考データは<b>国内主要ECモール</b>を中心に毎日分析。ランキング・大型セール・レビューから「いま売れているもの」を抽出します(このデモではサンプルデータを表示しています)</p>
+    <h2 class="page-title">EC Trend Radar</h2>
+    <p class="page-sub">Japanese market reference data is analyzed daily, centered on <b>major Japanese e-commerce malls</b>. We extract what is selling right now from rankings, mega sales, and reviews (this demo shows sample data)</p>
 
     <div class="cat-row" id="catRow">
-      <button class="cat-btn active" data-cat="beauty">💄 美容・コスメ</button>
-      <button class="cat-btn" data-cat="food">🍱 食品</button>
-      <button class="cat-btn" data-cat="living">🏠 生活雑貨・家電</button>
+      <button class="cat-btn active" data-cat="beauty">💄 Beauty &amp; Cosmetics</button>
+      <button class="cat-btn" data-cat="food">🍱 Food</button>
+      <button class="cat-btn" data-cat="living">🏠 Home &amp; Appliances</button>
     </div>
 
     <div class="grid g4" id="kpiRow"></div>
 
     <div class="grid g2 mt">
       <div class="card">
-        <h3>🔥 EC急上昇ランキング(直近7日)</h3>
+        <h3>🔥 Fast-Rising EC Ranking (last 7 days)</h3>
         <table>
-          <thead><tr><th></th><th>商品ジャンル</th><th>ECモールでの位置づけ</th><th>検索/売上成長</th></tr></thead>
+          <thead><tr><th></th><th>Product genre</th><th>Position on EC malls</th><th>Search / sales growth</th></tr></thead>
           <tbody id="rankBody"></tbody>
         </table>
       </div>
       <div>
         <div class="card">
-          <h3>📈 カテゴリー成長率(前月比)</h3>
+          <h3>📈 Category Growth (vs. last month)</h3>
           <div class="bars" id="barChart"></div>
         </div>
         <div class="card mt">
-          <h3>💬 レビューAIインサイト</h3>
+          <h3>💬 Review AI Insights</h3>
           <div id="insights"></div>
         </div>
       </div>
@@ -490,78 +490,78 @@
 
   <!-- ================= Planner ================= -->
   <section class="panel" id="panel-plan">
-    <h2 class="page-title">AI商品企画ジェネレーター</h2>
-    <p class="page-sub">条件を選ぶと、ECモールのトレンドデータに基づくOEM商品コンセプトと<b>商品イメージ画像(3案)</b>を生成します。<b>AI APIキーを設定すると実際にAIがリアルタイムで生成</b>し、未設定の場合はサンプルを表示します。<b>画像生成APIキーも設定すると、商品イメージ画像はパッケージのモックアップ図ではなく実際にAIが生成した画像</b>になります。商品名・ブランド名は実在するブランドと重複しない、完全にオリジナルな名称のみを生成します。</p>
+    <h2 class="page-title">AI Product Plan Generator</h2>
+    <p class="page-sub">Pick your conditions and we generate an OEM product concept based on EC mall trend data, along with <b>3 product image concepts</b>. <b>Set an AI API key and AI actually generates the plan in real time</b>; without a key, a sample is shown. <b>If you also set an image generation API key, the product images become actual AI-generated images</b> instead of package mockup diagrams. Product and brand names are always fully original coinages that never duplicate any existing brand.</p>
 
     <div class="api-bar">
-      <span class="api-status" id="apiStatus">🧪 サンプルモードで動作中(AI APIキー未設定)</span>
-      <button class="api-toggle" id="apiToggleBtn" type="button">⚙️ AI API設定</button>
+      <span class="api-status" id="apiStatus">🧪 Running in sample mode (no AI API key set)</span>
+      <button class="api-toggle" id="apiToggleBtn" type="button">⚙️ AI API Settings</button>
     </div>
     <div class="api-panel" id="apiPanel">
       <p class="api-desc">
-        お持ちの AI APIキーを入力すると、「企画を生成」ボタンで実際にAIがECモールのトレンドデータをもとにOEM商品コンセプトを生成します。<br>
-        <b>キーはこのブラウザ(localStorage)にのみ保存され、AI APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
-        API利用料はご自身のAPIアカウントに発生します。共有PCでは使用しないでください。<br>
-        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">APIキーの取得はこちら →</a>
+        Enter your own AI API key and the "Generate plan" button will have AI actually generate an OEM product concept from EC mall trend data.<br>
+        <b>The key is stored only in this browser (localStorage) and is sent directly from your browser to the AI API provider. It is never sent to or stored on this site's servers.</b>
+        API usage fees are billed to your own API account. Do not use this on a shared computer.<br>
+        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get an API key here →</a>
       </p>
       <div class="api-row">
         <input type="text" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
-        <button class="btn-save" id="apiSaveBtn" type="button">保存</button>
-        <button class="btn-clear" id="apiClearBtn" type="button">削除</button>
+        <button class="btn-save" id="apiSaveBtn" type="button">Save</button>
+        <button class="btn-clear" id="apiClearBtn" type="button">Delete</button>
       </div>
     </div>
 
     <div class="api-bar">
-      <span class="api-status" id="imageApiStatus">🧪 モックアップ表示中(画像生成APIキー未設定)</span>
-      <button class="api-toggle" id="imageApiToggleBtn" type="button">⚙️ 商品イメージ生成設定</button>
+      <span class="api-status" id="imageApiStatus">🧪 Showing mockups (no image generation API key set)</span>
+      <button class="api-toggle" id="imageApiToggleBtn" type="button">⚙️ Product Image Generation Settings</button>
     </div>
     <div class="api-panel" id="imageApiPanel">
       <p class="api-desc">
-        お持ちの画像生成APIキーを入力すると、商品イメージ画像をパッケージのモックアップ図ではなく<b>AIが生成した実際の画像</b>として作成します。<br>
-        <b>キーはこのブラウザ(localStorage)にのみ保存され、画像生成APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
-        API利用料はご自身のAPIアカウントに発生します。共有PCでは使用しないでください。<br>
-        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">APIキーの取得はこちら →</a>
+        Enter your own image generation API key and the product images will be created as <b>actual AI-generated images</b> instead of package mockup diagrams.<br>
+        <b>The key is stored only in this browser (localStorage) and is sent directly from your browser to the image generation API provider. It is never sent to or stored on this site's servers.</b>
+        API usage fees are billed to your own API account. Do not use this on a shared computer.<br>
+        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get an API key here →</a>
       </p>
       <div class="api-row">
         <input type="text" id="imageApiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
-        <button class="btn-save" id="imageApiSaveBtn" type="button">保存</button>
-        <button class="btn-clear" id="imageApiClearBtn" type="button">削除</button>
+        <button class="btn-save" id="imageApiSaveBtn" type="button">Save</button>
+        <button class="btn-clear" id="imageApiClearBtn" type="button">Delete</button>
       </div>
     </div>
 
     <div class="card">
       <div class="form-row">
         <div>
-          <label class="fld">ターゲットカテゴリー</label>
+          <label class="fld">Target category</label>
           <select id="planCat">
-            <option value="beauty">美容・コスメ</option>
-            <option value="food">食品</option>
-            <option value="living">生活雑貨・家電</option>
+            <option value="beauty">Beauty &amp; Cosmetics</option>
+            <option value="food">Food</option>
+            <option value="living">Home &amp; Appliances</option>
           </select>
         </div>
         <div>
-          <label class="fld">想定価格帯</label>
+          <label class="fld">Expected price range</label>
           <select id="planPrice">
-            <option>〜1,500円(トライアル)</option>
-            <option selected>1,500〜3,000円(ボリューム)</option>
-            <option>3,000円〜(プレミアム)</option>
+            <option>Up to ¥1,500 (trial)</option>
+            <option selected>¥1,500–3,000 (volume)</option>
+            <option>¥3,000+ (premium)</option>
           </select>
         </div>
         <div>
-          <label class="fld">主な販路</label>
+          <label class="fld">Main sales channel</label>
           <select id="planChannel">
-            <option selected>ECモール</option>
-            <option>クラウドファンディング</option>
-            <option>卸・小売(バラエティショップ等)</option>
+            <option selected>E-commerce malls</option>
+            <option>Crowdfunding</option>
+            <option>Wholesale &amp; retail (variety shops etc.)</option>
           </select>
         </div>
-        <button class="gen-btn" id="genBtn">✨ 企画を生成</button>
+        <button class="gen-btn" id="genBtn">✨ Generate plan</button>
       </div>
     </div>
 
     <div class="loading" id="genLoading">
       <div class="spinner"></div>
-      <span id="genLoadingText">ECモールのトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…</span>
+      <span id="genLoadingText">Analyzing EC mall trend data and generating a product concept and image concepts…</span>
     </div>
 
     <div class="proposal" id="proposal"></div>
@@ -570,97 +570,97 @@
   <!-- ================= Design ================= -->
   <section class="panel" id="panel-design">
     <div class="feed-search">
-      <input type="text" id="feedSearch" placeholder="&#128269; 気になるデザインを検索(例: コスメ パッケージ ミニマル)" autocomplete="off">
-      <button class="api-toggle" id="googleToggleBtn" type="button" title="実画像検索の設定">⚙️ 実画像検索の設定</button>
+      <input type="text" id="feedSearch" placeholder="&#128269; Search for design inspiration (e.g. cosmetics packaging minimal)" autocomplete="off">
+      <button class="api-toggle" id="googleToggleBtn" type="button" title="Real image search settings">⚙️ Real Image Search Settings</button>
     </div>
     <div class="api-panel" id="googlePanel">
       <p class="api-desc">
-        <b>画像検索エンジン</b>のAPIキーと検索エンジンIDを設定すると、フィードにデザイン参考サイト・実商品の<b>実画像検索結果</b>が優先的に流れるようになります(未設定でもキー不要の実在写真ソースでフィードは動作します)。<br>
-        <b>キーはこのブラウザ(localStorage)にのみ保存され、検索APIの提供元へブラウザから直接送信されます。当サイトのサーバーには一切送信・保存されません。</b>
-        APIコンソールでキーに「HTTPリファラー制限」を設定し、このサイトのURLのみ許可することを強く推奨します。<br>
-        <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① 検索エンジンを作成(cxを取得)</a> ・
-        <a href="https://console.cloud.google.com/apis/library/customsearch.googleapis.com" target="_blank" rel="noopener">② Custom Search APIキーを取得</a>
+        Set an <b>image search engine</b> API key and search engine ID, and the feed will prioritize <b>real image search results</b> from design reference sites and actual products (without keys, the feed still works using key-free sources of real photos).<br>
+        <b>The keys are stored only in this browser (localStorage) and are sent directly from your browser to the search API provider. They are never sent to or stored on this site's servers.</b>
+        We strongly recommend setting an "HTTP referrer restriction" on the key in the API console so that only this site's URL is allowed.<br>
+        <a href="https://programmablesearchengine.google.com/controlpanel/create" target="_blank" rel="noopener">① Create a search engine (get your cx)</a> ·
+        <a href="https://console.cloud.google.com/apis/library/customsearch.googleapis.com" target="_blank" rel="noopener">② Get an image search API key</a>
       </p>
       <div class="api-row">
-        <input type="text" id="googleKeyInput" placeholder="画像検索APIキー" autocomplete="off" spellcheck="false">
-        <input type="text" id="googleCxInput" placeholder="検索エンジンID(cx)" autocomplete="off" spellcheck="false">
-        <button class="btn-save" id="googleSaveBtn" type="button">保存</button>
-        <button class="btn-clear" id="googleClearBtn" type="button">削除</button>
+        <input type="text" id="googleKeyInput" placeholder="Image search API key" autocomplete="off" spellcheck="false">
+        <input type="text" id="googleCxInput" placeholder="Search engine ID (cx)" autocomplete="off" spellcheck="false">
+        <button class="btn-save" id="googleSaveBtn" type="button">Save</button>
+        <button class="btn-clear" id="googleClearBtn" type="button">Delete</button>
       </div>
     </div>
     <div class="feed-chips" id="feedChips"></div>
     <div class="feed-masonry" id="feedMasonry"></div>
-    <div class="feed-more"><button id="feedMoreBtn" type="button">もっと見る</button></div>
+    <div class="feed-more"><button id="feedMoreBtn" type="button">Load more</button></div>
   </section>
 
   <!-- ================= Marketing ================= -->
   <section class="panel" id="panel-marketing">
-    <h2 class="page-title">マーケティングプラン</h2>
-    <p class="page-sub">発売前のテストマーケティングから発売後のグロースまで、日本市場向けの標準プレイブック(デモ表示)</p>
+    <h2 class="page-title">Marketing Plan</h2>
+    <p class="page-sub">The standard playbook for the Japanese market, from pre-launch test marketing to post-launch growth (demo view)</p>
 
     <div class="grid g2">
       <div class="card">
-        <h3>🗓 発売までのロードマップ(標準6ヶ月)</h3>
+        <h3>🗓 Roadmap to Launch (standard 6 months)</h3>
         <div class="timeline">
           <div class="tl-item">
             <span class="tl-when">MONTH 1-2</span>
-            <h4>トレンド分析・商品企画の確定</h4>
-            <p>ターゲットカテゴリーの売れ筋・レビュー分析 → コンセプト決定 → OEM工場選定・見積</p>
+            <h4>Trend analysis &amp; product plan finalized</h4>
+            <p>Analyze best-sellers and reviews in the target category → lock in the concept → select OEM factories and request quotes</p>
           </div>
           <div class="tl-item">
             <span class="tl-when">MONTH 2-4</span>
-            <h4>試作・規制対応・デザイン制作</h4>
-            <p>サンプル評価、日本の薬機法/食品表示法チェック、パッケージ&EC画像制作</p>
+            <h4>Prototyping, regulatory work, design production</h4>
+            <p>Sample evaluation, checks against Japan's pharmaceutical and food labeling regulations, package &amp; EC imagery production</p>
           </div>
           <div class="tl-item">
             <span class="tl-when">MONTH 4-5</span>
-            <h4>テストマーケティング</h4>
-            <p>クラウドファンディングやサンプリング施策で需要検証。レビュー・CVRデータで価格と訴求を調整</p>
+            <h4>Test marketing</h4>
+            <p>Validate demand through crowdfunding and sampling campaigns. Adjust pricing and messaging based on review and CVR data</p>
           </div>
           <div class="tl-item">
             <span class="tl-when">MONTH 5-6</span>
-            <h4>本格ローンチ</h4>
-            <p>ECモール同時展開、インフルエンサー施策、広告運用開始。週次でKPIレビュー</p>
+            <h4>Full launch</h4>
+            <p>Simultaneous rollout across EC malls, influencer campaigns, and paid ads. Weekly KPI reviews</p>
           </div>
         </div>
       </div>
       <div>
         <div class="card">
-          <h3>📣 チャネル適合度(美容カテゴリー例)</h3>
+          <h3>📣 Channel Fit (beauty category example)</h3>
           <div class="channel">
             <span class="ch-icon">🛒</span>
-            <div><div class="ch-name">国内ECモール(大型セール)</div><div class="ch-desc">K-Beautyの主戦場。大型セール期間の集中投下が定石</div></div>
-            <div class="ch-fit"><b>95</b><span>適合度</span></div>
+            <div><div class="ch-name">Domestic EC malls (mega sales)</div><div class="ch-desc">K-Beauty's main battleground. Concentrating spend on mega sale periods is the standard play</div></div>
+            <div class="ch-fit"><b>95</b><span>fit score</span></div>
           </div>
           <div class="channel">
             <span class="ch-icon">📱</span>
-            <div><div class="ch-name">SNSショート動画</div><div class="ch-desc">使用感の動画レビューが購買に直結</div></div>
-            <div class="ch-fit"><b>90</b><span>適合度</span></div>
+            <div><div class="ch-name">Short-form social video</div><div class="ch-desc">Hands-on video reviews translate directly into purchases</div></div>
+            <div class="ch-fit"><b>90</b><span>fit score</span></div>
           </div>
           <div class="channel">
             <span class="ch-icon">🅰️</span>
-            <div><div class="ch-name">大手ECモール</div><div class="ch-desc">指名検索の受け皿。レビュー獲得を最優先</div></div>
-            <div class="ch-fit"><b>82</b><span>適合度</span></div>
+            <div><div class="ch-name">Major EC mall</div><div class="ch-desc">Catches branded search demand. Make review acquisition the top priority</div></div>
+            <div class="ch-fit"><b>82</b><span>fit score</span></div>
           </div>
           <div class="channel">
             <span class="ch-icon">🏪</span>
-            <div><div class="ch-name">バラエティショップ卸</div><div class="ch-desc">大手バラエティショップ等。EC実績を持って商談へ</div></div>
-            <div class="ch-fit"><b>74</b><span>適合度</span></div>
+            <div><div class="ch-name">Variety shop wholesale</div><div class="ch-desc">Major variety retail chains. Bring your EC track record to the negotiation</div></div>
+            <div class="ch-fit"><b>74</b><span>fit score</span></div>
           </div>
         </div>
         <div class="card mt">
-          <h3>🎯 ローンチKPIの目安(初月)</h3>
+          <h3>🎯 Launch KPI Targets (first month)</h3>
           <div class="grid g3">
             <div class="kpi" style="padding:8px 4px">
-              <div class="k-label">EC転換率</div>
+              <div class="k-label">EC conversion rate</div>
               <div class="k-value" style="font-size:21px">3.5%+</div>
             </div>
             <div class="kpi" style="padding:8px 4px">
-              <div class="k-label">レビュー件数</div>
-              <div class="k-value" style="font-size:21px">50件</div>
+              <div class="k-label">Reviews collected</div>
+              <div class="k-value" style="font-size:21px">50</div>
             </div>
             <div class="kpi" style="padding:8px 4px">
-              <div class="k-label">広告ROAS</div>
+              <div class="k-label">Ad ROAS</div>
               <div class="k-value" style="font-size:21px">300%</div>
             </div>
           </div>
@@ -669,19 +669,19 @@
     </div>
   </section>
 
-  <p class="note">⚠️ このページはプロダクトのデモです。トレンド数値・工場情報は説明用のサンプルデータです。「AI商品企画」タブでAI APIキーを設定した場合のみ、実際にAIが商品コンセプトを生成します(API利用料はお客様のAPIアカウントに発生します)。商品イメージ画像は、画像生成APIキー未設定時はパッケージ形状のイメージモックアップ(SVG)、設定時はAIが生成した画像を表示しますが、いずれも実際の商品写真ではありません。</p>
+  <p class="note">⚠️ This page is a product demo. Trend figures and factory information are sample data for illustration. AI actually generates product concepts only when you set an AI API key on the "AI Product Planning" tab (API usage fees are billed to your own API account). Product images are shown as package-shape mockups (SVG) when no image generation API key is set, and as AI-generated images when one is set — in either case they are concept visuals, not photos of real products.</p>
 </main>
-
 <script>
-// ================= 共通ユーティリティ =================
+// ================= Shared utilities =================
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// ================= 実商品検索(画像検索エンジン, BYOK) =================
-// 主要な外部サービスは画像を取得できる無料の公開APIを提供していないため、
-// ユーザー自身の画像検索APIキー+検索エンジンIDを使い、実際の通販サイトに絞った画像検索を行います。
-// (未設定、または結果が0件の場合はCCライセンス実写真にフォールバックします)
+// ================= Real product search (image search engine, BYOK) =================
+// Major external services do not offer a free public API for fetching images, so we use
+// the user's own image search API key + search engine ID to run image searches restricted
+// to actual online shopping sites.
+// (When unset, or when results are empty, we fall back to CC-licensed real photos.)
 const GOOGLE_KEY_STORAGE = "k2j_google_search_key";
 const GOOGLE_CX_STORAGE = "k2j_google_search_cx";
 const PRODUCT_SITES = {
@@ -689,8 +689,8 @@ const PRODUCT_SITES = {
   food: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
   living: ["qoo10.jp", "amazon.co.jp", "www.rakuten.co.jp"],
 };
-// デザイン/ムードボード用: 実商品(通販サイト)ではなく、デザイン参考が集まる外部サイトなど
-// デザイン参考が集まるサイトに絞って検索します(画像検索エンジン経由)。
+// For design/mood boards: instead of actual products (shopping sites), we search only
+// external sites where design references gather (via the image search engine).
 const DESIGN_SITES = ["pinterest.com", "www.pinterest.com", "jp.pinterest.com", "behance.net", "dribbble.com"];
 
 function getGoogleKey() { return localStorage.getItem(GOOGLE_KEY_STORAGE) || ""; }
@@ -708,147 +708,148 @@ function buildDesignQuery(keywords) {
   return `${keywords} (${DESIGN_SITES.map(s => `site:${s}`).join(" OR ")})`;
 }
 
-// ================= サンプルデータ(トレンド分析) =================
+// ================= Sample data (trend analysis) =================
 const TREND = {
   beauty: {
     kpi: [
-      { label: "追跡商品数", value: "12,480", delta: "+320 / 週", up: true },
-      { label: "急上昇キーワード", value: "シカミスト", delta: "検索 +218%", up: true },
-      { label: "売れ筋価格帯", value: "¥1,980", delta: "前月 ¥2,180", up: false },
-      { label: "レビュー分析件数", value: "48,200", delta: "+8,400 / 週", up: true },
+      { label: "Products tracked", value: "12,480", delta: "+320 / wk", up: true },
+      { label: "Trending keyword", value: "Cica mist", delta: "Searches +218%", up: true },
+      { label: "Best-selling price band", value: "¥1,980", delta: "Last month ¥2,180", up: false },
+      { label: "Reviews analyzed", value: "48,200", delta: "+8,400 / wk", up: true },
     ],
     rank: [
-      { name: "シカ成分スキンケアミスト", src: "ECモール ビューティー 1位", growth: "+218%", tags: ["敏感肌", "携帯用"], hot: true },
-      { name: "クッションファンデ(ツヤ肌系)", src: "ECモール 大型セール上位", growth: "+142%", tags: ["メガ割", "崩れにくい"], hot: true },
-      { name: "レチノール アイクリーム", src: "ECモール スキンケア", growth: "+118%", tags: ["エイジング"], hot: false },
-      { name: "弱酸性 頭皮ケアシャンプー", src: "ECモール ヘアケア", growth: "+96%", tags: ["ヘアケア"], hot: false },
-      { name: "リップスリーピングマスク", src: "ECモール × SNS言及", growth: "+87%", tags: ["ナイトケア"], hot: false },
+      { name: "Cica skincare mist", src: "EC mall beauty #1", growth: "+218%", tags: ["Sensitive skin", "Portable"], hot: true },
+      { name: "Cushion foundation (dewy finish)", src: "EC mall mega sale top seller", growth: "+142%", tags: ["Mega sale", "Long-wearing"], hot: true },
+      { name: "Retinol eye cream", src: "EC mall skincare", growth: "+118%", tags: ["Anti-aging"], hot: false },
+      { name: "Mildly acidic scalp care shampoo", src: "EC mall hair care", growth: "+96%", tags: ["Hair care"], hot: false },
+      { name: "Lip sleeping mask", src: "EC mall × social buzz", growth: "+87%", tags: ["Night care"], hot: false },
     ],
     bars: [
-      { label: "スキンケア", val: 34 }, { label: "ベースメイク", val: 26 },
-      { label: "ヘアケア", val: 19 }, { label: "リップ", val: 15 }, { label: "香水", val: 8 },
+      { label: "Skincare", val: 34 }, { label: "Base makeup", val: 26 },
+      { label: "Hair care", val: 19 }, { label: "Lip", val: 15 }, { label: "Fragrance", val: 8 },
     ],
     insights: [
-      { type: "neg", title: "不満点 = 商品機会", body: "「ミストの粒子が粗く、メイクの上から使えない」という不満が1,240件。微粒子ノズル採用で差別化余地。", cnt: "対象レビュー 1,240件" },
-      { type: "pos", title: "支持されている点", body: "「成分がシンプルで敏感肌でも安心」への言及が急増。処方の透明性(全成分の見せ方)が購入の決め手に。", cnt: "対象レビュー 3,080件" },
+      { type: "neg", title: "Complaints = product opportunity", body: "1,240 reviews complain that \"the mist droplets are too coarse to use over makeup.\" Adopting an ultra-fine nozzle leaves clear room for differentiation.", cnt: "1,240 reviews analyzed" },
+      { type: "pos", title: "What customers praise", body: "Mentions of \"simple ingredients that feel safe even on sensitive skin\" are surging. Formula transparency (how the full ingredient list is presented) is becoming the deciding factor.", cnt: "3,080 reviews analyzed" },
     ],
   },
   food: {
     kpi: [
-      { label: "追跡商品数", value: "8,940", delta: "+210 / 週", up: true },
-      { label: "急上昇キーワード", value: "高タンパク", delta: "検索 +164%", up: true },
-      { label: "売れ筋価格帯", value: "¥1,280", delta: "前月 ¥1,150", up: true },
-      { label: "レビュー分析件数", value: "31,600", delta: "+5,100 / 週", up: true },
+      { label: "Products tracked", value: "8,940", delta: "+210 / wk", up: true },
+      { label: "Trending keyword", value: "High protein", delta: "Searches +164%", up: true },
+      { label: "Best-selling price band", value: "¥1,280", delta: "Last month ¥1,150", up: true },
+      { label: "Reviews analyzed", value: "31,600", delta: "+5,100 / wk", up: true },
     ],
     rank: [
-      { name: "高タンパク グラノーラバー", src: "ECモール フード 1位", growth: "+164%", tags: ["プロテイン", "個包装"], hot: true },
-      { name: "冷凍キンパ(韓国海苔巻き)", src: "ECモール × SNS言及", growth: "+139%", tags: ["時短", "冷凍"], hot: true },
-      { name: "ゼロシュガー韓国スナック", src: "ECモール 韓国食品", growth: "+104%", tags: ["低糖質"], hot: false },
-      { name: "トゥンカロン(太っちょマカロン)", src: "ECモール スイーツ", growth: "+92%", tags: ["映え", "ギフト"], hot: false },
-      { name: "コンブチャ(炭酸飲料タイプ)", src: "ECモール ドリンク", growth: "+78%", tags: ["健康飲料"], hot: false },
+      { name: "High-protein granola bar", src: "EC mall food #1", growth: "+164%", tags: ["Protein", "Single-serve packs"], hot: true },
+      { name: "Frozen kimbap (Korean seaweed rolls)", src: "EC mall × social buzz", growth: "+139%", tags: ["Quick meal", "Frozen"], hot: true },
+      { name: "Zero-sugar Korean snacks", src: "EC mall Korean food", growth: "+104%", tags: ["Low-carb"], hot: false },
+      { name: "Fatcarons (chunky macarons)", src: "EC mall sweets", growth: "+92%", tags: ["Photogenic", "Gift"], hot: false },
+      { name: "Kombucha (sparkling drink type)", src: "EC mall drinks", growth: "+78%", tags: ["Health drink"], hot: false },
     ],
     bars: [
-      { label: "健康食品", val: 31 }, { label: "冷凍食品", val: 27 },
-      { label: "菓子", val: 22 }, { label: "飲料", val: 14 }, { label: "調味料", val: 9 },
+      { label: "Health foods", val: 31 }, { label: "Frozen foods", val: 27 },
+      { label: "Snacks", val: 22 }, { label: "Beverages", val: 14 }, { label: "Seasonings", val: 9 },
     ],
     insights: [
-      { type: "neg", title: "不満点 = 商品機会", body: "「輸入韓国菓子は辛すぎる/量が多い」の声が多数。日本向けに辛さ調整+小容量パックの需要が明確。", cnt: "対象レビュー 890件" },
-      { type: "pos", title: "支持されている点", body: "「タンパク質○g」の明記と個包装が高評価。オフィス間食・筋トレ層の定期購入が伸びている。", cnt: "対象レビュー 2,140件" },
+      { type: "neg", title: "Complaints = product opportunity", body: "\"Imported Korean snacks are too spicy / the portions are too big\" is a frequent complaint. Demand for Japan-tuned spice levels plus smaller packs is clear.", cnt: "890 reviews analyzed" },
+      { type: "pos", title: "What customers praise", body: "Clearly stating \"XX g of protein\" and single-serve packaging earn high ratings. Subscriptions from office snackers and gym-goers keep growing.", cnt: "2,140 reviews analyzed" },
     ],
   },
   living: {
     kpi: [
-      { label: "追跡商品数", value: "15,220", delta: "+410 / 週", up: true },
-      { label: "急上昇キーワード", value: "卓上加湿器", delta: "検索 +121%", up: true },
-      { label: "売れ筋価格帯", value: "¥3,480", delta: "前月 ¥3,900", up: false },
-      { label: "レビュー分析件数", value: "52,900", delta: "+9,200 / 週", up: true },
+      { label: "Products tracked", value: "15,220", delta: "+410 / wk", up: true },
+      { label: "Trending keyword", value: "Desktop humidifier", delta: "Searches +121%", up: true },
+      { label: "Best-selling price band", value: "¥3,480", delta: "Last month ¥3,900", up: false },
+      { label: "Reviews analyzed", value: "52,900", delta: "+9,200 / wk", up: true },
     ],
     rank: [
-      { name: "卓上加湿器(アロマ対応)", src: "ECモール 生活/家電 1位", growth: "+121%", tags: ["在宅ワーク", "静音"], hot: true },
-      { name: "姿勢サポートクッション", src: "ECモール × SNS言及", growth: "+97%", tags: ["デスクワーク"], hot: true },
-      { name: "折りたたみ ドライヤースタンド", src: "ECモール 生活雑貨", growth: "+85%", tags: ["時短", "省スペース"], hot: false },
-      { name: "珪藻土 キッチン水切りマット", src: "ECモール キッチン", growth: "+73%", tags: ["キッチン"], hot: false },
-      { name: "LEDデスクライト(調色機能)", src: "ECモール 家電", growth: "+66%", tags: ["目に優しい"], hot: false },
+      { name: "Desktop humidifier (aroma-ready)", src: "EC mall home/appliances #1", growth: "+121%", tags: ["Work from home", "Quiet"], hot: true },
+      { name: "Posture support cushion", src: "EC mall × social buzz", growth: "+97%", tags: ["Desk work"], hot: true },
+      { name: "Folding hair dryer stand", src: "EC mall home goods", growth: "+85%", tags: ["Time-saving", "Space-saving"], hot: false },
+      { name: "Diatomite kitchen drying mat", src: "EC mall kitchen", growth: "+73%", tags: ["Kitchen"], hot: false },
+      { name: "LED desk lamp (adjustable color)", src: "EC mall appliances", growth: "+66%", tags: ["Eye-friendly"], hot: false },
     ],
     bars: [
-      { label: "デスク周り", val: 33 }, { label: "キッチン", val: 24 },
-      { label: "収納", val: 18 }, { label: "美容家電", val: 16 }, { label: "掃除", val: 9 },
+      { label: "Desk setup", val: 33 }, { label: "Kitchen", val: 24 },
+      { label: "Storage", val: 18 }, { label: "Beauty devices", val: 16 }, { label: "Cleaning", val: 9 },
     ],
     insights: [
-      { type: "neg", title: "不満点 = 商品機会", body: "「加湿器の給水が面倒/カビが心配」が最多。上部給水+抗菌カートリッジ構造で解決余地が大きい。", cnt: "対象レビュー 1,560件" },
-      { type: "pos", title: "支持されている点", body: "「デスクに置いても可愛い」デザイン言及が多く、くすみカラー・ミニマル形状が支持されている。", cnt: "対象レビュー 2,760件" },
+      { type: "neg", title: "Complaints = product opportunity", body: "\"Refilling the humidifier is a hassle / I worry about mold\" tops the list. A top-fill design with an antibacterial cartridge leaves big room to solve this.", cnt: "1,560 reviews analyzed" },
+      { type: "pos", title: "What customers praise", body: "Many reviews mention design — \"cute enough to keep on my desk.\" Muted colors and minimal shapes are winning support.", cnt: "2,760 reviews analyzed" },
     ],
   },
 };
 
-// ================= サンプル商品企画(オリジナル新規ブランド名) =================
-// ここに登場するブランド名・商品名は、実在するブランド・商品とは無関係の完全な創作名です。
+// ================= Sample product plans (original, newly coined brand names) =================
+// The brand and product names appearing here are entirely fictional creations,
+// unrelated to any real brand or product.
 const PROPOSALS = {
   beauty: {
-    brandName: "VEILMER(ヴェイルメール)",
-    productName: "ヴェイルメール しずくミスト",
+    brandName: "VEILMER",
+    productName: "VEILMER Dew Mist",
     packageLabel: "VEIL MER",
     packageSub: "SOOTHING MIST 50mL",
-    lead: "レビュー分析で判明した「粒子が粗くメイクの上から使えない」という不満を解決する、超微粒子ノズル採用の携帯用ミスト。",
-    target: ["25〜39歳・オフィスワーカーの敏感肌層", "ECモールの大型セールでK-Beautyを購入する層", "「メイク直しの時短」ニーズ"],
-    spec: ["センテラアジアティカ+セラミド配合", "超微粒子ノズル(メイクの上からOK)", "50mL携帯サイズ+150mL詰替の2SKU"],
-    price: ["想定売価 ¥1,980(税込)", "目標原価率 28%(1st lot 5,000個)", "大型セール時 ¥1,680 の値付け余地"],
-    regulatory: ["化粧品輸入:製造販売業者経由の届出が必要", "「肌荒れを防ぐ」は医薬部外品でのみ訴求可", "全成分表示ラベル(日本語)必須"],
+    lead: "A portable mist with an ultra-fine nozzle that solves the top complaint found in review analysis: droplets too coarse to use over makeup.",
+    target: ["Office workers aged 25-39 with sensitive skin", "Shoppers who buy K-Beauty during EC mall mega sales", "The \"faster makeup touch-up\" need"],
+    spec: ["Centella asiatica + ceramide formula", "Ultra-fine nozzle (works over makeup)", "Two SKUs: 50mL portable + 150mL refill"],
+    price: ["Target retail price ¥1,980 (tax incl.)", "Target COGS ratio 28% (1st lot 5,000 units)", "Room to price at ¥1,680 during mega sales"],
+    regulatory: ["Cosmetics import: notification via a licensed marketing authorization holder required", "Claims like \"prevents skin irritation\" are allowed only for quasi-drugs", "Full ingredient label in Japanese is mandatory"],
     images: [
-      { name: "A案 ナチュラルグリーン", desc: "成分の誠実さを打ち出す低彩度グリーン", colors: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
-      { name: "B案 ソフトピンク", desc: "大型セールで強いK-Beautyらしい柔らかさ", colors: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
-      { name: "C案 クリーンブルー", desc: "皮膚科学系ブランドを想起する清潔感", colors: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
+      { name: "Concept A: Natural Green", desc: "Low-saturation green that signals ingredient honesty", colors: { bg1: "#f0f6ee", bg2: "#cfe0cb", body: "#e7f0e2", cap: "#5c7a58", text: "#3f5a3c", mist: "#8fae8b" } },
+      { name: "Concept B: Soft Pink", desc: "The soft K-Beauty look that performs in mega sales", colors: { bg1: "#fdf1f4", bg2: "#f4cdd8", body: "#fbe4ea", cap: "#c25b76", text: "#a54763", mist: "#e88aa0" } },
+      { name: "Concept C: Clean Blue", desc: "Clinical cleanliness that evokes derma-science brands", colors: { bg1: "#eff5fb", bg2: "#cdddef", body: "#e6eef7", cap: "#4a6fa5", text: "#38547e", mist: "#8aa9cf" } },
     ],
     factories: [
-      { emoji: "🏭", name: "Hansol Cosmetics(京畿道)", meta: "スキンケアOEM / 最小ロット3,000 / ISO22716", match: "適合 94%" },
-      { emoji: "🏭", name: "Seoul Beauty Lab(ソウル)", meta: "ミスト・スプレー充填が得意 / 最小ロット5,000", match: "適合 89%" },
+      { emoji: "🏭", name: "Hansol Cosmetics (Gyeonggi-do)", meta: "Skincare OEM / MOQ 3,000 / ISO22716", match: "94% match" },
+      { emoji: "🏭", name: "Seoul Beauty Lab (Seoul)", meta: "Strong in mist & spray filling / MOQ 5,000", match: "89% match" },
     ],
   },
   food: {
-    brandName: "HANMAEK(ハンメク)",
-    productName: "ハンメク プロテインスナック",
+    brandName: "HANMAEK",
+    productName: "HANMAEK Protein Snack",
     packageLabel: "HAN MAEK",
     packageSub: "PROTEIN SNACK",
     statBig: "15g",
-    badge: "マイルド / 旨辛",
-    lead: "「韓国スナックは辛すぎる・量が多い」という日本のレビュー不満と、高タンパク市場の急成長を掛け合わせた個包装スナック。",
-    target: ["20〜40代の筋トレ・ボディメイク層", "オフィス間食のヘルシー志向層", "韓国グルメ好きのライト層"],
-    spec: ["1袋あたりタンパク質15g・糖質10g以下", "辛さは日本向けに2段階(マイルド/旨辛)", "個包装×7袋入り(持ち歩き前提)"],
-    price: ["想定売価 ¥1,280(7袋入り・税込)", "定期購入(サブスク)で ¥1,080", "目標原価率 32%(1st lot 10,000袋)"],
-    regulatory: ["食品表示法:栄養成分表示(日本語)必須", "輸入時の検疫・添加物リスト適合確認", "「たんぱく質摂取に」等の機能性表示は要届出"],
+    badge: "Mild / Spicy",
+    lead: "A single-serve snack that pairs the Japanese review complaint \"Korean snacks are too spicy and portions too big\" with the fast-growing high-protein market.",
+    target: ["Gym and body-shaping enthusiasts in their 20s-40s", "Health-conscious office snackers", "Casual fans of Korean food"],
+    spec: ["15g protein and under 10g carbs per pack", "Two Japan-tuned spice levels (mild / savory-spicy)", "7 single-serve packs per bag (built for carrying around)"],
+    price: ["Target retail price ¥1,280 (7 packs, tax incl.)", "¥1,080 on subscription", "Target COGS ratio 32% (1st lot 10,000 bags)"],
+    regulatory: ["Food Labeling Act: nutrition facts panel in Japanese is mandatory", "Confirm import quarantine and additive-list compliance", "Function claims such as \"for protein intake\" require notification"],
     images: [
-      { name: "A案 パフォーマンスブラック", desc: "数値ドーンの日本プロテイン市場の定石", colors: { bg1: "#f3f4f6", bg2: "#d3d7de", body: "#1f2937", cap: "#f5b942", text: "#ffffff", mist: "#f5b942" } },
-      { name: "B案 コリアンレッド", desc: "韓国グルメ好きに刺さる旨辛トーン", colors: { bg1: "#fdf2ef", bg2: "#f5cfc4", body: "#c0392b", cap: "#f7e8c8", text: "#ffffff", mist: "#e67e22" } },
-      { name: "C案 ヘルシーグリーン", desc: "低糖質・オフィス間食層向けの軽さ", colors: { bg1: "#f2f8f0", bg2: "#d4e6cf", body: "#f7fbf3", cap: "#4a7c43", text: "#3c6636", mist: "#7aa872" } },
+      { name: "Concept A: Performance Black", desc: "The big-numbers formula standard in Japan's protein market", colors: { bg1: "#f3f4f6", bg2: "#d3d7de", body: "#1f2937", cap: "#f5b942", text: "#ffffff", mist: "#f5b942" } },
+      { name: "Concept B: Korean Red", desc: "Savory-spicy tones that hit home with Korean food fans", colors: { bg1: "#fdf2ef", bg2: "#f5cfc4", body: "#c0392b", cap: "#f7e8c8", text: "#ffffff", mist: "#e67e22" } },
+      { name: "Concept C: Healthy Green", desc: "A light look for low-carb office snackers", colors: { bg1: "#f2f8f0", bg2: "#d4e6cf", body: "#f7fbf3", cap: "#4a7c43", text: "#3c6636", mist: "#7aa872" } },
     ],
     factories: [
-      { emoji: "🏭", name: "K-Food Partners(忠清道)", meta: "スナックOEM / HACCP / 対日輸出実績あり", match: "適合 92%" },
-      { emoji: "🏭", name: "Daehan Foods(京畿道)", meta: "高タンパク食品が得意 / 最小ロット8,000", match: "適合 86%" },
+      { emoji: "🏭", name: "K-Food Partners (Chungcheong-do)", meta: "Snack OEM / HACCP / export track record to Japan", match: "92% match" },
+      { emoji: "🏭", name: "Daehan Foods (Gyeonggi-do)", meta: "Strong in high-protein foods / MOQ 8,000", match: "86% match" },
     ],
   },
   living: {
-    brandName: "BREEZO(ブリーゾ)",
-    productName: "ブリーゾ デスク加湿器",
+    brandName: "BREEZO",
+    productName: "BREEZO Desk Humidifier",
     packageLabel: "BREEZO",
     packageSub: "AROMA HUMIDIFIER",
-    lead: "「給水が面倒・カビが心配」というレビュー最多の不満を、上部給水+抗菌カートリッジで解決するデスク向け加湿器。",
-    target: ["在宅ワーク・オフィスのデスク利用者", "乾燥・肌ケアに関心の高い20〜40代女性", "「デスクに置けるかわいい家電」ニーズ"],
-    spec: ["上部給水式(タンク取り外し不要)", "抗菌カートリッジ+週1洗いでOK設計", "くすみカラー3色 / 静音25dB / USB-C給電"],
-    price: ["想定売価 ¥3,480(税込)", "クラウドファンディング先行価格 ¥2,780(20%オフ)", "目標原価率 35%(1st lot 3,000台)"],
-    regulatory: ["電気用品安全法(PSE)対象部品の確認", "USB給電機器の技適・表示要件", "取扱説明書(日本語)とPL保険の手配"],
+    lead: "A desk humidifier that solves the most common review complaints — refilling hassle and mold worries — with a top-fill design plus an antibacterial cartridge.",
+    target: ["Desk users working from home or at the office", "Women in their 20s-40s who care about dryness and skincare", "The \"cute appliance I can keep on my desk\" need"],
+    spec: ["Top-fill design (no tank removal needed)", "Antibacterial cartridge, designed for once-a-week cleaning", "3 muted colors / quiet 25dB / USB-C powered"],
+    price: ["Target retail price ¥3,480 (tax incl.)", "Crowdfunding early-bird price ¥2,780 (20% off)", "Target COGS ratio 35% (1st lot 3,000 units)"],
+    regulatory: ["Verify parts subject to Japan's Electrical Appliance Safety Act (PSE)", "Radio certification and labeling requirements for USB-powered devices", "Arrange a Japanese user manual and product liability insurance"],
     images: [
-      { name: "A案 グレージュ", desc: "インテリアに馴染む日本で人気のくすみ色", colors: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
-      { name: "B案 ブルーグレー", desc: "デスク家電らしいミニマル・テック", colors: { bg1: "#eef2f7", bg2: "#c9d6e4", body: "#dfe7f0", cap: "#5b7897", text: "#47607c", mist: "#8aa3c0" } },
-      { name: "C案 ピンクベージュ", desc: "「デスクに置けるかわいい家電」ニーズ向け", colors: { bg1: "#fbf2f1", bg2: "#ecd2cd", body: "#f6e4e0", cap: "#c98b80", text: "#a56d62", mist: "#dbaaa0" } },
+      { name: "Concept A: Greige", desc: "The muted tone popular in Japan that blends into interiors", colors: { bg1: "#f6f3ef", bg2: "#ded5c8", body: "#e9e2d7", cap: "#8c7f6d", text: "#6f6354", mist: "#b3a894" } },
+      { name: "Concept B: Blue Gray", desc: "The minimal tech look expected of desk appliances", colors: { bg1: "#eef2f7", bg2: "#c9d6e4", body: "#dfe7f0", cap: "#5b7897", text: "#47607c", mist: "#8aa3c0" } },
+      { name: "Concept C: Pink Beige", desc: "For the \"cute appliance I can keep on my desk\" need", colors: { bg1: "#fbf2f1", bg2: "#ecd2cd", body: "#f6e4e0", cap: "#c98b80", text: "#a56d62", mist: "#dbaaa0" } },
     ],
     factories: [
-      { emoji: "🏭", name: "Inno Electronics(仁川)", meta: "小型家電OEM / PSE対応実績 / 最小ロット2,000", match: "適合 91%" },
-      { emoji: "🏭", name: "Hue Living Tech(ソウル)", meta: "デザイン家電が得意 / 金型流用で初期費圧縮", match: "適合 84%" },
+      { emoji: "🏭", name: "Inno Electronics (Incheon)", meta: "Small appliance OEM / PSE experience / MOQ 2,000", match: "91% match" },
+      { emoji: "🏭", name: "Hue Living Tech (Seoul)", meta: "Strong in design appliances / mold reuse cuts initial cost", match: "84% match" },
     ],
   },
 };
 
-// ================= 商品イメージ画像:SVGモックアップ生成 =================
+// ================= Product image concepts: SVG mockup generation =================
 function svgDefs(id, p) {
   return `<defs>
     <radialGradient id="bg${id}" cx="50%" cy="30%" r="85%">
@@ -873,7 +874,7 @@ function wrapLabel(raw, maxLen) {
 function svgBeauty(id, p, pkg) {
   const [l1, l2] = wrapLabel(pkg.label, 6);
   const sub = escapeHtml((pkg.sub || "SOOTHING MIST").toUpperCase());
-  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ミストボトルのコンセプト画像">
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept image of a mist bottle">
     ${svgDefs(id, p)}
     <rect width="300" height="220" fill="url(#bg${id})"/>
     <ellipse cx="150" cy="199" rx="66" ry="9" fill="rgba(0,0,0,.09)"/>
@@ -899,7 +900,7 @@ function svgFood(id, p, pkg) {
   const fontSize = label.length > 9 ? 14 : 19;
   const big = escapeHtml(pkg.big || "");
   const sub = escapeHtml((pkg.sub || "PROTEIN SNACK").toUpperCase());
-  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="スナックパウチのコンセプト画像">
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept image of a snack pouch">
     ${svgDefs(id, p)}
     <rect width="300" height="220" fill="url(#bg${id})"/>
     <ellipse cx="150" cy="200" rx="74" ry="9" fill="rgba(0,0,0,.09)"/>
@@ -919,7 +920,7 @@ function svgLiving(id, p, pkg) {
   const label = escapeHtml((pkg.label || "BRAND").toUpperCase());
   const fontSize = label.length > 8 ? 7 : 8.5;
   const sub = escapeHtml((pkg.sub || "AROMA HUMIDIFIER").toUpperCase());
-  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="卓上加湿器のコンセプト画像">
+  return `<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Concept image of a desktop humidifier">
     ${svgDefs(id, p)}
     <rect width="300" height="220" fill="url(#bg${id})"/>
     <ellipse cx="150" cy="199" rx="62" ry="9" fill="rgba(0,0,0,.09)"/>
@@ -942,7 +943,7 @@ function svgLiving(id, p, pkg) {
 
 const SVG_BY_CAT = { beauty: svgBeauty, food: svgFood, living: svgLiving };
 
-// ================= タブ切替 =================
+// ================= Tab switching =================
 document.querySelectorAll(".tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -953,17 +954,17 @@ document.querySelectorAll(".tab").forEach(tab => {
   });
 });
 
-// ================= デザインフィード(実在画像のマソンリー) =================
+// ================= Design feed (masonry of real images) =================
 const FEED_CHIPS = [
-  { label: "おすすめ", en: ["packaging design inspiration", "product design"], tags: ["packagingdesign", "productdesign"] },
-  { label: "コスメ", en: ["cosmetics packaging design", "skincare packaging"], tags: ["cosmetics", "packaging"] },
-  { label: "食品パッケージ", en: ["food packaging design", "snack packaging colorful"], tags: ["foodpackaging", "packagingdesign"] },
-  { label: "家電・ガジェット", en: ["minimal electronics product design", "industrial design product"], tags: ["industrialdesign", "productdesign"] },
-  { label: "ミニマル", en: ["minimal packaging design white"], tags: ["minimalism", "minimaldesign"] },
-  { label: "ポップ・カラフル", en: ["colorful pop packaging design"], tags: ["colorful", "graphicdesign"] },
-  { label: "高級感", en: ["luxury packaging design gold"], tags: ["luxury", "packaging"] },
-  { label: "ブランディング", en: ["brand identity logo design"], tags: ["branding", "logodesign"] },
-  { label: "配色", en: ["color palette design inspiration"], tags: ["colorpalette", "colorscheme"] },
+  { label: "For you", en: ["packaging design inspiration", "product design"], tags: ["packagingdesign", "productdesign"] },
+  { label: "Cosmetics", en: ["cosmetics packaging design", "skincare packaging"], tags: ["cosmetics", "packaging"] },
+  { label: "Food packaging", en: ["food packaging design", "snack packaging colorful"], tags: ["foodpackaging", "packagingdesign"] },
+  { label: "Electronics & gadgets", en: ["minimal electronics product design", "industrial design product"], tags: ["industrialdesign", "productdesign"] },
+  { label: "Minimal", en: ["minimal packaging design white"], tags: ["minimalism", "minimaldesign"] },
+  { label: "Pop & colorful", en: ["colorful pop packaging design"], tags: ["colorful", "graphicdesign"] },
+  { label: "Luxury", en: ["luxury packaging design gold"], tags: ["luxury", "packaging"] },
+  { label: "Branding", en: ["brand identity logo design"], tags: ["branding", "logodesign"] },
+  { label: "Color palettes", en: ["color palette design inspiration"], tags: ["colorpalette", "colorscheme"] },
 ];
 
 let feedInited = false;
@@ -978,7 +979,7 @@ function hostOf(u) {
   try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; }
 }
 
-// JSONP(コールバック方式)。CORSヘッダーを返さない公開フィードでも取得できる
+// JSONP (callback style). Works even with public feeds that do not return CORS headers
 function jsonp(url, cbParam, timeoutMs) {
   return new Promise((resolve) => {
     const cb = "__k2jcb" + (jsonpSeq++);
@@ -999,7 +1000,7 @@ function jsonp(url, cbParam, timeoutMs) {
   });
 }
 
-// CCライセンス画像検索(キー不要・CORS対応)
+// CC-licensed image search (no key required, CORS-enabled)
 async function feedFetchOpenverse(query, page) {
   try {
     const res = await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=20&page=${page}&mature=false`);
@@ -1015,7 +1016,7 @@ async function feedFetchOpenverse(query, page) {
   } catch (e) { return []; }
 }
 
-// 写真共有サービスの公開フィード(キー不要・JSONP)。_m(240px)を_c(800px)に差し替えて高画質化
+// Public feed of a photo sharing service (no key required, JSONP). Swap _m (240px) for _c (800px) for higher resolution
 async function feedFetchPhotoFeed(tags) {
   const data = await jsonp(`https://api.flickr.com/services/feeds/photos_public.gne?format=json&tagmode=any&tags=${encodeURIComponent(tags)}`, "jsoncallback", 8000);
   if (!data || !data.items) return [];
@@ -1028,7 +1029,7 @@ async function feedFetchPhotoFeed(tags) {
   })).filter(x => x.img);
 }
 
-// 実画像検索(任意設定・BYOK)。設定時はデザイン参考サイトの実画像がフィードに流れる
+// Real image search (optional, BYOK). When set, real images from design reference sites flow into the feed
 async function feedFetchGoogle(query, start) {
   const key = getGoogleKey();
   const cx = getGoogleCx();
@@ -1064,10 +1065,10 @@ function feedCardHtml(item) {
   return `<div class="feed-card">
     <a href="${escapeHtml(item.landing)}" target="_blank" rel="noopener">
       <img src="${escapeHtml(item.img)}"${item.thumbFallback ? ` data-fb="${escapeHtml(item.thumbFallback)}"` : ""} alt="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="no-referrer" onerror="feedImgError(this)">
-      <div class="feed-overlay"><span class="feed-open">元ページ ↗</span></div>
+      <div class="feed-overlay"><span class="feed-open">Source ↗</span></div>
     </a>
     ${item.title ? `<div class="feed-title">${escapeHtml(item.title)}</div>` : ""}
-    <div class="feed-src">${escapeHtml(item.src)}${item.credit ? " ・ " + escapeHtml(item.credit) : ""}</div>
+    <div class="feed-src">${escapeHtml(item.src)}${item.credit ? " · " + escapeHtml(item.credit) : ""}</div>
   </div>`;
 }
 
@@ -1095,7 +1096,7 @@ async function loadFeedBatch(reset) {
     queries.forEach(q => jobs.push(feedFetchGoogle(buildDesignQuery(q), (feedPage - 1) * 10 + 1)));
   }
   queries.forEach(q => jobs.push(feedFetchOpenverse(q, feedPage)));
-  if (feedPage <= 2) jobs.push(feedFetchPhotoFeed(tags)); // 公開フィードはページングなしのため序盤のみ
+  if (feedPage <= 2) jobs.push(feedFetchPhotoFeed(tags)); // the public feed has no paging, so only use it early on
 
   const results = (await Promise.all(jobs)).filter(Boolean).flat();
   for (let i = results.length - 1; i > 0; i--) {
@@ -1109,7 +1110,7 @@ async function loadFeedBatch(reset) {
   if (fresh.length) {
     box.insertAdjacentHTML("beforeend", fresh.map(feedCardHtml).join(""));
   } else if (reset) {
-    box.innerHTML = `<div class="pin-empty">画像を取得できませんでした。キーワードを変えて再度お試しください。</div>`;
+    box.innerHTML = `<div class="pin-empty">Could not load any images. Please try again with a different keyword.</div>`;
   }
   feedPage++;
   moreBtn.disabled = false;
@@ -1146,7 +1147,7 @@ function initFeedOnce() {
   feedInited = true;
   renderFeedChips();
   loadFeedBatch(true);
-  // 下端に近づいたら自動で追加読み込み(無限スクロール)
+  // Automatically load more when nearing the bottom (infinite scroll)
   if ("IntersectionObserver" in window) {
     new IntersectionObserver((entries) => {
       if (entries.some(en => en.isIntersecting) && !feedBusy && feedInited) loadFeedBatch(false);
@@ -1154,7 +1155,7 @@ function initFeedOnce() {
   }
 }
 
-// ================= トレンドタブ描画 =================
+// ================= Trend tab rendering =================
 function renderTrend(cat) {
   const d = TREND[cat];
 
@@ -1201,7 +1202,7 @@ document.querySelectorAll(".cat-btn").forEach(btn => {
 });
 renderTrend("beauty");
 
-// ================= AI API設定(ブラウザのみに保存 / BYOK) =================
+// ================= AI API settings (stored in the browser only / BYOK) =================
 const CLAUDE_KEY_STORAGE = "k2j_claude_api_key";
 const CLAUDE_MODEL = "claude-sonnet-5";
 
@@ -1217,8 +1218,8 @@ function refreshApiStatus() {
   const has = !!getClaudeKey();
   const statusEl = document.getElementById("apiStatus");
   statusEl.textContent = has
-    ? "✨ AI APIキー設定済み — 生成時に実際のAPIを呼び出します"
-    : "🧪 サンプルモードで動作中(AI APIキー未設定)";
+    ? "✨ AI API key set — the real API will be called on generation"
+    : "🧪 Running in sample mode (no AI API key set)";
   statusEl.classList.toggle("on", has);
   document.getElementById("apiKeyInput").value = has ? getClaudeKey() : "";
 }
@@ -1237,9 +1238,9 @@ document.getElementById("apiClearBtn").addEventListener("click", () => {
 });
 refreshApiStatus();
 
-// ================= 商品イメージ生成APIの設定(ブラウザのみに保存 / BYOK) =================
+// ================= Product image generation API settings (stored in the browser only / BYOK) =================
 const IMAGE_KEY_STORAGE = "k2j_image_api_key";
-// 先頭のモデルで生成を試み、モデル/パラメーター起因のエラー時のみ後続モデルで再試行する
+// Try the first model, and retry with the next model only on model/parameter-related errors
 const IMAGE_MODELS = ["dall-e-3", "gpt-image-1"];
 
 function getImageKey() {
@@ -1255,8 +1256,8 @@ function refreshImageApiStatus() {
   const statusEl = document.getElementById("imageApiStatus");
   if (!statusEl) return;
   statusEl.textContent = has
-    ? "✨ 画像生成APIキー設定済み — 生成時に実際のAI画像を作成します"
-    : "🧪 モックアップ表示中(画像生成APIキー未設定)";
+    ? "✨ Image generation API key set — real AI images will be created on generation"
+    : "🧪 Showing mockups (no image generation API key set)";
   statusEl.classList.toggle("on", has);
   document.getElementById("imageApiKeyInput").value = has ? getImageKey() : "";
 }
@@ -1268,24 +1269,24 @@ document.getElementById("imageApiSaveBtn").addEventListener("click", async () =>
   if (!v) return;
   setImageKey(v);
   document.getElementById("imageApiPanel").classList.remove("show");
-  // 保存と同時にキーの疎通確認を行い、結果をステータスに表示する
+  // Check connectivity as soon as the key is saved, and show the result in the status
   const statusEl = document.getElementById("imageApiStatus");
-  statusEl.textContent = "⏳ 画像生成APIへの接続を確認中…";
+  statusEl.textContent = "⏳ Checking the connection to the image generation API…";
   try {
     const res = await fetch("https://api.openai.com/v1/models", {
       headers: { "authorization": `Bearer ${v}` },
     });
     if (res.ok) {
-      statusEl.textContent = "✅ 画像生成APIキー設定済み — 接続確認OK。生成時に実際のAI画像を作成します";
+      statusEl.textContent = "✅ Image generation API key set — connection OK. Real AI images will be created on generation";
       statusEl.classList.add("on");
     } else {
       let detail = "";
       try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
-      statusEl.textContent = `⚠️ キーは保存しましたが、接続確認に失敗しました(${res.status})${detail ? ": " + detail.slice(0, 80) : ""}`;
+      statusEl.textContent = `⚠️ The key was saved, but the connection check failed (${res.status})${detail ? ": " + detail.slice(0, 80) : ""}`;
       statusEl.classList.remove("on");
     }
   } catch (err) {
-    statusEl.textContent = "⚠️ キーは保存しましたが、ブラウザから画像生成APIへ接続できませんでした(ネットワーク/CORS制限の可能性)";
+    statusEl.textContent = "⚠️ The key was saved, but the browser could not reach the image generation API (possibly a network/CORS restriction)";
     statusEl.classList.remove("on");
   }
 });
@@ -1311,7 +1312,7 @@ async function requestImageWithModel(key, model, prompt) {
 
   let res;
   try {
-    // モデルごとに使える任意パラメーターが異なるため、全モデル共通で有効な最小構成のみ送る
+    // Optional parameters differ per model, so send only the minimal payload valid for all models
     res = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -1333,21 +1334,21 @@ async function requestImageWithModel(key, model, prompt) {
   if (!res.ok) {
     let detail = "";
     try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
-    throw new Error(`画像生成APIエラー(${res.status})${detail ? ": " + detail : ""}`);
+    throw new Error(`Image generation API error (${res.status})${detail ? ": " + detail : ""}`);
   }
 
   const resData = await res.json();
   const item = resData.data && resData.data[0];
   if (item && item.b64_json) return `data:image/png;base64,${item.b64_json}`;
   if (item && item.url) return item.url;
-  throw new Error("画像生成APIの応答が不正です");
+  throw new Error("The image generation API returned an invalid response");
 }
 
 function isModelSpecificError(err) {
   return /model|parameter|verified|organization/i.test((err && err.message) || "");
 }
 
-let imageModelStartIdx = 0; // 非対応と判明したモデルを次回以降スキップするための開始位置
+let imageModelStartIdx = 0; // starting position so models found to be unsupported are skipped next time
 
 async function generateProductImage(prompt) {
   const key = getImageKey();
@@ -1360,7 +1361,7 @@ async function generateProductImage(prompt) {
       return out;
     } catch (err) {
       lastErr = err;
-      // キー無効・残高不足など、モデルを変えても解決しないエラーは即座に中断する
+      // Errors that switching models cannot fix (invalid key, no credit, etc.) abort immediately
       if (!isModelSpecificError(err)) throw err;
       if (m + 1 < IMAGE_MODELS.length) imageModelStartIdx = m + 1;
     }
@@ -1371,13 +1372,13 @@ async function generateProductImage(prompt) {
 let currentImageRenderToken = 0;
 
 function describeImageError(err) {
-  if (err && err.name === "AbortError") return "画像生成APIへの接続がタイムアウトしました。";
-  if (err instanceof TypeError) return "ブラウザから画像生成APIへ直接接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
+  if (err && err.name === "AbortError") return "The connection to the image generation API timed out.";
+  if (err instanceof TypeError) return "Could not connect directly to the image generation API from the browser (possibly a network/CORS restriction).";
   return (err && err.message) ? err.message : String(err);
 }
 
 async function generateProposalImages(cat, catLabel, data, token) {
-  // レートリミット(1分あたりの生成枚数)に触れにくいよう、3案を並列ではなく順番に生成する
+  // Generate the 3 concepts sequentially rather than in parallel, to avoid hitting per-minute rate limits
   for (let i = 0; i < data.images.length; i++) {
     const img = data.images[i];
     try {
@@ -1395,12 +1396,12 @@ async function generateProposalImages(cat, catLabel, data, token) {
         visual.innerHTML = SVG_BY_CAT[cat]("_" + cat + i + "_fallback" + token, img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })
           + `<div class="img-gen-error">⚠️ ${escapeHtml(describeImageError(err))}</div>`;
       }
-      if (badge) badge.textContent = "🧪 SAMPLE(画像生成に失敗)";
+      if (badge) badge.textContent = "🧪 SAMPLE (image generation failed)";
     }
   }
 }
 
-// ================= 実商品検索の設定パネル =================
+// ================= Real product search settings panel =================
 function refreshGoogleStatus() {
   document.getElementById("googleKeyInput").value = getGoogleKey();
   document.getElementById("googleCxInput").value = getGoogleCx();
@@ -1422,9 +1423,9 @@ document.getElementById("googleClearBtn").addEventListener("click", () => {
 });
 refreshGoogleStatus();
 
-// ================= 生成済み商品の保存(デザインタブで読み込むため) =================
+// ================= Saving generated products (for loading in the design tab) =================
 const GENERATED_STORAGE = "k2j_generated_products";
-const CAT_LABEL = { beauty: "美容", food: "食品", living: "生活雑貨" };
+const CAT_LABEL = { beauty: "Beauty", food: "Food", living: "Home goods" };
 
 function getGeneratedProducts() {
   try { return JSON.parse(localStorage.getItem(GENERATED_STORAGE) || "[]"); } catch (e) { return []; }
@@ -1440,16 +1441,16 @@ function refreshProductSelect() {
   if (!sel) return;
   const list = getGeneratedProducts();
   if (!list.length) {
-    sel.innerHTML = `<option value="">(まだAI商品企画で商品が生成されていません。先に「AI商品企画」タブで生成してください)</option>`;
+    sel.innerHTML = `<option value="">(No products generated yet. Generate one on the "AI Product Planning" tab first)</option>`;
     return;
   }
-  sel.innerHTML = list.map((p, i) => `<option value="${i}">[${CAT_LABEL[p.cat] || p.cat}] ${escapeHtml(p.productName)}${p.liveMode ? " ✨AI生成" : ""}</option>`).join("");
+  sel.innerHTML = list.map((p, i) => `<option value="${i}">[${CAT_LABEL[p.cat] || p.cat}] ${escapeHtml(p.productName)}${p.liveMode ? " ✨AI generated" : ""}</option>`).join("");
 }
 refreshProductSelect();
 
-// ================= Claude APIへの企画生成リクエスト =================
+// ================= Plan generation request to the Claude API =================
 function buildPrompt(cat, priceLabel, channelLabel) {
-  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
+  const catLabel = { beauty: "Beauty & Cosmetics", food: "Food", living: "Home Goods & Appliances" }[cat];
   const trend = TREND[cat];
   const context = {
     category: catLabel,
@@ -1459,32 +1460,33 @@ function buildPrompt(cat, priceLabel, channelLabel) {
     reviewInsights: trend.insights.map(i => ({ type: i.type, title: i.title, body: i.body })),
   };
 
-  const system = `あなたは韓国企業の日本向けOEM商品開発を支援する優秀なプロダクトマネージャー兼マーケターです。
-与えられた日本市場(国内ECモール)のトレンドデータをもとに、独自性の高いOEM商品コンセプトを1件提案してください。
+  const system = `You are an excellent product manager and marketer who supports Korean companies in developing OEM products for the Japanese market.
+Based on the provided Japanese market (domestic e-commerce mall) trend data, propose exactly one highly original OEM product concept.
 
-重要な制約:
-- ブランド名・商品名は、日本や韓国で実在する可能性がある有名ブランド名・商品名とは一切重複・類似させず、完全にオリジナルな造語にしてください。既存の実在商品を模倣した名称は禁止です。
-- 出力は必ず以下のJSON形式のみとし、それ以外の文字列(説明文・前置き・コードフェンス等)は一切含めないでください。
-- colorsのhex値は必ず "#rrggbb" 形式にしてください。
+Important constraints:
+- Keep the JSON field names exactly as specified below, and write ALL JSON field values in English (currency amounts may use the yen sign, e.g. ¥1,980).
+- The brand name and product name must be completely original coined words. They must never duplicate or resemble any famous brand or product name that may actually exist in Japan or Korea; names that imitate existing real products are strictly forbidden.
+- Your output must consist of the following JSON format only, with no other text (no explanations, preambles, or code fences).
+- Every hex value in colors must use the "#rrggbb" format.
 
 {
-  "brandName": "オリジナルの英字ブランド名(日本語読みをカッコ書きで併記可)",
-  "productName": "商品名(日本語表記)",
-  "packageLabel": "パッケージ表示用の短い英字ラベル(全て大文字、12文字以内)",
-  "packageSub": "パッケージ表示用の短い英字サブコピー(24文字以内)",
-  "lead": "商品コンセプトの要約(80字程度)",
-  "target": ["ターゲット層の説明を3つ"],
-  "spec": ["処方・仕様のポイントを3つ"],
-  "price": ["価格・原価計画のポイントを3つ"],
-  "regulatory": ["日本の規制チェックポイントを3つ"],
+  "brandName": "Original brand name in Latin letters",
+  "productName": "Product name (in English)",
+  "packageLabel": "Short package label in capital letters (max 12 characters)",
+  "packageSub": "Short package sub-copy in Latin letters (max 24 characters)",
+  "lead": "Product concept summary in English (about 160 characters)",
+  "target": ["3 bullet points describing the target audience"],
+  "spec": ["3 bullet points on formula / specifications"],
+  "price": ["3 bullet points on pricing and cost planning — the first one must contain a target retail price figure such as ¥1,980"],
+  "regulatory": ["3 bullet points on Japanese regulatory checkpoints"],
   "images": [
-    {"name": "A案の名称", "desc": "デザイン意図の説明(40字程度)", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
-    {"name": "B案の名称", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
-    {"name": "C案の名称", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}}
+    {"name": "Name of concept A", "desc": "Design intent in English (about 80 characters)", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
+    {"name": "Name of concept B", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
+    {"name": "Name of concept C", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}}
   ]
 }`;
 
-  const user = `以下の条件・ECモールのトレンドデータをもとに、OEM商品コンセプトをJSON形式で1件提案してください。
+  const user = `Based on the following conditions and EC mall trend data, propose one OEM product concept in the JSON format specified. Write all field values in English.
 
 ${JSON.stringify(context, null, 2)}`;
 
@@ -1521,7 +1523,7 @@ async function callClaudeAPI(system, user, maxTokens) {
   if (!res.ok) {
     let detail = "";
     try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
-    throw new Error(`AI APIエラー(${res.status})${detail ? ": " + detail : ""}`);
+    throw new Error(`AI API error (${res.status})${detail ? ": " + detail : ""}`);
   }
 
   const data = await res.json();
@@ -1531,13 +1533,13 @@ async function callClaudeAPI(system, user, maxTokens) {
   try {
     return JSON.parse(jsonStr);
   } catch (e) {
-    throw new Error("AI APIの応答をJSONとして解析できませんでした");
+    throw new Error("Could not parse the AI API response as JSON");
   }
 }
 
 function describeClaudeError(err) {
-  if (err && err.name === "AbortError") return "AI APIへの接続がタイムアウトしました。";
-  if (err instanceof TypeError) return "ブラウザから直接APIへ接続できませんでした(ネットワーク/CORSの制限の可能性があります)。";
+  if (err && err.name === "AbortError") return "The connection to the AI API timed out.";
+  if (err instanceof TypeError) return "Could not connect directly to the API from the browser (possibly a network/CORS restriction).";
   return (err && err.message) ? err.message : String(err);
 }
 
@@ -1546,7 +1548,7 @@ async function generateWithClaude(cat, priceLabel, channelLabel) {
   return callClaudeAPI(system, user, 2000);
 }
 
-// ================= 企画データの正規化(欠損時はサンプルで補完) =================
+// ================= Plan data normalization (missing fields fall back to the sample) =================
 function normalizeProposal(cat, raw) {
   raw = raw || {};
   const fb = PROPOSALS[cat];
@@ -1585,9 +1587,9 @@ function normalizeProposal(cat, raw) {
   return out;
 }
 
-// ================= 企画結果の描画 =================
-// ================= 実務向け機能:収益シミュレーター・商標事前確認・見積依頼文 =================
-let lastProposalContext = null; // renderProposal直後の内容(RFQボタンのクリック時に参照)
+// ================= Rendering the plan result =================
+// ================= Practical tools: profit simulator, trademark pre-check, RFQ letter =================
+let lastProposalContext = null; // contents right after renderProposal (referenced when the RFQ button is clicked)
 
 function parseYen(str) {
   const m = String(str || "").match(/[\d,]{2,}/);
@@ -1610,29 +1612,31 @@ function updateProfitSim() {
   const netEl = document.getElementById("simNetMonth");
   netEl.textContent = (netMonth >= 0 ? "¥" : "-¥") + Math.abs(Math.round(netMonth)).toLocaleString();
   netEl.className = "sim-val " + (netMonth >= 0 ? "up" : "down");
-  document.getElementById("simBreakeven").textContent = breakeven.toLocaleString() + " 個/月";
+  document.getElementById("simBreakeven").textContent = breakeven.toLocaleString() + " units/mo";
 }
 
 function buildRfqText(ctx, factory) {
-  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[ctx.cat];
+  const catLabel = { beauty: "Beauty & Cosmetics", food: "Food", living: "Home Goods & Appliances" }[ctx.cat];
   return [
-    `${factory.name} ご担当者様`,
+    `Dear ${factory.name} team,`,
     ``,
-    `お世話になっております。日本向けOEM商品の製造について、下記商品のお見積りをお願いできますでしょうか。`,
+    `I hope this message finds you well. We are preparing an OEM product for the Japanese market and would like to request a quotation for the product outlined below.`,
     ``,
-    `■商品名: ${ctx.data.productName}${ctx.data.brandName ? `(ブランド名候補: ${ctx.data.brandName})` : ""}`,
-    `■カテゴリー: ${catLabel}`,
-    `■想定販路: ${ctx.channelLabel}`,
-    `■想定価格帯: ${ctx.priceLabel}`,
-    `■仕様・特徴:`,
-    ...(ctx.data.spec || []).map(s => `　- ${s}`),
+    `- Product name: ${ctx.data.productName}${ctx.data.brandName ? ` (candidate brand name: ${ctx.data.brandName})` : ""}`,
+    `- Category: ${catLabel}`,
+    `- Planned sales channel: ${ctx.channelLabel}`,
+    `- Target price range: ${ctx.priceLabel}`,
+    `- Specifications / features:`,
+    ...(ctx.data.spec || []).map(s => `  - ${s}`),
     ``,
-    `以下についてご教示いただけますと幸いです。`,
-    `・最小ロット(MOQ)と単価`,
-    `・サンプル製作の可否と費用/納期`,
-    `・量産リードタイム`,
+    `We would appreciate it if you could share the following:`,
+    `- Minimum order quantity (MOQ) and unit price`,
+    `- Availability, cost, and lead time for sample production`,
+    `- Mass production lead time`,
     ``,
-    `よろしくお願いいたします。`,
+    `Thank you very much for your time. We look forward to hearing from you.`,
+    ``,
+    `Best regards,`,
   ].join("\n");
 }
 
@@ -1643,8 +1647,8 @@ document.getElementById("proposal").addEventListener("click", async (e) => {
     const text = buildRfqText(lastProposalContext, factory);
     try {
       await navigator.clipboard.writeText(text);
-      rfqBtn.textContent = "✅ コピーしました";
-      setTimeout(() => { rfqBtn.textContent = "📋 見積依頼文をコピー"; }, 2200);
+      rfqBtn.textContent = "✅ Copied";
+      setTimeout(() => { rfqBtn.textContent = "📋 Copy RFQ email"; }, 2200);
     } catch (err) {
       const box = document.getElementById("rfqFallbackBox");
       if (box) {
@@ -1662,14 +1666,14 @@ document.getElementById("proposal").addEventListener("click", async (e) => {
 });
 
 function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote) {
-  const catLabel = { beauty: "美容・コスメ", food: "食品", living: "生活雑貨・家電" }[cat];
+  const catLabel = { beauty: "Beauty & Cosmetics", food: "Food", living: "Home Goods & Appliances" }[cat];
   const factories = PROPOSALS[cat].factories;
   lastProposalContext = { cat, priceLabel, channelLabel, data, factories };
   const items = [
-    { icon: "🎯", title: "ターゲット", list: data.target },
-    { icon: "⚗️", title: "処方・仕様", list: data.spec },
-    { icon: "💰", title: "価格・原価計画", list: data.price },
-    { icon: "⚖️", title: "規制チェック", list: data.regulatory },
+    { icon: "🎯", title: "Target", list: data.target },
+    { icon: "⚗️", title: "Formula & Specs", list: data.spec },
+    { icon: "💰", title: "Pricing & Cost Plan", list: data.price },
+    { icon: "⚖️", title: "Regulatory Check", list: data.regulatory },
   ];
   const defaultPrice = parseYen((data.price || [])[0]) || 2000;
   const tmQuery = encodeURIComponent(`"${data.brandName || data.productName}" 商標`);
@@ -1679,22 +1683,22 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
   document.getElementById("proposal").innerHTML = `
     <div class="prop-head">
       <div class="prop-head-top">
-        <span class="p-tag">PROPOSAL — ${catLabel} ・ ${escapeHtml(priceLabel)} ・ ${escapeHtml(channelLabel)}</span>
-        <button class="print-btn" type="button">🖨 提案書を印刷/PDF保存</button>
+        <span class="p-tag">PROPOSAL — ${catLabel} · ${escapeHtml(priceLabel)} · ${escapeHtml(channelLabel)}</span>
+        <button class="print-btn" type="button">🖨 Print / save proposal as PDF</button>
       </div>
-      <div class="gen-badge ${liveMode ? "live" : ""}">${liveMode ? "✨ AIが生成(リアルタイム)" : (errorNote ? "🧪 サンプル表示中(APIエラーのフォールバック)" : "🧪 サンプル表示中(AI APIキー未設定)")}</div>
-      <h3>${escapeHtml(data.productName)}${data.brandName ? `「${escapeHtml(data.brandName)}」` : ""}</h3>
+      <div class="gen-badge ${liveMode ? "live" : ""}">${liveMode ? "✨ Generated by AI (live)" : (errorNote ? "🧪 Showing sample (fallback after API error)" : "🧪 Showing sample (no AI API key set)")}</div>
+      <h3>${escapeHtml(data.productName)}${data.brandName ? ` (${escapeHtml(data.brandName)})` : ""}</h3>
       <p>${escapeHtml(data.lead)}</p>
     </div>
     <div class="prop-body">
-      ${errorNote ? `<div class="api-error">⚠️ AI APIの呼び出しに失敗したため、サンプルデータを表示しています: ${escapeHtml(errorNote)}</div>` : ""}
+      ${errorNote ? `<div class="api-error">⚠️ The AI API call failed, so sample data is shown: ${escapeHtml(errorNote)}</div>` : ""}
 
       <div class="tm-check">
-        <b>⚖️ 商標の事前確認</b>
-        <p>「${escapeHtml(data.brandName || data.productName)}」はAIが生成したオリジナル名称です。実際に出願・使用する前に、必ず公式データベースで既存の商標と重複していないかご確認ください。</p>
+        <b>⚖️ Trademark pre-check</b>
+        <p>"${escapeHtml(data.brandName || data.productName)}" is an AI-generated original name. Before actually filing or using it, be sure to check the official databases for conflicts with existing trademarks.</p>
         <div class="ref-links">
-          <a class="ref-btn" href="https://www.j-platpat.inpit.go.jp/" target="_blank" rel="noopener">🔎 特許庁の商標検索で確認する</a>
-          <a class="ref-btn" href="https://www.google.com/search?q=${tmQuery}" target="_blank" rel="noopener">Web検索で確認する</a>
+          <a class="ref-btn" href="https://www.j-platpat.inpit.go.jp/" target="_blank" rel="noopener">🔎 Check the Japan Patent Office trademark database</a>
+          <a class="ref-btn" href="https://www.google.com/search?q=${tmQuery}" target="_blank" rel="noopener">Check via web search</a>
         </div>
       </div>
 
@@ -1707,41 +1711,41 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
       </div>
 
       <div class="sim-card no-print">
-        <b style="font-size:14px">💹 収益シミュレーター</b>
-        <p style="font-size:12px;color:var(--sub);margin-top:2px">数値を入力すると、月間の粗利・広告費控除後利益・損益分岐販売数を試算します(簡易計算・税抜)。</p>
+        <b style="font-size:14px">💹 Profit Simulator</b>
+        <p style="font-size:12px;color:var(--sub);margin-top:2px">Enter your figures to estimate monthly gross profit, profit after ad spend, and break-even sales volume (simplified calculation, tax excluded).</p>
         <div class="sim-grid">
-          <div><label class="fld">想定売価(円)</label><input type="number" id="simPrice" value="${defaultPrice}" oninput="updateProfitSim()"></div>
-          <div><label class="fld">原価率(%)</label><input type="number" id="simCostPct" value="30" oninput="updateProfitSim()"></div>
-          <div><label class="fld">月間販売目標(個)</label><input type="number" id="simUnits" value="500" oninput="updateProfitSim()"></div>
-          <div><label class="fld">月間広告費(円)</label><input type="number" id="simAd" value="200000" oninput="updateProfitSim()"></div>
+          <div><label class="fld">Retail price (¥)</label><input type="number" id="simPrice" value="${defaultPrice}" oninput="updateProfitSim()"></div>
+          <div><label class="fld">COGS ratio (%)</label><input type="number" id="simCostPct" value="30" oninput="updateProfitSim()"></div>
+          <div><label class="fld">Monthly sales target (units)</label><input type="number" id="simUnits" value="500" oninput="updateProfitSim()"></div>
+          <div><label class="fld">Monthly ad budget (¥)</label><input type="number" id="simAd" value="200000" oninput="updateProfitSim()"></div>
         </div>
         <div class="sim-result">
-          <div><span class="sim-label">粗利/個</span><span class="sim-val" id="simGrossUnit">-</span></div>
-          <div><span class="sim-label">月間粗利</span><span class="sim-val" id="simGrossMonth">-</span></div>
-          <div><span class="sim-label">広告費控除後利益</span><span class="sim-val" id="simNetMonth">-</span></div>
-          <div><span class="sim-label">損益分岐販売数</span><span class="sim-val" id="simBreakeven">-</span></div>
+          <div><span class="sim-label">Gross profit / unit</span><span class="sim-val" id="simGrossUnit">-</span></div>
+          <div><span class="sim-label">Monthly gross profit</span><span class="sim-val" id="simGrossMonth">-</span></div>
+          <div><span class="sim-label">Profit after ad spend</span><span class="sim-val" id="simNetMonth">-</span></div>
+          <div><span class="sim-label">Break-even units</span><span class="sim-val" id="simBreakeven">-</span></div>
         </div>
       </div>
 
-      <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 商品イメージ画像(${imgLiveMode ? "AI生成" : "サンプル"}・3案)</h3>
-      <p class="img-note">${imgLiveMode ? "AIが商品コンセプト(デザイン方向性・配色)をもとに実際の画像を生成します。生成には数十秒かかる場合があります。" : "トレンド分析とデザインリファレンスを反映したパッケージ形状のモックアップです。"} ※AI生成画像も含め、実際の商品写真ではなくコンセプトイメージです。</p>
+      <h3 style="font-size:14px;font-weight:800;margin:22px 0 2px">🖼 Product image concepts (${imgLiveMode ? "AI generated" : "sample"} · 3 options)</h3>
+      <p class="img-note">${imgLiveMode ? "AI generates real images based on the product concept (design direction and color palette). Generation may take up to a minute." : "Package-shape mockups reflecting the trend analysis and design references."} Note: all images, including AI-generated ones, are concept visuals, not photos of real products.</p>
       <div class="img-grid">
         ${data.images.map((img, i) => `
           <div class="img-card">
             <div class="img-visual" id="img-visual-${i}">
               ${imgLiveMode
-                ? `<div class="img-photo-loading"><span class="mini-spinner"></span>AI画像を生成中…</div>`
+                ? `<div class="img-photo-loading"><span class="mini-spinner"></span>Generating AI image…</div>`
                 : SVG_BY_CAT[cat]("_" + cat + i + (liveMode ? "_live" : ""), img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })}
             </div>
             <div class="ic-body">
-              <span class="ai-badge" id="img-badge-${i}">${imgLiveMode ? "🎨 生成中…" : "🧪 SAMPLE"}</span>
+              <span class="ai-badge" id="img-badge-${i}">${imgLiveMode ? "🎨 Generating…" : "🧪 SAMPLE"}</span>
               <div class="ic-name">${escapeHtml(img.name)}</div>
               <div class="ic-desc">${escapeHtml(img.desc)}</div>
             </div>
           </div>`).join("")}
       </div>
 
-      <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 マッチするOEM/ODM工場(サンプル)</h3>
+      <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 Matching OEM/ODM factories (sample)</h3>
       ${factories.map((f, i) => `
         <div class="factory">
           <span class="f-logo">${f.emoji}</span>
@@ -1750,16 +1754,16 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
             <div class="f-meta">${escapeHtml(f.meta)}</div>
           </div>
           <span class="match">${f.match}</span>
-          <button class="rfq-btn no-print" type="button" data-fidx="${i}">📋 見積依頼文をコピー</button>
+          <button class="rfq-btn no-print" type="button" data-fidx="${i}">📋 Copy RFQ email</button>
         </div>`).join("")}
       <textarea id="rfqFallbackBox" class="rfq-fallback no-print" readonly style="display:none" rows="10"></textarea>
-      <p class="pin-note no-print">📋 見積依頼文は、クリップボードにコピーされた文面を実際の工場担当者のメールに貼り付けてお使いください(上記の工場情報はサンプルです)。</p>
+      <p class="pin-note no-print">📋 The RFQ text is copied to your clipboard — paste it into an actual email to the factory contact (the factory information above is sample data).</p>
     </div>`;
   updateProfitSim();
   if (imgLiveMode) generateProposalImages(cat, catLabel, data, myImageToken);
 }
 
-// ================= 企画ジェネレーター(ボタン押下時) =================
+// ================= Plan generator (on button click) =================
 document.getElementById("genBtn").addEventListener("click", async () => {
   const btn = document.getElementById("genBtn");
   const loading = document.getElementById("genLoading");
@@ -1773,8 +1777,8 @@ document.getElementById("genBtn").addEventListener("click", async () => {
   btn.disabled = true;
   box.classList.remove("show");
   loadingText.textContent = hasKey
-    ? "AI APIでECモールのトレンドデータを分析し、商品コンセプトを生成しています…"
-    : "ECモールのトレンドデータを分析し、商品コンセプトとイメージ画像を生成しています…(サンプルモード)";
+    ? "Calling the AI API to analyze EC mall trend data and generate a product concept…"
+    : "Analyzing EC mall trend data and generating a product concept and image concepts… (sample mode)";
   loading.classList.add("show");
 
   let liveMode = false;
