@@ -347,6 +347,58 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .case-visual.img-missing img { display: none; }
 .case-visual.img-missing .case-fb { display: block; }
 
+
+/* ===== Stepper (Features) ===== */
+.stepper {
+  max-width: 780px; margin: 44px auto 0;
+  background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 24px; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  padding: 26px 28px 22px;
+}
+.stepper-head { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
+.st-ind {
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,.08); color: #9aa1c0; font-weight: 800; font-size: 14px; font-family: inherit;
+  display: grid; place-items: center; transition: background .25s, color .25s, transform .25s;
+}
+.st-ind.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; transform: scale(1.12); box-shadow: 0 6px 20px rgba(99,102,241,.45); }
+.st-ind.done { background: rgba(45,212,168,.2); color: var(--mint); }
+.st-line { width: 54px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.1); transition: background .3s; }
+.st-line.done { background: rgba(45,212,168,.55); }
+.stepper-viewport { overflow: hidden; transition: height .45s cubic-bezier(.4, 0, .2, 1); }
+.st-panels { display: flex; transition: transform .5s cubic-bezier(.4, 0, .2, 1); }
+.st-panel { width: 100%; flex: 0 0 100%; padding: 20px 6px 6px; display: flex; gap: 22px; align-items: flex-start; }
+.st-media { flex: 0 0 128px; padding-top: 8px; }
+.st-media img { width: 100%; filter: drop-shadow(0 0 16px rgba(160,170,255,.2)); }
+.st-body h3 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.st-body p { font-size: 13.5px; color: #aab1cf; line-height: 1.75; }
+.st-body ul { margin-top: 12px; font-size: 13px; color: #9aa1c0; list-style: none; }
+.st-body li { padding-left: 20px; position: relative; margin-top: 6px; line-height: 1.6; }
+.st-body li::before { content: "✓"; position: absolute; left: 0; color: var(--mint); font-weight: 800; }
+.st-complete { justify-content: center; }
+.st-done-box { text-align: center; padding: 26px 10px 18px; }
+.st-done-emoji { font-size: 40px; margin-bottom: 10px; }
+.st-done-box h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.st-done-box p { font-size: 13.5px; color: #aab1cf; margin-bottom: 20px; max-width: 34em; margin-left: auto; margin-right: auto; }
+.stepper-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+.st-btn {
+  border: none; border-radius: 12px; padding: 11px 24px; cursor: pointer;
+  font-size: 13.5px; font-weight: 800; font-family: inherit; transition: transform .18s, box-shadow .18s, opacity .18s;
+}
+.st-back { background: rgba(255,255,255,.07); color: #c3c8dd; }
+.st-back:hover { background: rgba(255,255,255,.12); }
+.st-back.hidden { visibility: hidden; }
+.st-next {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 8px 26px rgba(99,102,241,.4);
+}
+.st-next:hover { transform: translateY(-2px); }
+.st-next.hidden { visibility: hidden; }
+@media (max-width: 640px) {
+  .st-panel { flex-direction: column; }
+  .st-media { flex-basis: auto; width: 110px; }
+  .st-line { width: 26px; }
+}
 /* ===== BounceCards (How It Works) ===== */
 .bounce-stack { position: relative; width: 620px; max-width: 100%; height: 300px; margin: 44px auto 26px; }
 .bounce-card {
@@ -533,60 +585,79 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   <div class="wrap">
     <span class="sec-label">Features</span>
     <h2>Key Features</h2>
-    <div class="features">
-      <div class="feature">
-        <div class="f-icon blue"><img src="assets/step-1.png" alt=""></div>
-        <div>
-          <h3>E-Commerce Trend Radar</h3>
-          <p>Japanese market reference data is scanned daily, centered on <b>major Japanese e-commerce malls</b>. Track trending keywords and growth categories from your dashboard.</p>
-          <ul>
+    <div class="stepper" id="featStepper">
+      <div class="stepper-head" id="stHead">
+        <button class="st-ind" data-s="0" type="button">1</button><span class="st-line"></span><button class="st-ind" data-s="1" type="button">2</button><span class="st-line"></span><button class="st-ind" data-s="2" type="button">3</button><span class="st-line"></span><button class="st-ind" data-s="3" type="button">4</button>
+      </div>
+      <div class="stepper-viewport" id="stViewport">
+        <div class="st-panels" id="stPanels">
+        <section class="st-panel">
+          <div class="st-media"><img src="assets/step-1.png" alt=""></div>
+          <div class="st-body">
+            <h3>E-Commerce Trend Radar</h3>
+            <p>Japanese market reference data is scanned daily, centered on <b>major Japanese e-commerce malls</b>. Track trending keywords and growth categories from your dashboard.</p>
+            <ul>
             <li>Ranking trend graphs by e-commerce mall category</li>
             <li>Best-seller and pricing analysis during mega sale periods</li>
             <li>AI review summaries (turn complaints into product opportunities)</li>
             <li>Cross-analysis with mentions on major social platforms</li>
-          </ul>
-        </div>
-      </div>
-      <div class="feature">
-        <div class="f-icon purple"><img src="assets/step-2.png" alt=""></div>
-        <div>
-          <h3>AI Product Planning Generator</h3>
-          <p>Just pick a target category, and <b>generative AI</b> creates product concepts, suggested pricing, and differentiation points based on e-commerce mall trend data — plus <b>product concept images</b>, generated live in real time. Includes practical tools manufacturers can use for their next move, as-is.</p>
-          <ul>
+            </ul>
+          </div>
+        </section>
+        <section class="st-panel">
+          <div class="st-media"><img src="assets/step-2.png" alt=""></div>
+          <div class="st-body">
+            <h3>AI Product Planning Generator</h3>
+            <p>Just pick a target category, and <b>generative AI</b> creates product concepts, suggested pricing, and differentiation points based on e-commerce mall trend data — plus <b>product concept images</b>, generated live in real time.</p>
+            <ul>
             <li>Concept proposals that target gaps in the best-seller landscape</li>
             <li>Product and brand names are fully original — never duplicating existing brands</li>
-            <li><b>Profit simulator</b> instantly estimates gross margin, profit after ad spend, and break-even sales volume</li>
-            <li><b>Trademark pre-check link</b> (Japan Patent Office trademark search) to verify brand-name safety</li>
-            <li>Automatic matching with Korean OEM/ODM factories + <b>one-click copy of quote request messages</b></li>
-            <li>Regulatory checklists for Japan's Pharmaceutical and Medical Device Act, Food Labeling Act, and more</li>
+            <li><b>Profit simulator</b> for gross margin, profit after ad spend, and break-even volume</li>
+            <li><b>Trademark pre-check link</b> (Japan Patent Office search) for brand-name safety</li>
+            <li>Korean OEM/ODM factory matching + <b>one-click copy of quote request messages</b></li>
+            <li>Regulatory checklists (Pharmaceutical and Medical Device Act, Food Labeling Act)</li>
             <li><b>Print / save proposals as PDF</b> for internal sharing and approvals</li>
-          </ul>
-        </div>
-      </div>
-      <div class="feature">
-        <div class="f-icon coral"><img src="assets/step-3.png" alt=""></div>
-        <div>
-          <h3>Design Reference</h3>
-          <p>Presents <b>real photos</b> in a tiled (masonry) layout. Industry-wide design trends show <b>real images from design reference sites</b>, and when you load a product generated by AI Product Planning or your own product, it displays <b>real product photos from major e-commerce malls</b>. Work from real-world references, not abstract illustrations.</p>
-          <ul>
+            </ul>
+          </div>
+        </section>
+        <section class="st-panel">
+          <div class="st-media"><img src="assets/step-3.png" alt=""></div>
+          <div class="st-body">
+            <h3>Design Reference</h3>
+            <p>Presents <b>real photos</b> in a tiled (masonry) layout — real images from design reference sites, and real product photos from major e-commerce malls for your own products. Work from real-world references, not abstract illustrations.</p>
+            <ul>
             <li>Industry-wide trends shown with real design reference images</li>
-            <li>Load your own or AI-generated products to see real product photos tailored to them</li>
+            <li>Load your own or AI-generated products to see tailored real product photos</li>
             <li>Reference links to real examples on design reference sites</li>
             <li>Search for similar real products listed on e-commerce malls</li>
-          </ul>
-        </div>
-      </div>
-      <div class="feature">
-        <div class="f-icon mint"><img src="assets/step-4.png" alt=""></div>
-        <div>
-          <h3>Marketing Support</h3>
-          <p>From pre-launch test marketing to post-launch ad operations and CRM. Grow your sales with a team and tools deeply versed in the Japanese market.</p>
-          <ul>
+            </ul>
+          </div>
+        </section>
+        <section class="st-panel">
+          <div class="st-media"><img src="assets/step-4.png" alt=""></div>
+          <div class="st-body">
+            <h3>Marketing Support</h3>
+            <p>From pre-launch test marketing to post-launch ad operations and CRM. Grow your sales with a team and tools deeply versed in the Japanese market.</p>
+            <ul>
             <li>Channel strategy (major e-commerce malls, wholesale, crowdfunding)</li>
             <li>Influencer and social media campaign planning</li>
             <li>Unified dashboard for sales and advertising data</li>
-          </ul>
+            </ul>
+          </div>
+        </section>
+        <section class="st-panel st-complete">
+          <div class="st-done-box">
+            <div class="st-done-emoji">🎉</div>
+            <h3>All steps completed!</h3>
+            <p>You have seen everything K2J Bridge does. Try it yourself with sample data — no sign-up needed.</p>
+            <a class="btn btn-primary" href="dashboard.html">Open the demo dashboard</a>
+          </div>
+        </section>
         </div>
+      </div>
+      <div class="stepper-foot">
+        <button class="st-btn st-back" id="stBack" type="button">Previous</button>
+        <button class="st-btn st-next" id="stNext" type="button">Next</button>
       </div>
     </div>
     <p class="sec-desc" style="margin-top:44px">Supported Data Sources</p>
@@ -774,6 +845,48 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
       if (en.isIntersecting) { stack.classList.add("play"); io.disconnect(); }
     });
   }, { rootMargin: "0px 0px -15% 0px" }).observe(stack);
+})();
+</script>
+<script id="feat-stepper">
+(function () {
+  var stepper = document.getElementById("featStepper");
+  if (!stepper) return;
+  var panels = document.getElementById("stPanels");
+  var viewport = document.getElementById("stViewport");
+  var inds = Array.prototype.slice.call(stepper.querySelectorAll(".st-ind"));
+  var lines = Array.prototype.slice.call(stepper.querySelectorAll(".st-line"));
+  var backBtn = document.getElementById("stBack");
+  var nextBtn = document.getElementById("stNext");
+  var total = 4; // コンテンツステップ数(+完了パネル)
+  var cur = 0;
+
+  function setHeight() {
+    var panel = panels.children[cur];
+    viewport.style.height = panel.offsetHeight + "px";
+  }
+  function render() {
+    panels.style.transform = "translateX(-" + (cur * 100) + "%)";
+    inds.forEach(function (b, i) {
+      b.classList.toggle("active", i === cur);
+      b.classList.toggle("done", i < cur || cur >= total);
+      b.textContent = (i < cur || cur >= total) ? "✓" : String(i + 1);
+    });
+    lines.forEach(function (l, i) { l.classList.toggle("done", i < cur || cur >= total); });
+    backBtn.classList.toggle("hidden", cur === 0);
+    nextBtn.classList.toggle("hidden", cur >= total);
+    nextBtn.textContent = cur === total - 1 ? "Complete" : "Next";
+    backBtn.textContent = "Previous";
+    setHeight();
+  }
+  nextBtn.addEventListener("click", function () { if (cur <= total - 1) { cur++; render(); } });
+  backBtn.addEventListener("click", function () { if (cur > 0) { cur--; render(); } });
+  inds.forEach(function (b) {
+    b.addEventListener("click", function () { cur = parseInt(b.dataset.s, 10); render(); });
+  });
+  window.addEventListener("resize", setHeight);
+  // 画像ロード後に高さを取り直す
+  stepper.querySelectorAll("img").forEach(function (im) { im.addEventListener("load", setHeight); });
+  render();
 })();
 </script>
 <script id="modern-reveal">
