@@ -274,14 +274,14 @@ h2 { letter-spacing: -.015em; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2), 0 16px 44px rgba(124,92,255,.55); }
 .btn-ghost { border-radius: 14px !important; transition: .2s; }
 .btn-ghost:hover { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); }
-.feature, .case, .plan, .step {
+.feature, .case, .plan, .flow-card {
   background: rgba(255,255,255,.045) !important;
   border: 1px solid rgba(255,255,255,.09) !important;
   border-radius: 20px !important;
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
 }
-.feature:hover, .case:hover, .step:hover {
+.feature:hover, .case:hover, .flow-card:hover {
   transform: translateY(-5px);
   border-color: rgba(124,92,255,.45) !important;
   box-shadow: 0 24px 64px rgba(4,6,24,.55), 0 0 0 1px rgba(124,92,255,.18);
@@ -313,6 +313,17 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   .feature, .case, .plan, .step, .btn-primary { transition: none; }
 }
 
+
+/* ===== Flow step illustrations ===== */
+.flow-visual {
+  height: 130px; border-radius: 14px; background: #fff;
+  display: grid; place-items: center; overflow: hidden; margin: 6px 0 14px;
+}
+.flow-visual img { width: 100%; height: 100%; object-fit: contain; padding: 10px; filter: contrast(1.35); }
+.flow-visual .flow-icon-fb { display: none; font-size: 38px; }
+.flow-visual.img-missing { background: transparent; height: auto; margin: 0; }
+.flow-visual.img-missing img { display: none; }
+.flow-visual.img-missing .flow-icon-fb { display: block; }
 /* ===== BorderGlow — マウス追従の縁グロー ===== */
 .glow-target { position: relative; }
 .glow-target::after {
@@ -416,25 +427,25 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
     <div class="flow">
       <div class="flow-card">
         <span class="flow-num">STEP 01</span>
-        <div class="flow-icon">📊</div>
+        <div class="flow-visual"><img src="assets/step-1.png" alt="Trend analysis illustration" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="flow-icon-fb">📊</span></div>
         <h3>Trend Analysis</h3>
         <p>Our AI gathers data daily, focusing on rankings, mega sales, and reviews from <b>major Japanese e-commerce malls</b>. See at a glance which products are growing in each category — and why.</p>
       </div>
       <div class="flow-card">
         <span class="flow-num">STEP 02</span>
-        <div class="flow-icon">💡</div>
+        <div class="flow-visual"><img src="assets/step-2.png" alt="Product planning illustration" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="flow-icon-fb">💡</span></div>
         <h3>OEM Product Planning</h3>
         <p>AI generates product concepts and <b>product concept images</b> reverse-engineered from best-seller data. We match you with partner OEM/ODM factories in Korea and support you from prototyping through mass production.</p>
       </div>
       <div class="flow-card">
         <span class="flow-num">STEP 03</span>
-        <div class="flow-icon">🎨</div>
+        <div class="flow-visual"><img src="assets/step-3.png" alt="Design proposal illustration" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="flow-icon-fb">🎨</span></div>
         <h3>Design Proposals</h3>
         <p>Cross-analysis of packaging, landing pages, and ad creatives from popular Japanese products. Get concrete design directions that Japanese consumers actually choose.</p>
       </div>
       <div class="flow-card">
         <span class="flow-num">STEP 04</span>
-        <div class="flow-icon">🚀</div>
+        <div class="flow-visual"><img src="assets/step-4.png" alt="Marketing illustration" loading="lazy" onerror="this.parentElement.classList.add('img-missing')"><span class="flow-icon-fb">🚀</span></div>
         <h3>Marketing</h3>
         <p>Channel selection (e-commerce, wholesale, crowdfunding), pricing strategy, social media and influencer campaigns, and ad operations. Data-driven improvement cycles continue after launch.</p>
       </div>
@@ -677,7 +688,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 
 <script id="modern-reveal">
 (function () {
-  var targets = document.querySelectorAll(".feature, .case, .plan, .step, .faq details");
+  var targets = document.querySelectorAll(".feature, .case, .plan, .flow-card, .faq details");
   if (!targets.length || !("IntersectionObserver" in window)) return;
   document.body.classList.add("reveal-init");
   var io = new IntersectionObserver(function (entries) {
@@ -695,7 +706,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 
 <script id="border-glow">
 (function () {
-  var els = document.querySelectorAll(".feature, .case, .plan, .step, .faq details, .mock");
+  var els = document.querySelectorAll(".feature, .case, .plan, .flow-card, .faq details, .mock");
   els.forEach(function (el) {
     el.classList.add("glow-target");
     el.addEventListener("pointermove", function (e) {
