@@ -232,6 +232,60 @@
     .sim-grid, .sim-result { grid-template-columns: 1fr 1fr; }
   }
 
+  /* ===== Factories & Costs hub ===== */
+  .fd-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 4px 0 14px; }
+  .fd-controls input[type="text"] {
+    flex: 1; min-width: 150px; padding: 9px 14px; font-size: 13px; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink);
+  }
+  .fd-controls select {
+    padding: 9px 12px; font-size: 12.5px; font-weight: 700; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--sub);
+  }
+  .fd-chip {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px;
+    padding: 8px 14px; font-size: 12.5px; font-weight: 700; color: var(--sub);
+  }
+  .fd-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .fd-chip:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+  .fd-list { max-height: 560px; overflow-y: auto; padding-right: 4px; }
+  .fd-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+  .fd-badge {
+    font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    background: #eef1fd; color: #4a5488; white-space: nowrap;
+  }
+  .fd-badge.cert { background: #e7f7f1; color: #1e7a5e; }
+  .fd-actions { display: flex; gap: 6px; width: 100%; margin-top: 10px; }
+  .fd-use-btn {
+    font-size: 11px; font-weight: 700; padding: 7px 13px; border-radius: 999px;
+    background: #fff; color: var(--accent); border: 1px solid var(--accent); white-space: nowrap;
+  }
+  .fd-use-btn:hover { background: var(--accent); color: #fff; }
+  .fd-empty { font-size: 12.5px; color: var(--sub); padding: 18px 4px; }
+  .cp-linked { font-size: 11.5px; color: var(--sub); margin-bottom: 8px; }
+  .cp-linked b { color: var(--accent); }
+  .cost-table-wrap { overflow-x: auto; margin-top: 12px; }
+  .cost-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 640px; }
+  .cost-table th {
+    text-align: left; font-size: 11px; color: var(--sub); font-weight: 800;
+    padding: 8px 10px; border-bottom: 2px solid var(--line); white-space: nowrap;
+  }
+  .cost-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .cost-table td:first-child { font-weight: 800; white-space: normal; }
+  .cost-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .cost-table .pos { color: var(--mint); font-weight: 800; }
+  .cost-table .neg { color: var(--coral); font-weight: 800; }
+  .ct-mini-btn {
+    border: 1px solid var(--line); background: #fff; border-radius: 8px;
+    padding: 4px 10px; font-size: 11px; font-weight: 700; color: var(--sub);
+  }
+  .ct-mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ct-mini-btn.danger:hover { border-color: var(--coral); color: var(--coral); }
+  .margin-pill { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .margin-pill.good { background: #e7f7f1; color: #1e7a5e; }
+  .margin-pill.ok { background: #fff4dd; color: #9a7420; }
+  .margin-pill.bad { background: #fdeef1; color: #b23348; }
+
   @media print {
     .topbar, .tabs, .api-bar, .api-panel, .card, .loading, .note, .no-print { display: none !important; }
     body { background: #fff; }
@@ -546,6 +600,7 @@ input:focus, select:focus, textarea:focus {
   <button class="tab active" data-panel="trend"><img class="tab-ico" src="assets/step-1.png" alt="">Trend Analysis</button>
   <button class="tab" data-panel="plan"><img class="tab-ico" src="assets/step-2.png" alt="">AI Product Planning</button>
   <button class="tab" data-panel="design"><img class="tab-ico" src="assets/step-3.png" alt="">Design Inspiration</button>
+  <button class="tab" data-panel="factory"><img class="tab-ico" src="assets/step-2.png" alt="">Factories &amp; Costs</button>
   <button class="tab" data-panel="marketing"><img class="tab-ico" src="assets/step-4.png" alt="">Marketing</button>
 </nav>
 
@@ -691,6 +746,79 @@ input:focus, select:focus, textarea:focus {
   </section>
 
   <!-- ================= Marketing ================= -->
+  <section class="panel" id="panel-factory">
+    <h2 class="page-title">Factories &amp; Cost Management</h2>
+    <p class="page-sub">Browse partner OEM/ODM factories in Korea, plan your per-unit costs, and manage every product's profitability in one place (factory data is a sample; your saved products stay in this browser only)</p>
+
+    <div class="grid g2">
+      <div class="card">
+        <h3>🏭 Factory Directory</h3>
+        <div class="fd-controls">
+          <input type="text" id="fdSearch" placeholder="🔍 Search factories, capabilities…">
+          <select id="fdSort">
+            <option value="rating">Sort: Rating</option>
+            <option value="moq">Sort: Lowest MOQ</option>
+            <option value="lead">Sort: Fastest lead time</option>
+            <option value="cost">Sort: Lowest unit cost</option>
+          </select>
+        </div>
+        <div class="fd-controls" id="fdChips">
+          <button class="fd-chip active" data-fcat="all">All</button>
+          <button class="fd-chip" data-fcat="beauty">Beauty</button>
+          <button class="fd-chip" data-fcat="food">Food</button>
+          <button class="fd-chip" data-fcat="living">Home &amp; Appliances</button>
+        </div>
+        <div class="fd-list" id="fdList"></div>
+      </div>
+
+      <div class="card">
+        <h3>💹 Cost Planner</h3>
+        <p class="cp-linked" id="cpLinked">Linked factory: <b>none</b> — pick one from the directory to prefill the unit cost</p>
+        <div class="sim-card" style="margin:0">
+          <div class="sim-grid" style="grid-template-columns:repeat(2,1fr)">
+            <div style="grid-column:1/-1"><label class="fld">Product name</label><input type="text" id="cpName" placeholder="e.g. VEILMER Cica Mist"></div>
+            <div><label class="fld">Retail price (¥)</label><input type="number" id="cpRetail" value="1980"></div>
+            <div><label class="fld">Manufacturing cost / unit (¥)</label><input type="number" id="cpUnit" value="420"></div>
+            <div><label class="fld">Packaging / unit (¥)</label><input type="number" id="cpPack" value="80"></div>
+            <div><label class="fld">Shipping to Japan / unit (¥)</label><input type="number" id="cpShip" value="60"></div>
+            <div><label class="fld">Customs &amp; import (%)</label><input type="number" id="cpCustoms" value="8"></div>
+            <div><label class="fld">Fulfillment / unit (¥)</label><input type="number" id="cpFul" value="130"></div>
+            <div><label class="fld">Platform fee (%)</label><input type="number" id="cpFee" value="10"></div>
+            <div><label class="fld">Ads / unit (¥)</label><input type="number" id="cpAd" value="150"></div>
+            <div><label class="fld">Monthly fixed costs (¥)</label><input type="number" id="cpFixed" value="200000"></div>
+            <div><label class="fld">Monthly sales target (units)</label><input type="number" id="cpUnits" value="1500"></div>
+          </div>
+          <div class="sim-result">
+            <div><span class="sim-label">Landed cost / unit</span><span class="sim-val" id="cpLanded">—</span></div>
+            <div><span class="sim-label">Total cost / unit</span><span class="sim-val" id="cpTotal">—</span></div>
+            <div><span class="sim-label">Gross profit / unit</span><span class="sim-val" id="cpProfit">—</span></div>
+            <div><span class="sim-label">Margin</span><span class="sim-val" id="cpMargin">—</span></div>
+            <div><span class="sim-label">COGS ratio</span><span class="sim-val" id="cpCogs">—</span></div>
+            <div><span class="sim-label">Monthly profit (after fixed)</span><span class="sim-val" id="cpMonthly">—</span></div>
+            <div><span class="sim-label">Break-even (units / mo)</span><span class="sim-val" id="cpBreakeven">—</span></div>
+          </div>
+          <div class="fd-actions">
+            <button class="btn-save" id="cpSaveBtn" style="height:38px">💾 Save to product list</button>
+            <button class="btn-clear" id="cpResetBtn" style="height:38px">Reset form</button>
+          </div>
+          <p class="note" style="margin-top:10px">Simplified pre-tax estimate: customs is applied to manufacturing + packaging + shipping; platform fee is applied to the retail price. Exchange rates, returns, and taxes are not included.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt">
+      <h3>📦 Managed Products</h3>
+      <p class="page-sub" style="margin-bottom:12px">Every product you save is tracked here with its cost structure and monthly outlook (stored in this browser via localStorage)</p>
+      <div class="grid g4" id="cpPortfolio"></div>
+      <div class="cost-table-wrap">
+        <table class="cost-table" id="cpTable"></table>
+      </div>
+      <div class="fd-actions" style="margin-top:14px">
+        <button class="btn-clear" id="cpCsvBtn">⬇️ Download CSV</button>
+      </div>
+    </div>
+  </section>
+
   <section class="panel" id="panel-marketing">
     <h2 class="page-title">Marketing Plan</h2>
     <p class="page-sub">The standard playbook for the Japanese market, from pre-launch test marketing to post-launch growth (demo view)</p>
@@ -1902,6 +2030,300 @@ document.getElementById("genBtn").addEventListener("click", async () => {
   box.classList.add("show");
   btn.disabled = false;
 });
+</script>
+
+<script id="factory-cost-hub">
+// ================= Factories & Costs hub =================
+(function () {
+  var COST_STORAGE = "k2j_cost_products";
+
+  // --- Factory directory (sample data) ---
+  var FACTORY_DIR = [
+    { emoji: "🧴", name: "Hansol Cosmetics", region: "Gyeonggi-do", cat: "beauty", caps: "Skincare OEM/ODM — mists, serums, creams", moq: 3000, lead: 45, certs: ["ISO22716", "CGMP"], cost: [350, 520], rating: 4.8 },
+    { emoji: "💧", name: "Seoul Beauty Lab", region: "Seoul", cat: "beauty", caps: "Mist & spray filling, small-lot prototyping", moq: 5000, lead: 38, certs: ["ISO22716"], cost: [300, 460], rating: 4.6 },
+    { emoji: "🎨", name: "Jeju Naturals", region: "Jeju", cat: "beauty", caps: "Natural-ingredient cosmetics, clean beauty lines", moq: 5000, lead: 55, certs: ["ISO22716", "VEGAN"], cost: [420, 640], rating: 4.5 },
+    { emoji: "💄", name: "K-Color Cosmetic", region: "Incheon", cat: "beauty", caps: "Color cosmetics — lip, cushion, palette", moq: 8000, lead: 60, certs: ["CGMP"], cost: [380, 700], rating: 4.4 },
+    { emoji: "🍜", name: "K-Food Partners", region: "Chungcheong-do", cat: "food", caps: "Snack OEM, export documentation for Japan", moq: 10000, lead: 50, certs: ["HACCP", "FSSC22000"], cost: [120, 260], rating: 4.7 },
+    { emoji: "🥫", name: "Daehan Foods", region: "Gyeonggi-do", cat: "food", caps: "High-protein foods, retort & sauce lines", moq: 8000, lead: 42, certs: ["HACCP"], cost: [150, 320], rating: 4.5 },
+    { emoji: "🍙", name: "Busan Marine Foods", region: "Busan", cat: "food", caps: "Seaweed & seafood snacks, gim specialties", moq: 12000, lead: 48, certs: ["HACCP", "MSC"], cost: [90, 210], rating: 4.3 },
+    { emoji: "🔌", name: "Inno Electronics", region: "Incheon", cat: "living", caps: "Small appliances, USB devices, PSE experience", moq: 2000, lead: 65, certs: ["PSE", "ISO9001"], cost: [800, 1500], rating: 4.6 },
+    { emoji: "🛋", name: "Hue Living Tech", region: "Seoul", cat: "living", caps: "Design appliances, shared molds to cut initial cost", moq: 3000, lead: 58, certs: ["ISO9001"], cost: [650, 1200], rating: 4.4 },
+    { emoji: "🧺", name: "Gwangju Homeware", region: "Gwangju", cat: "living", caps: "Household goods, silicone & plastic molding", moq: 5000, lead: 40, certs: ["ISO9001", "BSCI"], cost: [200, 450], rating: 4.2 },
+  ];
+  var CAT_LABEL = { beauty: "Beauty", food: "Food", living: "Home & Appliances" };
+
+  var fdSearch = document.getElementById("fdSearch");
+  var fdSort = document.getElementById("fdSort");
+  var fdChips = document.getElementById("fdChips");
+  var fdList = document.getElementById("fdList");
+  var fdCat = "all";
+  var linkedFactory = null;
+
+  function yen(n) { return "¥" + Math.round(n).toLocaleString("en-US"); }
+
+  function renderDirectory() {
+    var q = (fdSearch.value || "").toLowerCase();
+    var rows = FACTORY_DIR.filter(function (f) {
+      if (fdCat !== "all" && f.cat !== fdCat) return false;
+      if (!q) return true;
+      return (f.name + " " + f.region + " " + f.caps + " " + f.certs.join(" ")).toLowerCase().indexOf(q) !== -1;
+    });
+    var sort = fdSort.value;
+    rows.sort(function (a, b) {
+      if (sort === "moq") return a.moq - b.moq;
+      if (sort === "lead") return a.lead - b.lead;
+      if (sort === "cost") return a.cost[0] - b.cost[0];
+      return b.rating - a.rating;
+    });
+    if (!rows.length) {
+      fdList.innerHTML = '<p class="fd-empty">No factories match your search. Try different keywords or another category.</p>';
+      return;
+    }
+    fdList.innerHTML = rows.map(function (f) {
+      var idx = FACTORY_DIR.indexOf(f);
+      return '<div class="factory">' +
+        '<div class="f-logo">' + f.emoji + '</div>' +
+        '<div style="flex:1;min-width:180px">' +
+          '<div class="f-name">' + escapeHtml(f.name) + ' <span style="font-weight:600;color:var(--sub)">(' + escapeHtml(f.region) + ')</span></div>' +
+          '<div class="f-meta">' + escapeHtml(f.caps) + '</div>' +
+          '<div class="fd-badges">' +
+            '<span class="fd-badge">' + CAT_LABEL[f.cat] + '</span>' +
+            '<span class="fd-badge">MOQ ' + f.moq.toLocaleString("en-US") + '</span>' +
+            '<span class="fd-badge">Lead ' + f.lead + ' days</span>' +
+            '<span class="fd-badge">' + yen(f.cost[0]) + '–' + yen(f.cost[1]) + ' / unit</span>' +
+            f.certs.map(function (c) { return '<span class="fd-badge cert">' + escapeHtml(c) + '</span>'; }).join("") +
+          '</div>' +
+        '</div>' +
+        '<span class="match">★ ' + f.rating.toFixed(1) + '</span>' +
+        '<div class="fd-actions">' +
+          '<button class="rfq-btn" data-fdi="' + idx + '">📋 Copy RFQ email</button>' +
+          '<button class="fd-use-btn" data-fdu="' + idx + '">→ Use in cost planner</button>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  }
+
+  function buildDirRfq(f) {
+    return [
+      "Subject: RFQ — OEM production inquiry (via K2J Bridge)",
+      "",
+      "Dear " + f.name + " team,",
+      "",
+      "We found your company through the K2J Bridge platform and would like to request a quotation.",
+      "",
+      "- Category: " + CAT_LABEL[f.cat],
+      "- Assumed unit cost range: " + yen(f.cost[0]) + "–" + yen(f.cost[1]),
+      "- Reference MOQ: " + f.moq.toLocaleString("en-US") + " units",
+      "",
+      "We would appreciate it if you could share the following:",
+      "- Minimum order quantity (MOQ) and unit price",
+      "- Availability, cost, and lead time for sample production",
+      "- Mass production lead time",
+      "",
+      "Thank you very much for your time. We look forward to hearing from you.",
+      "",
+      "Best regards,",
+    ].join("\n");
+  }
+
+  fdSearch.addEventListener("input", renderDirectory);
+  fdSort.addEventListener("change", renderDirectory);
+  fdChips.addEventListener("click", function (e) {
+    var chip = e.target.closest(".fd-chip");
+    if (!chip) return;
+    fdChips.querySelectorAll(".fd-chip").forEach(function (c) { c.classList.remove("active"); });
+    chip.classList.add("active");
+    fdCat = chip.dataset.fcat;
+    renderDirectory();
+  });
+  fdList.addEventListener("click", function (e) {
+    var rfq = e.target.closest(".rfq-btn");
+    if (rfq) {
+      var f = FACTORY_DIR[parseInt(rfq.dataset.fdi, 10)];
+      navigator.clipboard.writeText(buildDirRfq(f)).then(function () {
+        rfq.textContent = "✅ Copied";
+        setTimeout(function () { rfq.textContent = "📋 Copy RFQ email"; }, 2200);
+      }).catch(function () {
+        window.prompt("Copy the RFQ text below:", buildDirRfq(f));
+      });
+      return;
+    }
+    var use = e.target.closest(".fd-use-btn");
+    if (use) {
+      var uf = FACTORY_DIR[parseInt(use.dataset.fdu, 10)];
+      linkedFactory = uf.name;
+      document.getElementById("cpUnit").value = Math.round((uf.cost[0] + uf.cost[1]) / 2);
+      document.getElementById("cpLinked").innerHTML = "Linked factory: <b>" + escapeHtml(uf.name) + "</b> — unit cost prefilled from its range (" + yen(uf.cost[0]) + "–" + yen(uf.cost[1]) + ")";
+      updatePlanner();
+      document.getElementById("cpName").focus();
+    }
+  });
+
+  // --- Cost planner ---
+  var FIELDS = ["cpRetail", "cpUnit", "cpPack", "cpShip", "cpCustoms", "cpFul", "cpFee", "cpAd", "cpFixed", "cpUnits"];
+  function num(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  function computeCosts(v) {
+    var landedBase = v.unit + v.pack + v.ship;
+    var landed = landedBase * (1 + v.customs / 100);
+    var platformFee = v.retail * (v.fee / 100);
+    var totalUnit = landed + v.ful + platformFee + v.ad;
+    var profitUnit = v.retail - totalUnit;
+    var margin = v.retail > 0 ? profitUnit / v.retail * 100 : 0;
+    var cogs = v.retail > 0 ? landed / v.retail * 100 : 0;
+    var monthly = profitUnit * v.units - v.fixed;
+    var breakeven = profitUnit > 0 ? Math.ceil(v.fixed / profitUnit) : Infinity;
+    return { landed: landed, totalUnit: totalUnit, profitUnit: profitUnit, margin: margin, cogs: cogs, monthly: monthly, breakeven: breakeven };
+  }
+
+  function readForm() {
+    return {
+      name: document.getElementById("cpName").value.trim(),
+      factory: linkedFactory,
+      retail: num("cpRetail"), unit: num("cpUnit"), pack: num("cpPack"), ship: num("cpShip"),
+      customs: num("cpCustoms"), ful: num("cpFul"), fee: num("cpFee"), ad: num("cpAd"),
+      fixed: num("cpFixed"), units: num("cpUnits"),
+    };
+  }
+
+  function setVal(id, text, cls) {
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.className = "sim-val" + (cls ? " " + cls : "");
+  }
+
+  function updatePlanner() {
+    var v = readForm();
+    var c = computeCosts(v);
+    setVal("cpLanded", yen(c.landed));
+    setVal("cpTotal", yen(c.totalUnit));
+    setVal("cpProfit", yen(c.profitUnit), c.profitUnit >= 0 ? "up" : "down");
+    setVal("cpMargin", c.margin.toFixed(1) + "%", c.margin >= 30 ? "up" : (c.margin >= 15 ? "" : "down"));
+    setVal("cpCogs", c.cogs.toFixed(1) + "%", c.cogs <= 35 ? "up" : (c.cogs <= 50 ? "" : "down"));
+    setVal("cpMonthly", yen(c.monthly), c.monthly >= 0 ? "up" : "down");
+    setVal("cpBreakeven", c.breakeven === Infinity ? "—" : c.breakeven.toLocaleString("en-US") + " units");
+  }
+  FIELDS.forEach(function (id) { document.getElementById(id).addEventListener("input", updatePlanner); });
+
+  // --- Managed products (localStorage) ---
+  function loadProducts() {
+    try { return JSON.parse(localStorage.getItem(COST_STORAGE) || "[]"); } catch (e) { return []; }
+  }
+  function saveProducts(list) { localStorage.setItem(COST_STORAGE, JSON.stringify(list)); }
+
+  function marginPill(m) {
+    if (m >= 30) return '<span class="margin-pill good">' + m.toFixed(1) + '%</span>';
+    if (m >= 15) return '<span class="margin-pill ok">' + m.toFixed(1) + '%</span>';
+    return '<span class="margin-pill bad">' + m.toFixed(1) + '%</span>';
+  }
+
+  function renderProducts() {
+    var list = loadProducts();
+    var table = document.getElementById("cpTable");
+    var portfolio = document.getElementById("cpPortfolio");
+    if (!list.length) {
+      portfolio.innerHTML = "";
+      table.innerHTML = '<tr><td class="fd-empty" style="border:none">No products saved yet — fill in the cost planner above and press "Save to product list".</td></tr>';
+      return;
+    }
+    var totalRev = 0, totalProfit = 0, marginSum = 0;
+    var rows = list.map(function (p, i) {
+      var c = computeCosts(p);
+      totalRev += p.retail * p.units;
+      totalProfit += c.monthly;
+      marginSum += c.margin;
+      return '<tr>' +
+        '<td>' + escapeHtml(p.name || "(unnamed)") + (p.factory ? '<br><span style="font-weight:400;font-size:11px;color:var(--sub)">🏭 ' + escapeHtml(p.factory) + '</span>' : '') + '</td>' +
+        '<td class="num">' + yen(p.retail) + '</td>' +
+        '<td class="num">' + yen(c.landed) + '</td>' +
+        '<td class="num">' + yen(c.totalUnit) + '</td>' +
+        '<td class="num ' + (c.profitUnit >= 0 ? "pos" : "neg") + '">' + yen(c.profitUnit) + '</td>' +
+        '<td class="num">' + marginPill(c.margin) + '</td>' +
+        '<td class="num">' + p.units.toLocaleString("en-US") + '</td>' +
+        '<td class="num ' + (c.monthly >= 0 ? "pos" : "neg") + '">' + yen(c.monthly) + '</td>' +
+        '<td><div style="display:flex;gap:6px">' +
+          '<button class="ct-mini-btn" data-edit="' + i + '">✏️ Edit</button>' +
+          '<button class="ct-mini-btn danger" data-del="' + i + '">🗑 Delete</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join("");
+    table.innerHTML =
+      '<tr><th>Product</th><th class="num">Retail</th><th class="num">Landed / unit</th><th class="num">Total cost / unit</th><th class="num">Profit / unit</th><th class="num">Margin</th><th class="num">Units / mo</th><th class="num">Monthly profit</th><th></th></tr>' + rows;
+    portfolio.innerHTML =
+      '<div class="card kpi"><div class="k-label">Products managed</div><div class="k-value">' + list.length + '</div></div>' +
+      '<div class="card kpi"><div class="k-label">Monthly revenue (target)</div><div class="k-value" style="font-size:21px">' + yen(totalRev) + '</div></div>' +
+      '<div class="card kpi"><div class="k-label">Monthly profit (after fixed)</div><div class="k-value" style="font-size:21px;color:' + (totalProfit >= 0 ? "var(--mint)" : "var(--coral)") + '">' + yen(totalProfit) + '</div></div>' +
+      '<div class="card kpi"><div class="k-label">Average margin</div><div class="k-value" style="font-size:21px">' + (marginSum / list.length).toFixed(1) + '%</div></div>';
+  }
+
+  document.getElementById("cpSaveBtn").addEventListener("click", function () {
+    var v = readForm();
+    if (!v.name) { document.getElementById("cpName").focus(); document.getElementById("cpName").placeholder = "⚠️ Enter a product name to save"; return; }
+    var list = loadProducts();
+    var existing = list.findIndex(function (p) { return p.name === v.name; });
+    if (existing !== -1) list[existing] = v; else list.push(v);
+    saveProducts(list);
+    renderProducts();
+    var btn = this;
+    btn.textContent = "✅ Saved";
+    setTimeout(function () { btn.textContent = "💾 Save to product list"; }, 1800);
+  });
+
+  document.getElementById("cpResetBtn").addEventListener("click", function () {
+    document.getElementById("cpName").value = "";
+    linkedFactory = null;
+    document.getElementById("cpLinked").innerHTML = "Linked factory: <b>none</b> — pick one from the directory to prefill the unit cost";
+    var defaults = { cpRetail: 1980, cpUnit: 420, cpPack: 80, cpShip: 60, cpCustoms: 8, cpFul: 130, cpFee: 10, cpAd: 150, cpFixed: 200000, cpUnits: 1500 };
+    Object.keys(defaults).forEach(function (id) { document.getElementById(id).value = defaults[id]; });
+    updatePlanner();
+  });
+
+  document.getElementById("cpTable").addEventListener("click", function (e) {
+    var del = e.target.closest("[data-del]");
+    if (del) {
+      var list = loadProducts();
+      list.splice(parseInt(del.dataset.del, 10), 1);
+      saveProducts(list);
+      renderProducts();
+      return;
+    }
+    var edit = e.target.closest("[data-edit]");
+    if (edit) {
+      var p = loadProducts()[parseInt(edit.dataset.edit, 10)];
+      if (!p) return;
+      document.getElementById("cpName").value = p.name;
+      linkedFactory = p.factory || null;
+      document.getElementById("cpLinked").innerHTML = p.factory
+        ? "Linked factory: <b>" + escapeHtml(p.factory) + "</b>"
+        : "Linked factory: <b>none</b> — pick one from the directory to prefill the unit cost";
+      var map = { cpRetail: "retail", cpUnit: "unit", cpPack: "pack", cpShip: "ship", cpCustoms: "customs", cpFul: "ful", cpFee: "fee", cpAd: "ad", cpFixed: "fixed", cpUnits: "units" };
+      Object.keys(map).forEach(function (id) { document.getElementById(id).value = p[map[id]]; });
+      updatePlanner();
+      document.getElementById("panel-factory").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+
+  document.getElementById("cpCsvBtn").addEventListener("click", function () {
+    var list = loadProducts();
+    if (!list.length) return;
+    var header = ["Product", "Factory", "Retail (JPY)", "Landed cost/unit", "Total cost/unit", "Profit/unit", "Margin %", "Units/mo", "Monthly profit (after fixed)"];
+    var lines = [header.join(",")].concat(list.map(function (p) {
+      var c = computeCosts(p);
+      var cells = [p.name, p.factory || "", p.retail, Math.round(c.landed), Math.round(c.totalUnit), Math.round(c.profitUnit), c.margin.toFixed(1), p.units, Math.round(c.monthly)];
+      return cells.map(function (x) { return '"' + String(x).replace(/"/g, '""') + '"'; }).join(",");
+    }));
+    var blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "k2j-cost-management.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  renderDirectory();
+  updatePlanner();
+  renderProducts();
+})();
 </script>
 
 </body>
