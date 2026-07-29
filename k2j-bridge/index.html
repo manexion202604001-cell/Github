@@ -269,6 +269,12 @@ header .nav {
 }
 header .nav-links { display: flex; gap: 22px; }
 header .btn-primary { padding: 10px 22px !important; }
+html, body { overflow-x: clip; }
+@media (max-width: 900px) {
+  header .nav-links { display: none; }
+  header .nav { gap: 14px; padding: 7px 8px 7px 20px; }
+  header .btn-primary { padding: 9px 18px !important; font-size: 13px; }
+}
 .hero h1 {
   background: linear-gradient(100deg, #ffffff 25%, #c9d2ff 55%, #9fb0ff 80%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
@@ -384,9 +390,14 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .inf-go:hover { transform: translateY(-3px) scale(1.05); }
 .inf-hint { position: absolute; top: 22px; right: 30px; font-size: 11px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
 @media (max-width: 700px) {
-  .infmenu { height: 520px; }
+  /* モバイルはキャプションをステージの下に出す(写真を覆わない) */
+  .infmenu { height: auto; }
+  .inf-stage { position: relative; inset: auto; height: 400px; }
   .inf-tile { width: 180px; height: 230px; left: -90px; top: -115px; }
-  .inf-caption { left: 20px; bottom: 20px; max-width: 70%; }
+  .inf-caption { position: static; max-width: none; margin-top: 14px; padding: 18px 88px 18px 20px; }
+  .inf-caption h3 { font-size: 19px; }
+  .inf-go { right: 14px; bottom: 14px; width: 48px; height: 48px; font-size: 19px; }
+  .inf-hint { top: 14px; right: 16px; }
 }
 /* ===== Stepper (Features) ===== */
 .stepper {
@@ -406,7 +417,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
 .st-line { width: 54px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.1); transition: background .3s; }
 .st-line.done { background: rgba(45,212,168,.55); }
 .stepper-viewport { overflow: hidden; transition: height .45s cubic-bezier(.4, 0, .2, 1); }
-.st-panels { display: flex; transition: transform .5s cubic-bezier(.4, 0, .2, 1); }
+.st-panels { display: flex; align-items: flex-start; transition: transform .5s cubic-bezier(.4, 0, .2, 1); }
 .st-panel { width: 100%; flex: 0 0 100%; padding: 20px 6px 6px; display: flex; gap: 22px; align-items: flex-start; }
 .st-media { flex: 0 0 128px; padding-top: 8px; }
 .st-media img { width: 100%; filter: drop-shadow(0 0 16px rgba(160,170,255,.2)); }
@@ -483,12 +494,12 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   .bounce-card.settled { transition: none; }
 }
 @media (max-width: 700px) {
-  .bounce-stack { height: 240px; }
-  .bounce-card { width: 150px; height: 196px; margin-left: -75px; }
-  .bc-1 { --tf: rotate(6deg) translateX(-105px); }
-  .bc-2 { --tf: rotate(-3deg) translateX(-36px); }
-  .bc-3 { --tf: rotate(3deg) translateX(36px); }
-  .bc-4 { --tf: rotate(-6deg) translateX(105px); }
+  /* モバイルはファン(重なり)をやめて2x2グリッドに整列 — タイトルが隠れないように */
+  .bounce-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; height: auto; }
+  .bounce-card { position: relative; left: auto; top: auto; margin-left: 0; width: 100%; height: 200px; }
+  .bc-1, .bc-2, .bc-3, .bc-4 { --tf: translateX(0); }
+  .bc-title { font-size: 13.5px; }
+  .bc-label { top: 12px; left: 14px; }
 }
 .flow-texts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; margin-top: 34px; }
 .flow-texts h3 { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
@@ -868,7 +879,7 @@ body.reveal-init .reveal.in { opacity: 1; transform: none; }
   var COPIES = 3;
   var N = ITEMS.length * COPIES;
   var STEP = 360 / N;
-  var RADIUS = 480;
+  var RADIUS = window.matchMedia("(max-width: 700px)").matches ? 310 : 480;
   var tiles = [];
   for (var i = 0; i < N; i++) {
     var t = document.createElement("div");

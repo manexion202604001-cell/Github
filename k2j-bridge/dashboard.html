@@ -477,6 +477,16 @@ body {
   filter: invert(.72); opacity: .8;
 }
 .tab.active .tab-ico { filter: none; opacity: 1; }
+.tabs { scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+@media (max-width: 700px) {
+  .topbar { gap: 10px; padding: 0 14px; }
+  .demo-pill { display: none; }
+  .back-link { white-space: nowrap; font-size: 12px; }
+  .tabs { max-width: calc(100% - 16px); }
+  .tab { padding: 8px 13px !important; font-size: 13px; gap: 6px; }
+  .tab-ico { width: 24px; height: 18px; }
+}
 .card {
   border-radius: 18px !important;
   background: rgba(255,255,255,.78) !important;
@@ -1036,6 +1046,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
     tab.classList.add("active");
+    tab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
     if (tab.dataset.panel === "design") initFeedOnce();
   });
