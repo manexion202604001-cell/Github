@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アプリダッシュボード — Claude Code開発プロジェクト</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6;
+    --series-1-soft:  #cde2fb;
+    --good:           #0ca30c;
+    --accent-wash:    rgba(42,120,214,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-1-soft:  #184f95;
+      --good:           #0ca30c;
+      --accent-wash:    rgba(57,135,229,0.12);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  /* ---- header ---- */
+  header h1 { font-size: 1.65rem; font-weight: 700; letter-spacing: 0.01em; }
+  header .sub { color: var(--text-secondary); margin-top: 6px; font-size: 0.95rem; }
+  header .repo-link { margin-top: 10px; font-size: 0.85rem; }
+  header .repo-link a { color: var(--series-1); text-decoration: none; }
+  header .repo-link a:hover { text-decoration: underline; }
+
+  /* ---- KPI tiles ---- */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 28px 0 36px;
+  }
+  .kpi {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .kpi .label { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.02em; }
+  .kpi .value { font-size: 1.9rem; font-weight: 700; margin-top: 2px; line-height: 1.2; }
+  .kpi .note  { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+
+  h2 { font-size: 1.15rem; font-weight: 700; margin: 40px 0 14px; }
+  h2 .tag { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-left: 8px; }
+
+  /* ---- app cards ---- */
+  .apps { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .app {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .app .head { display: flex; align-items: center; gap: 10px; }
+  .app .emoji { font-size: 1.6rem; }
+  .app .name { font-size: 1.08rem; font-weight: 700; }
+  .app .tagline { font-size: 0.82rem; color: var(--text-secondary); margin-top: 1px; }
+  .app .desc { font-size: 0.88rem; color: var(--text-secondary); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 0.72rem;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--accent-wash);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .app .stats {
+    display: flex; gap: 18px; padding-top: 10px; margin-top: auto;
+    border-top: 1px solid var(--grid);
+    font-size: 0.78rem; color: var(--text-muted);
+  }
+  .app .stats b { color: var(--text-primary); font-weight: 600; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .links a {
+    font-size: 0.8rem; font-weight: 600;
+    color: var(--series-1); text-decoration: none;
+    padding: 5px 12px; border: 1px solid var(--border); border-radius: 8px;
+  }
+  .links a:hover { background: var(--accent-wash); }
+  .links a.primary { background: var(--series-1); color: #fff; border-color: var(--series-1); }
+  .links a.primary:hover { opacity: 0.9; }
+
+  /* ---- chart ---- */
+  .panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .panel .panel-title { font-size: 0.95rem; font-weight: 700; }
+  .panel .panel-sub { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px; }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 52px; align-items: center; gap: 10px; margin: 10px 0; }
+  .bar-row .bar-label { font-size: 0.83rem; color: var(--text-secondary); text-align: right; }
+  .bar-track { position: relative; height: 22px; }
+  .bar-track .baseline-rule { position: absolute; left: 0; top: -5px; bottom: -5px; width: 1px; background: var(--baseline); }
+  .bar {
+    position: absolute; left: 0; top: 0; height: 22px;
+    background: var(--series-1);
+    border-radius: 0 4px 4px 0;
+    min-width: 3px;
+    transition: opacity 0.15s;
+    cursor: default;
+  }
+  .bar:hover { opacity: 0.82; }
+  .bar-row .bar-value { font-size: 0.83rem; font-variant-numeric: tabular-nums; color: var(--text-primary); font-weight: 600; }
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 10;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    font-size: 0.78rem; color: var(--text-secondary);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    opacity: 0; transition: opacity 0.1s;
+    max-width: 260px;
+  }
+  .tooltip b { color: var(--text-primary); display: block; margin-bottom: 2px; }
+  .tooltip.show { opacity: 1; }
+
+  /* ---- timeline ---- */
+  .timeline { list-style: none; }
+  .timeline li {
+    display: grid; grid-template-columns: 92px 14px 1fr; gap: 12px;
+    padding: 0 0 18px;
+  }
+  .timeline .date { font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: right; padding-top: 2px; }
+  .timeline .dotcol { position: relative; }
+  .timeline .dotcol::before {
+    content: ""; position: absolute; left: 5px; top: 14px; bottom: -6px; width: 2px; background: var(--grid);
+  }
+  .timeline li:last-child .dotcol::before { display: none; }
+  .timeline .dot {
+    position: absolute; left: 0; top: 6px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--series-1); border: 2px solid var(--surface-1);
+  }
+  .timeline .event b { font-size: 0.9rem; }
+  .timeline .event p { font-size: 0.82rem; color: var(--text-secondary); }
+
+  footer { margin-top: 48px; font-size: 0.78rem; color: var(--text-muted); border-top: 1px solid var(--grid); padding-top: 16px; }
+
+  @media (max-width: 560px) {
+    .bar-row { grid-template-columns: 96px 1fr 44px; }
+    .timeline li { grid-template-columns: 76px 14px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>🚀 アプリダッシュボード</h1>
+    <div class="sub">Claude Codeで開発した3つのアプリの概要・構成・開発状況をまとめたポータルページです。</div>
+    <div class="repo-link">📦 リポジトリ: <a href="https://github.com/manexion202604001-cell/Github" target="_blank" rel="noopener">manexion202604001-cell/Github</a></div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">アプリ数</div>
+      <div class="value">3</div>
+      <div class="note">すべてビルド不要の静的HTML</div>
+    </div>
+    <div class="kpi">
+      <div class="label">HTMLページ数</div>
+      <div class="value">8</div>
+      <div class="note">合計 約7,300行</div>
+    </div>
+    <div class="kpi">
+      <div class="label">総コミット数</div>
+      <div class="value">56</div>
+      <div class="note">2026-04-21 〜 2026-07-29</div>
+    </div>
+    <div class="kpi">
+      <div class="label">最終更新</div>
+      <div class="value" style="font-size:1.3rem; padding-top:8px;">2026-07-29</div>
+      <div class="note">K2J Bridge 工場・原価管理タブ追加</div>
+    </div>
+  </div>
+
+  <h2>📱 アプリ一覧</h2>
+  <div class="apps">
+
+    <div class="app">
+      <div class="head">
+        <span class="emoji">📒</span>
+        <div>
+          <div class="name">顧客台帳</div>
+          <div class="tagline">紹介者・報酬管理CRM</div>
+        </div>
+      </div>
+      <div class="desc">社内3名で共有する顧客管理システム。顧客ごとに複数の紹介者を登録し、%配分から報酬額を自動計算。タイムスタンプ付きメモ、紹介者別の報酬合計サマリーに対応し、編集はリアルタイムで全員の画面に反映されます。</div>
+      <div class="chips">
+        <span class="chip">Supabase</span>
+        <span class="chip">リアルタイム同期</span>
+        <span class="chip">パスコード保護</span>
+        <span class="chip">単一HTML</span>
+      </div>
+      <div class="links">
+        <a class="primary" href="index.html">アプリを開く</a>
+        <a href="README.md">README</a>
+      </div>
+      <div class="stats">
+        <span>コミット <b>5</b></span>
+        <span>ページ <b>1</b></span>
+        <span>最終更新 <b>07-10</b></span>
+      </div>
+    </div>
+
+    <div class="app">
+      <div class="head">
+        <span class="emoji">🌉</span>
+        <div>
+          <div class="name">K2J Bridge</div>
+          <div class="tagline">韓国→日本 商品開発支援プラットフォーム</div>
+        </div>
+      </div>
+      <div class="desc">韓国企業の日本市場向け商品開発を支援。日本ECモールのトレンド分析、AI商品企画(BYOKで実AI生成・商品イメージ画像3案)、デザインインスピレーションフィード、工場ディレクトリ+原価プランナー、ローンチロードマップの5タブ構成デモダッシュボード付き。UIは英語版。</div>
+      <div class="chips">
+        <span class="chip">LP + デモダッシュボード</span>
+        <span class="chip">BYOK AI生成</span>
+        <span class="chip">原価シミュレーター</span>
+        <span class="chip">モバイル対応</span>
+      </div>
+      <div class="links">
+        <a class="primary" href="k2j-bridge/index.html">ランディングページ</a>
+        <a href="k2j-bridge/dashboard.html">デモダッシュボード</a>
+        <a href="k2j-bridge/README.md">README</a>
+      </div>
+      <div class="stats">
+        <span>コミット <b>42</b></span>
+        <span>ページ <b>2</b></span>
+        <span>最終更新 <b>07-29</b></span>
+      </div>
+    </div>
+
+    <div class="app">
+      <div class="head">
+        <span class="emoji">💡</span>
+        <div>
+          <div class="name">PatentBridge</div>
+          <div class="tagline">特許×企業マッチングプラットフォーム</div>
+        </div>
+      </div>
+      <div class="desc">難解な特許を「AI特許翻訳」で誰にでも分かる解説に変換し、用途展開エンジンで異業種の活用シナリオを生成、世界の企業と適合度スコア順でマッチング。Supabase連携のPoC版アプリ、大学・研究機関(TLO)向けページ、提案スライド資料まで揃った6ページ構成。</div>
+      <div class="chips">
+        <span class="chip">PoC版アプリ(Supabase)</span>
+        <span class="chip">AI特許翻訳</span>
+        <span class="chip">大学向けページ</span>
+        <span class="chip">提案スライド12枚</span>
+      </div>
+      <div class="links">
+        <a class="primary" href="patent-match/index.html">ランディングページ</a>
+        <a href="patent-match/app.html">PoCアプリ</a>
+        <a href="patent-match/dashboard.html">デモ</a>
+        <a href="patent-match/universities.html">大学向け</a>
+        <a href="patent-match/proposal.html">提案資料</a>
+      </div>
+      <div class="stats">
+        <span>コミット <b>1</b></span>
+        <span>ページ <b>5</b></span>
+        <span>最終更新 <b>07-16</b></span>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>📊 開発アクティビティ</h2>
+  <div class="panel">
+    <div class="panel-title">アプリ別コミット数</div>
+    <div class="panel-sub">全56コミットの内訳(2026-04-21 〜 2026-07-29)</div>
+    <div id="bars"></div>
+  </div>
+
+  <h2>🗓 開発タイムライン</h2>
+  <div class="panel">
+    <ul class="timeline">
+      <li>
+        <div class="date">2026-04-21</div>
+        <div class="dotcol"><span class="dot"></span></div>
+        <div class="event"><b>リポジトリ作成</b><p>初期コミット</p></div>
+      </li>
+      <li>
+        <div class="date">2026-07-10</div>
+        <div class="dotcol"><span class="dot"></span></div>
+        <div class="event"><b>📒 顧客台帳 リリース</b><p>紹介者・報酬管理CRM。Supabase接続、GitHub Pagesデプロイ、モバイルUI改善まで同日に完了。</p></div>
+      </li>
+      <li>
+        <div class="date">2026-07-15</div>
+        <div class="dotcol"><span class="dot"></span></div>
+        <div class="event"><b>🌉 K2J Bridge 追加</b><p>ランディングページ+5タブのデモダッシュボードを公開。以降、AI商品企画・画像生成・原価プランナーなどを継続的に拡張。</p></div>
+      </li>
+      <li>
+        <div class="date">2026-07-16</div>
+        <div class="dotcol"><span class="dot"></span></div>
+        <div class="event"><b>💡 PatentBridge 追加</b><p>LP・デモ・PoCアプリ・大学向けページ・提案資料の6ページを一括公開。</p></div>
+      </li>
+      <li>
+        <div class="date">2026-07-27〜29</div>
+        <div class="dotcol"><span class="dot"></span></div>
+        <div class="event"><b>🎨 K2J Bridge 大規模UI刷新</b><p>オーロラ/ガラスのモダンテーマ、BorderGlow、BounceCards、Stepper、InfiniteMenu(3Dリング)、フルモバイル対応、工場・原価管理タブ追加など30以上のコミット。</p></div>
+      </li>
+    </ul>
+  </div>
+
+  <footer>
+    このダッシュボードを含む全アプリは <b>Claude Code</b> で開発されています。データは 2026-08-07 時点のgit履歴に基づきます。
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+  const data = [
+    { label: "K2J Bridge",  value: 42, note: "サイト追加からUI刷新・機能拡張まで。最も活発に開発。" },
+    { label: "共通・その他", value: 8,  note: "README、GitHub Pagesワークフロー等のリポジトリ共通変更。" },
+    { label: "顧客台帳",     value: 5,  note: "CRM本体・Supabase接続・モバイルUI改善。" },
+    { label: "PatentBridge", value: 1,  note: "6ページ一括で追加(1コミット)。" },
+  ];
+  const max = Math.max(...data.map(d => d.value));
+  const bars = document.getElementById("bars");
+  const tooltip = document.getElementById("tooltip");
+
+  data.forEach(d => {
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    const pct = (d.value / max * 100).toFixed(1);
+    row.innerHTML =
+      '<div class="bar-label">' + d.label + '</div>' +
+      '<div class="bar-track"><span class="baseline-rule"></span><div class="bar" style="width:' + pct + '%"></div></div>' +
+      '<div class="bar-value">' + d.value + '</div>';
+    const bar = row.querySelector(".bar");
+    bar.addEventListener("mousemove", e => {
+      tooltip.innerHTML = "<b>" + d.label + " — " + d.value + "コミット</b>" + d.note;
+      tooltip.classList.add("show");
+      const pad = 14;
+      let x = e.clientX + pad, y = e.clientY + pad;
+      const r = tooltip.getBoundingClientRect();
+      if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+      if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+      tooltip.style.left = x + "px";
+      tooltip.style.top = y + "px";
+    });
+    bar.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+    bars.appendChild(row);
+  });
+</script>
+</body>
+</html>
