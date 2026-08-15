@@ -4,23 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PatentBridge ご提案資料 — 大学・研究機関向け</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117;
-    --bg-2: #151c28;
-    --white: #ffffff;
-    --accent: #22b8a6;
-    --accent-2: #4f8ef7;
-    --amber: #f5b942;
-    --coral: #ff6b5d;
-    --violet: #8b7cf7;
-    --muted: #8b95a9;
-    --line: rgba(255,255,255,.1);
+    --bg: #16352D;
+    --bg-2: #1C3B32;
+    --white: #F3F0E8;
+    --accent: #A88B57;
+    --accent-2: #B9A67E;
+    --amber: #C7A96B;
+    --coral: #C08573;
+    --violet: #BAA88C;
+    --muted: #9BA69D;
+    --line: rgba(243,240,232,.16);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
-    background: #05070d; color: var(--white); line-height: 1.7;
+    background: #0F231D; color: var(--white); line-height: 1.7;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -30,7 +33,7 @@
     aspect-ratio: 16 / 9;
     background: var(--bg);
     border: 1px solid var(--line);
-    border-radius: 14px;
+    border-radius: 0;
     margin-bottom: 34px;
     padding: 54px 64px;
     position: relative;
@@ -53,18 +56,18 @@
 
   /* 表紙 */
   .cover { justify-content: center; background:
-    radial-gradient(700px 500px at 15% 10%, rgba(34,184,166,.16), transparent 60%),
-    radial-gradient(600px 450px at 85% 90%, rgba(139,124,247,.16), transparent 60%),
+    radial-gradient(700px 500px at 15% 10%, rgba(168,139,87,.16), transparent 60%),
+    radial-gradient(600px 450px at 85% 90%, rgba(186,168,140,.16), transparent 60%),
     var(--bg);
   }
   .cover .badge {
     display: inline-flex; width: fit-content; font-size: 13px; font-weight: 800; letter-spacing: .08em;
-    color: var(--violet); border: 1px solid rgba(139,124,247,.45); background: rgba(139,124,247,.1);
-    padding: 8px 18px; border-radius: 999px; margin-bottom: 30px;
+    color: var(--violet); border: 1px solid rgba(186,168,140,.45); background: rgba(186,168,140,.1);
+    padding: 8px 18px; border-radius: 0; margin-bottom: 30px;
   }
   .cover h1 { font-size: 46px; font-weight: 800; line-height: 1.4; }
   .cover h1 .grad {
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    background: var(--accent);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .cover .meta { margin-top: 34px; font-size: 14px; color: var(--muted); }
@@ -76,14 +79,14 @@
   .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
   .cols-4 { grid-template-columns: repeat(4, 1fr); }
   .box {
-    background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 22px;
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 0; padding: 22px;
   }
   .box .b-icon { font-size: 24px; margin-bottom: 10px; }
   .box h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
   .box p { font-size: 12.5px; color: #b9c2d4; }
-  .box.bad { background: rgba(255,107,93,.06); border-color: rgba(255,107,93,.3); }
-  .box.good { background: rgba(34,184,166,.06); border-color: rgba(34,184,166,.35); }
-  .box.violet { background: rgba(139,124,247,.07); border-color: rgba(139,124,247,.35); }
+  .box.bad { background: rgba(192,133,115,.06); border-color: rgba(192,133,115,.3); }
+  .box.good { background: rgba(168,139,87,.06); border-color: rgba(168,139,87,.35); }
+  .box.violet { background: rgba(186,168,140,.07); border-color: rgba(186,168,140,.35); }
 
   .bignum { font-size: 40px; font-weight: 800; line-height: 1.2; }
   .bignum.red { color: var(--coral); }
@@ -104,34 +107,34 @@
   th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); }
   th { font-size: 11.5px; letter-spacing: .06em; color: var(--muted); font-weight: 800; }
   td b { color: var(--accent); }
-  tr.hl td { background: rgba(34,184,166,.06); }
+  tr.hl td { background: rgba(168,139,87,.06); }
 
   .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  .tl-item { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 18px; position: relative; }
+  .tl-item { background: var(--bg-2); border: 1px solid var(--line); border-radius: 0; padding: 18px; position: relative; }
   .tl-item .tl-when { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--accent-2); margin-bottom: 8px; }
   .tl-item h4 { font-size: 14px; margin-bottom: 6px; }
   .tl-item p { font-size: 11.5px; color: var(--muted); }
 
   .quote-bar {
-    border-left: 4px solid var(--amber); background: rgba(245,185,66,.07);
-    padding: 16px 22px; border-radius: 0 12px 12px 0; font-size: 15px; color: #e6d9b8; margin-top: 22px;
+    border-left: 4px solid var(--amber); background: rgba(199,169,107,.07);
+    padding: 16px 22px; border-radius: 0 0; font-size: 15px; color: #e6d9b8; margin-top: 22px;
   }
 
   /* ===== 操作バー ===== */
   .toolbar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 10px; align-items: center; z-index: 50;
-    background: rgba(13,17,23,.9); backdrop-filter: blur(10px);
-    border: 1px solid var(--line); border-radius: 999px; padding: 9px 18px;
+    background: rgba(18,42,35,.9); backdrop-filter: blur(10px);
+    border: 1px solid var(--line); border-radius: 0; padding: 9px 18px;
     font-size: 12.5px; color: var(--muted);
   }
   .toolbar button {
     background: none; border: 1px solid rgba(255,255,255,.2); color: var(--white);
-    border-radius: 999px; padding: 6px 14px; font-family: inherit; font-size: 12.5px;
+    border-radius: 0; padding: 6px 14px; font-family: inherit; font-size: 12.5px;
     font-weight: 700; cursor: pointer;
   }
   .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
-  .toolbar a { color: var(--white); text-decoration: none; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 6px 14px; font-weight: 700; }
+  .toolbar a { color: var(--white); text-decoration: none; border: 1px solid rgba(255,255,255,.2); border-radius: 0; padding: 6px 14px; font-weight: 700; }
   .toolbar a:hover { border-color: var(--accent); color: var(--accent); }
 
   /* ===== 印刷(PDF化)対応 ===== */
@@ -157,6 +160,12 @@
     .cover h1 { font-size: 30px; }
     .slide h2 { font-size: 22px; }
   }
+
+  /* ===== Quiet Luxury overlay — Forest / Bone / Gold ===== */
+  body { font-family: "Inter", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif; }
+  h1, h2 { font-family: "Cormorant Garamond", "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif; font-weight: 600; letter-spacing: .01em; }
+  ::selection { background: #A88B57; color: #16352D; }
+  :focus-visible { outline: 1px solid #A88B57; outline-offset: 2px; }
 </style>
 </head>
 <body>
