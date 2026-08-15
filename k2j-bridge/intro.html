@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ja" data-lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K2J Bridge — Introduction Guide</title>
+<meta name="description" content="K2J Bridge introduction guide — who it is for, before/after, and how to use it. Available in English, Korean, and Japanese.">
+<style>
+  :root {
+    --ivory: #f7f5f0;
+    --ivory-2: #efece4;
+    --ink: #16171c;
+    --ink-soft: #3c3d45;
+    --muted: #7b7a72;
+    --hairline: #ddd8cc;
+    --bronze: #8a6d3f;
+    --bronze-soft: rgba(138, 109, 63, .09);
+    --serif: "Georgia", "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "Batang", "Nanum Myeongjo", "Noto Serif KR", "Noto Serif JP", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html[data-lang="ko"] body { word-break: keep-all; }
+  html, body { overflow-x: clip; }
+  body {
+    font-family: var(--sans);
+    background: var(--ivory);
+    color: var(--ink);
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 28px; }
+
+  /* i18n — .L blocks show only for the active language */
+  .L { display: none; }
+  html[data-lang="en"] .L[lang="en"],
+  html[data-lang="ko"] .L[lang="ko"],
+  html[data-lang="ja"] .L[lang="ja"] { display: contents; }
+
+  /* ===== Top bar ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(247, 245, 240, .88);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 62px; gap: 16px; }
+  .wordmark { font-family: var(--serif); font-size: 15px; letter-spacing: .32em; font-weight: 600; }
+  .wordmark small { letter-spacing: .22em; color: var(--muted); font-size: 10px; display: block; line-height: 1; margin-top: 2px; font-family: var(--sans); }
+  .top-right { display: flex; align-items: center; gap: 18px; }
+  .lang-switch { display: flex; border: 1px solid var(--hairline); border-radius: 999px; overflow: hidden; background: #fff; }
+  .lang-switch button {
+    border: none; background: transparent; cursor: pointer;
+    font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: .04em;
+    color: var(--muted); padding: 7px 14px; transition: color .15s, background .15s;
+  }
+  .lang-switch button.on { background: var(--ink); color: var(--ivory); }
+  .top-demo { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--ink); padding-bottom: 2px; white-space: nowrap; }
+  .top-demo:hover { color: var(--bronze); border-color: var(--bronze); }
+
+  /* ===== Cover ===== */
+  .cover { padding: 110px 0 100px; border-bottom: 1px solid var(--hairline); position: relative; }
+  .cover-meta {
+    display: flex; align-items: center; gap: 18px;
+    font-size: 11px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--muted);
+  }
+  .cover-meta::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+  .cover h1 {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(40px, 7vw, 78px); line-height: 1.18; letter-spacing: .01em;
+    margin-top: 44px; max-width: 15em; text-wrap: balance;
+  }
+  .cover h1 em { font-style: italic; color: var(--bronze); }
+  .cover .sub { margin-top: 34px; max-width: 42em; font-size: 15.5px; color: var(--ink-soft); }
+  .cover-foot { margin-top: 58px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .monogram {
+    width: 74px; height: 74px; border: 1px solid var(--ink); border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--serif); font-size: 17px; letter-spacing: .08em;
+  }
+  .cover-index { font-size: 12px; color: var(--muted); letter-spacing: .06em; line-height: 2.1; text-align: right; }
+  .cover-index b { color: var(--ink); font-weight: 600; margin-right: 10px; font-family: var(--serif); }
+
+  /* ===== Chapters ===== */
+  .chapter { padding: 104px 0; border-bottom: 1px solid var(--hairline); }
+  .ch-head { display: flex; align-items: baseline; gap: 26px; margin-bottom: 20px; }
+  .ch-num { font-family: var(--serif); font-size: clamp(52px, 7vw, 84px); line-height: 1; color: #d9d3c3; font-weight: 500; }
+  .ch-label { font-size: 11px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: var(--bronze); }
+  .ch-title { font-family: var(--serif); font-weight: 500; font-size: clamp(26px, 3.6vw, 40px); line-height: 1.3; letter-spacing: .01em; margin-top: 6px; text-wrap: balance; }
+  .ch-sub { margin-top: 18px; max-width: 40em; font-size: 15px; color: var(--ink-soft); }
+
+  /* ===== 01 Personas ===== */
+  .personas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 56px; border: 1px solid var(--hairline); background: #fff; }
+  .persona { padding: 38px 32px 34px; border-left: 1px solid var(--hairline); display: flex; flex-direction: column; }
+  .persona:first-child { border-left: none; }
+  .p-num { font-family: var(--serif); font-size: 14px; letter-spacing: .2em; color: var(--bronze); }
+  .p-role { font-family: var(--serif); font-size: 21px; font-weight: 600; line-height: 1.35; margin-top: 16px; }
+  .p-org { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+  .p-sit { margin-top: 18px; font-size: 13.5px; color: var(--ink-soft); flex: 1; }
+  .p-line { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--muted); }
+  .p-line b { color: var(--ink); font-weight: 600; }
+
+  .moments { margin-top: 44px; }
+  .moments-label { font-size: 11px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .moment-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .moment-chips span {
+    font-size: 13px; color: var(--ink-soft);
+    border: 1px solid var(--hairline); background: #fff;
+    padding: 9px 18px; border-radius: 999px;
+  }
+
+  /* ===== 02 Before / After ===== */
+  .ba { margin-top: 56px; border-top: 1px solid var(--ink); }
+  .ba-row {
+    display: grid; grid-template-columns: 168px 1fr 44px 1fr;
+    gap: 0 22px; align-items: start;
+    padding: 34px 0; border-bottom: 1px solid var(--hairline);
+  }
+  .ba-theme { font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.45; padding-top: 2px; }
+  .ba-theme small { display: block; font-family: var(--sans); font-size: 10.5px; font-weight: 700; letter-spacing: .22em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .ba-col .tag {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 3px; margin-bottom: 10px;
+  }
+  .ba-before .tag { color: var(--muted); border: 1px solid var(--hairline); background: #fff; }
+  .ba-after .tag { color: #fff; background: var(--bronze); }
+  .ba-before p { font-size: 13.5px; color: var(--muted); }
+  .ba-after p { font-size: 13.5px; color: var(--ink); }
+  .ba-arrow { display: grid; place-items: center; padding-top: 30px; color: var(--bronze); }
+  .ba-arrow svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== 03 How to use ===== */
+  .url-plate {
+    margin-top: 48px; background: var(--ink); color: var(--ivory);
+    border-radius: 6px; padding: 26px 30px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  }
+  .url-plate .lab { font-size: 11px; font-weight: 700; letter-spacing: .26em; text-transform: uppercase; color: #a8a396; }
+  .url-plate .url { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: clamp(12px, 1.8vw, 15px); letter-spacing: .01em; word-break: break-all; }
+  .url-plate a.go {
+    font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    border: 1px solid rgba(247,245,240,.4); border-radius: 999px; padding: 9px 20px; white-space: nowrap;
+    transition: background .15s, color .15s;
+  }
+  .url-plate a.go:hover { background: var(--ivory); color: var(--ink); }
+
+  .howto { margin-top: 26px; }
+  .ht-step { display: grid; grid-template-columns: 92px 1fr; gap: 26px; padding: 40px 0; border-bottom: 1px solid var(--hairline); }
+  .ht-step:last-child { border-bottom: none; }
+  .ht-no {
+    width: 58px; height: 58px; border: 1px solid var(--ink); border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--serif); font-size: 19px;
+  }
+  .ht-chip {
+    display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--bronze); background: var(--bronze-soft); border-radius: 3px; padding: 4px 10px; margin-bottom: 10px;
+  }
+  .ht-title { font-family: var(--serif); font-size: 22px; font-weight: 600; line-height: 1.4; }
+  .ht-tab { display: inline-block; font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; border: 1px solid var(--hairline); background: #fff; border-radius: 999px; padding: 3px 12px; vertical-align: 3px; margin-left: 10px; color: var(--ink-soft); }
+  .ht-body { margin-top: 12px; font-size: 14px; color: var(--ink-soft); max-width: 46em; }
+  .ht-get { margin-top: 16px; font-size: 13px; display: flex; gap: 10px; align-items: baseline; }
+  .ht-get b { font-size: 10.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--bronze); white-space: nowrap; }
+  .ht-get span { color: var(--ink); border-bottom: 1px solid var(--hairline); padding-bottom: 2px; }
+
+  /* ===== 04 Notes & start ===== */
+  .notes { margin-top: 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--hairline); background: #fff; }
+  .note { padding: 30px 32px; border-left: 1px solid var(--hairline); }
+  .note:first-child { border-left: none; }
+  .note h4 { font-size: 11px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .note p { font-size: 13px; color: var(--ink-soft); }
+  .start-row { margin-top: 46px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    padding: 16px 30px; border-radius: 999px; transition: background .15s, color .15s, border-color .15s;
+  }
+  .btn-solid { background: var(--ink); color: var(--ivory); }
+  .btn-solid:hover { background: var(--bronze); }
+  .btn-line { border: 1px solid var(--ink); }
+  .btn-line:hover { border-color: var(--bronze); color: var(--bronze); }
+
+  footer { padding: 44px 0 56px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 11.5px; letter-spacing: .08em; color: var(--muted); }
+  .foot .wordmark { font-size: 12px; }
+
+  /* ===== Reveal ===== */
+  body.reveal-init .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+  body.reveal-init .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    body.reveal-init .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 880px) {
+    .personas { grid-template-columns: 1fr; }
+    .persona { border-left: none; border-top: 1px solid var(--hairline); }
+    .persona:first-child { border-top: none; }
+    .ba-row { grid-template-columns: 1fr; gap: 14px; padding: 30px 0; }
+    .ba-arrow { display: none; }
+    .ba-theme { font-size: 17px; }
+    .notes { grid-template-columns: 1fr; }
+    .note { border-left: none; border-top: 1px solid var(--hairline); }
+    .note:first-child { border-top: none; }
+    .chapter { padding: 78px 0; }
+    .cover { padding: 78px 0 70px; }
+    .ht-step { grid-template-columns: 1fr; gap: 14px; }
+    .ht-no { width: 46px; height: 46px; font-size: 16px; }
+    .cover-index { text-align: left; }
+  }
+  @media (max-width: 560px) {
+    .topbar .wrap { height: auto; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
+    .top-right { width: 100%; justify-content: space-between; }
+    .start-row .btn { width: 100%; justify-content: center; }
+  }
+
+  /* ===== Print ===== */
+  @media print {
+    .topbar, .start-row, .top-demo { display: none; }
+    body { background: #fff; }
+    .chapter, .cover { border-bottom: none; page-break-after: always; padding: 40px 0; }
+    footer { page-break-before: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="wordmark">K2J BRIDGE<small>
+      <span class="L" lang="en">INTRODUCTION GUIDE</span>
+      <span class="L" lang="ko">소개 자료</span>
+      <span class="L" lang="ja">紹介資料</span>
+    </small></div>
+    <div class="top-right">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="ko">한국어</button>
+        <button type="button" data-lang="ja">日本語</button>
+      </div>
+      <a class="top-demo" href="dashboard.html">
+        <span class="L" lang="en">Demo →</span>
+        <span class="L" lang="ko">데모 →</span>
+        <span class="L" lang="ja">デモ →</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ===== Cover ===== -->
+<div class="cover">
+  <div class="wrap">
+    <div class="cover-meta">
+      <span>K2J BRIDGE</span>
+      <span>
+        <span class="L" lang="en">Introduction Guide · 2026</span>
+        <span class="L" lang="ko">소개 자료 · 2026</span>
+        <span class="L" lang="ja">紹介資料 · 2026</span>
+      </span>
+    </div>
+    <h1>
+      <span class="L" lang="en">Market entry into Japan,<br><em>engineered by data.</em></span>
+      <span class="L" lang="ko">일본 시장 진출을,<br><em>데이터로 설계하다.</em></span>
+      <span class="L" lang="ja">日本市場への参入を、<br><em>データで設計する。</em></span>
+    </h1>
+    <p class="sub">
+      <span class="L" lang="en">K2J Bridge is a one-stop platform for Korean companies entering Japan. It turns live data from major Japanese e-commerce malls into OEM product concepts, design directions, factory sourcing with cost management, and launch plans. This guide explains who it is for, what changes before and after, and exactly how to use it.</span>
+      <span class="L" lang="ko">K2J Bridge는 일본 진출을 준비하는 한국 기업을 위한 원스톱 플랫폼입니다. 일본 주요 이커머스 몰의 실시간 데이터를 OEM 상품 기획, 디자인 방향, 공장 소싱·원가 관리, 런칭 플랜으로 연결합니다. 이 자료는 누가, 언제 사용하는지, 도입 전후로 무엇이 달라지는지, 그리고 구체적인 사용 방법을 안내합니다.</span>
+      <span class="L" lang="ja">K2J Bridgeは、日本進出をめざす韓国企業のためのワンストップ・プラットフォームです。日本の主要ECモールのライブデータを、OEM商品企画・デザイン方針・工場ソーシングと原価管理・ローンチ計画へとつなげます。本資料では「誰が、どんな時に使うのか」「導入前後で何が変わるのか」「具体的な使い方」をご案内します。</span>
+    </p>
+    <div class="cover-foot">
+      <div class="monogram">K→J</div>
+      <div class="cover-index">
+        <div><b>01</b>
+          <span class="L" lang="en">Who uses it, and when</span>
+          <span class="L" lang="ko">누가, 언제 사용하나요</span>
+          <span class="L" lang="ja">誰が、どんな時に使うのか</span>
+        </div>
+        <div><b>02</b>
+          <span class="L" lang="en">Before / After</span>
+          <span class="L" lang="ko">도입 전 / 후</span>
+          <span class="L" lang="ja">導入前 / 導入後</span>
+        </div>
+        <div><b>03</b>
+          <span class="L" lang="en">How to use — your first week</span>
+          <span class="L" lang="ko">사용 방법 — 첫 일주일</span>
+          <span class="L" lang="ja">使い方 — 最初の1週間</span>
+        </div>
+        <div><b>04</b>
+          <span class="L" lang="en">Notes &amp; getting started</span>
+          <span class="L" lang="ko">유의사항과 시작하기</span>
+          <span class="L" lang="ja">ご利用にあたって</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 01 Who & When ===== -->
+<section class="chapter" id="who">
+  <div class="wrap">
+    <div class="ch-head"><span class="ch-num">01</span>
+      <div>
+        <div class="ch-label">
+          <span class="L" lang="en">Who &amp; When</span>
+          <span class="L" lang="ko">사용자와 시점</span>
+          <span class="L" lang="ja">利用者と利用シーン</span>
+        </div>
+        <h2 class="ch-title">
+          <span class="L" lang="en">Who uses it, and when.</span>
+          <span class="L" lang="ko">누가, 언제 사용하나요.</span>
+          <span class="L" lang="ja">誰が、どんな時に使うのか。</span>
+        </h2>
+      </div>
+    </div>
+    <p class="ch-sub">
+      <span class="L" lang="en">K2J Bridge is built for teams that must make Japan-market decisions without a local office — with evidence instead of guesswork.</span>
+      <span class="L" lang="ko">K2J Bridge는 현지 조직 없이 일본 시장에 대한 의사결정을 내려야 하는 팀을 위해 만들어졌습니다. 감이 아닌 근거로 판단할 수 있도록.</span>
+      <span class="L" lang="ja">K2J Bridgeは、現地拠点を持たずに日本市場の意思決定を迫られるチームのために作られています。勘ではなく、根拠で判断できるように。</span>
+    </p>
+
+    <div class="personas">
+      <div class="persona reveal">
+        <span class="p-num">I</span>
+        <div class="p-role">
+          <span class="L" lang="en">Head of Overseas Sales</span>
+          <span class="L" lang="ko">해외영업 총괄</span>
+          <span class="L" lang="ja">海外営業責任者</span>
+        </div>
+        <div class="p-org">
+          <span class="L" lang="en">Korean beauty manufacturer</span>
+          <span class="L" lang="ko">한국 뷰티 제조사</span>
+          <span class="L" lang="ja">韓国コスメメーカー</span>
+        </div>
+        <p class="p-sit">
+          <span class="L" lang="en">Japan expansion has been decided — but there is no local team, and every question about the market is currently answered by guesswork.</span>
+          <span class="L" lang="ko">일본 진출은 결정됐지만 현지 팀이 없고, 시장에 대한 질문에 지금은 모두 감으로 답하고 있는 상황.</span>
+          <span class="L" lang="ja">日本進出は決まったものの現地チームがなく、市場についての問いに今はすべて勘で答えている状況。</span>
+        </p>
+        <p class="p-line">
+          <span class="L" lang="en"><b>Uses it when</b> the board asks "what will actually sell in Japan?" — before committing budget.</span>
+          <span class="L" lang="ko"><b>사용 시점</b> — 경영진이 "일본에서 뭐가 팔리는데?"라고 물을 때. 예산을 확정하기 전에.</span>
+          <span class="L" lang="ja"><b>使うタイミング</b> — 経営陣に「日本で何が売れるのか」と問われた時。予算を確定する前に。</span>
+        </p>
+      </div>
+      <div class="persona reveal">
+        <span class="p-num">II</span>
+        <div class="p-role">
+          <span class="L" lang="en">New Business Team</span>
+          <span class="L" lang="ko">신사업팀</span>
+          <span class="L" lang="ja">新規事業チーム</span>
+        </div>
+        <div class="p-org">
+          <span class="L" lang="en">Korean food manufacturer</span>
+          <span class="L" lang="ko">한국 식품 제조사</span>
+          <span class="L" lang="ja">韓国食品メーカー</span>
+        </div>
+        <p class="p-sit">
+          <span class="L" lang="en">Manufacturing strength is proven; market visibility is not. Which product deserves the first production run — and at what cost structure?</span>
+          <span class="L" lang="ko">제조력은 충분하지만 시장이 보이지 않는 상황. 어떤 상품에 첫 생산을 걸어야 하고, 원가 구조는 어때야 하는가?</span>
+          <span class="L" lang="ja">製造力は十分でも、市場が見えていない状況。どの商品に最初の生産枠を割き、どんな原価構造にすべきか。</span>
+        </p>
+        <p class="p-line">
+          <span class="L" lang="en"><b>Uses it when</b> choosing the next OEM product and validating unit economics before production.</span>
+          <span class="L" lang="ko"><b>사용 시점</b> — 다음 OEM 상품을 정하고, 생산 전에 단위 손익을 검증할 때.</span>
+          <span class="L" lang="ja"><b>使うタイミング</b> — 次のOEM商品を決め、生産前に単位あたりの損益を検証する時。</span>
+        </p>
+      </div>
+      <div class="persona reveal">
+        <span class="p-num">III</span>
+        <div class="p-role">
+          <span class="L" lang="en">Founder / Brand Director</span>
+          <span class="L" lang="ko">창업자 / 브랜드 디렉터</span>
+          <span class="L" lang="ja">創業者 / ブランドディレクター</span>
+        </div>
+        <div class="p-org">
+          <span class="L" lang="en">D2C lifestyle brand</span>
+          <span class="L" lang="ko">D2C 라이프스타일 브랜드</span>
+          <span class="L" lang="ja">D2Cライフスタイルブランド</span>
+        </div>
+        <p class="p-sit">
+          <span class="L" lang="en">A small team doing everything — research, planning, costing, design briefs — with no room to hire specialists for each.</span>
+          <span class="L" lang="ko">리서치, 기획, 원가 계산, 디자인 브리프까지 전부 소수의 팀이 처리하는 상황. 분야별 전문가를 채용할 여유는 없다.</span>
+          <span class="L" lang="ja">リサーチ・企画・原価計算・デザイン指示まで、すべてを少人数でこなす状況。分野ごとに専門家を雇う余裕はない。</span>
+        </p>
+        <p class="p-line">
+          <span class="L" lang="en"><b>Uses it when</b> one person needs the output of a research team, a planner, and a cost analyst — this week.</span>
+          <span class="L" lang="ko"><b>사용 시점</b> — 리서치팀·기획자·원가 분석가의 결과물이 이번 주 안에, 한 사람에게 필요할 때.</span>
+          <span class="L" lang="ja"><b>使うタイミング</b> — リサーチチーム・企画者・原価分析者のアウトプットが、今週中に、ひとりに必要な時。</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="moments reveal">
+      <div class="moments-label">
+        <span class="L" lang="en">Typical moments</span>
+        <span class="L" lang="ko">대표적인 사용 시점</span>
+        <span class="L" lang="ja">代表的な利用シーン</span>
+      </div>
+      <div class="moment-chips">
+        <span>
+          <span class="L" lang="en">Deciding whether to enter Japan</span>
+          <span class="L" lang="ko">일본 진출 여부를 검토할 때</span>
+          <span class="L" lang="ja">日本進出の可否を検討するとき</span>
+        </span>
+        <span>
+          <span class="L" lang="en">Choosing the next OEM product</span>
+          <span class="L" lang="ko">다음 OEM 상품을 정할 때</span>
+          <span class="L" lang="ja">次のOEM商品を決めるとき</span>
+        </span>
+        <span>
+          <span class="L" lang="en">Comparing factories and unit costs</span>
+          <span class="L" lang="ko">공장과 원가를 비교할 때</span>
+          <span class="L" lang="ja">工場と原価を比較するとき</span>
+        </span>
+        <span>
+          <span class="L" lang="en">Preparing a board or investor deck</span>
+          <span class="L" lang="ko">경영진·투자자 보고를 준비할 때</span>
+          <span class="L" lang="ja">経営会議・投資家向け資料を作るとき</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 Before / After ===== -->
+<section class="chapter" id="beforeafter">
+  <div class="wrap">
+    <div class="ch-head"><span class="ch-num">02</span>
+      <div>
+        <div class="ch-label">
+          <span class="L" lang="en">Before / After</span>
+          <span class="L" lang="ko">도입 전 / 후</span>
+          <span class="L" lang="ja">導入前 / 導入後</span>
+        </div>
+        <h2 class="ch-title">
+          <span class="L" lang="en">What changes when your team runs on K2J Bridge.</span>
+          <span class="L" lang="ko">K2J Bridge 도입 후, 팀의 일하는 방식이 달라집니다.</span>
+          <span class="L" lang="ja">K2J Bridge導入で、チームの働き方はこう変わる。</span>
+        </h2>
+      </div>
+    </div>
+
+    <div class="ba">
+      <div class="ba-row reveal">
+        <div class="ba-theme"><small>
+            <span class="L" lang="en">Research</span>
+            <span class="L" lang="ko">리서치</span>
+            <span class="L" lang="ja">リサーチ</span></small>
+          <span class="L" lang="en">Market research</span>
+          <span class="L" lang="ko">시장 조사</span>
+          <span class="L" lang="ja">市場調査</span>
+        </div>
+        <div class="ba-col ba-before"><span class="tag">Before</span>
+          <p>
+            <span class="L" lang="en">Weeks of manual browsing across malls and social media. Decisions ultimately made on gut feel.</span>
+            <span class="L" lang="ko">몰과 SNS를 몇 주씩 수작업으로 뒤지고, 결국은 감으로 결정.</span>
+            <span class="L" lang="ja">モールやSNSを何週間も手作業で調べ、最後は勘で判断。</span>
+          </p>
+        </div>
+        <div class="ba-arrow"><svg viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7"/></svg></div>
+        <div class="ba-col ba-after"><span class="tag">After</span>
+          <p>
+            <span class="L" lang="en">Rankings, mega sales and reviews scanned daily. Growth categories and complaint-driven opportunities, at a glance.</span>
+            <span class="L" lang="ko">랭킹·빅세일·리뷰를 매일 자동 수집. 성장 카테고리와 소비자 불만에서 나온 기회가 한눈에.</span>
+            <span class="L" lang="ja">ランキング・ビッグセール・レビューを毎日自動収集。成長カテゴリと不満起点の機会がひと目でわかる。</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="ba-row reveal">
+        <div class="ba-theme"><small>
+            <span class="L" lang="en">Planning</span>
+            <span class="L" lang="ko">기획</span>
+            <span class="L" lang="ja">企画</span></small>
+          <span class="L" lang="en">Product planning</span>
+          <span class="L" lang="ko">상품 기획</span>
+          <span class="L" lang="ja">商品企画</span>
+        </div>
+        <div class="ba-col ba-before"><span class="tag">Before</span>
+          <p>
+            <span class="L" lang="en">Concept meetings stall — ideas without evidence, names that carry trademark risk.</span>
+            <span class="L" lang="ko">근거 없는 아이디어로 기획 회의가 공전. 네이밍에는 상표 리스크까지.</span>
+            <span class="L" lang="ja">根拠のないアイデアで企画会議が空転。ネーミングには商標リスクも。</span>
+          </p>
+        </div>
+        <div class="ba-arrow"><svg viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7"/></svg></div>
+        <div class="ba-col ba-after"><span class="tag">After</span>
+          <p>
+            <span class="L" lang="en">AI drafts concepts from trend data — pricing, differentiation, 3 package images — with a regulation checklist and a trademark pre-check link.</span>
+            <span class="L" lang="ko">AI가 트렌드 데이터로 콘셉트·가격·차별화 포인트·패키지 이미지 3안을 생성. 규제 체크리스트와 상표 사전 확인 링크까지.</span>
+            <span class="L" lang="ja">AIがトレンドデータから、コンセプト・価格・差別化・パッケージ画像3案を生成。規制チェックリストと商標事前確認リンク付き。</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="ba-row reveal">
+        <div class="ba-theme"><small>
+            <span class="L" lang="en">Design</span>
+            <span class="L" lang="ko">디자인</span>
+            <span class="L" lang="ja">デザイン</span></small>
+          <span class="L" lang="en">Design direction</span>
+          <span class="L" lang="ko">디자인 방향</span>
+          <span class="L" lang="ja">デザイン方針</span>
+        </div>
+        <div class="ba-col ba-before"><span class="tag">Before</span>
+          <p>
+            <span class="L" lang="en">Vague briefs, endless revision rounds with designers.</span>
+            <span class="L" lang="ko">모호한 레퍼런스로 디자이너와 수정만 반복.</span>
+            <span class="L" lang="ja">曖昧な指示のまま、デザイナーと修正の往復が続く。</span>
+          </p>
+        </div>
+        <div class="ba-arrow"><svg viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7"/></svg></div>
+        <div class="ba-col ba-after"><span class="tag">After</span>
+          <p>
+            <span class="L" lang="en">A real-photo reference feed by category. Share concrete directions and cut revision cycles.</span>
+            <span class="L" lang="ko">카테고리별 실사진 레퍼런스 피드로 구체적인 방향을 공유. 수정 횟수를 줄인다.</span>
+            <span class="L" lang="ja">カテゴリ別の実写リファレンスフィードで具体的な方向を共有。修正回数を削減。</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="ba-row reveal">
+        <div class="ba-theme"><small>
+            <span class="L" lang="en">Sourcing</span>
+            <span class="L" lang="ko">소싱</span>
+            <span class="L" lang="ja">ソーシング</span></small>
+          <span class="L" lang="en">Factory &amp; cost</span>
+          <span class="L" lang="ko">공장·원가</span>
+          <span class="L" lang="ja">工場・原価</span>
+        </div>
+        <div class="ba-col ba-before"><span class="tag">Before</span>
+          <p>
+            <span class="L" lang="en">Scattered spreadsheets. Landed cost and break-even become clear only after commitments are made.</span>
+            <span class="L" lang="ko">엑셀 파일이 흩어져, 착륙 원가와 손익분기는 계약 후에야 파악.</span>
+            <span class="L" lang="ja">スプレッドシートが散在し、着荷原価も損益分岐も契約後に判明。</span>
+          </p>
+        </div>
+        <div class="ba-arrow"><svg viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7"/></svg></div>
+        <div class="ba-col ba-after"><span class="tag">After</span>
+          <p>
+            <span class="L" lang="en">A factory directory with one-click RFQ drafts. Landed cost, margin and break-even computed in real time; the whole portfolio exports to CSV.</span>
+            <span class="L" lang="ko">공장 디렉토리에서 견적요청 메일을 원클릭 복사. 착륙 원가·마진·손익분기를 실시간 계산, 포트폴리오 전체를 CSV로.</span>
+            <span class="L" lang="ja">工場ディレクトリから見積依頼文をワンクリックでコピー。着荷原価・粗利・損益分岐をリアルタイム試算、ポートフォリオはCSV出力。</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="ba-row reveal">
+        <div class="ba-theme"><small>
+            <span class="L" lang="en">Launch</span>
+            <span class="L" lang="ko">런칭</span>
+            <span class="L" lang="ja">ローンチ</span></small>
+          <span class="L" lang="en">Marketing</span>
+          <span class="L" lang="ko">마케팅</span>
+          <span class="L" lang="ja">マーケティング</span>
+        </div>
+        <div class="ba-col ba-before"><span class="tag">Before</span>
+          <p>
+            <span class="L" lang="en">Launch first, plan later. Channels and KPIs decided after the product already exists.</span>
+            <span class="L" lang="ko">일단 출시부터 하고, 채널과 KPI는 그다음에 고민.</span>
+            <span class="L" lang="ja">とりあえず発売してから、チャネルとKPIを考える。</span>
+          </p>
+        </div>
+        <div class="ba-arrow"><svg viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7"/></svg></div>
+        <div class="ba-col ba-after"><span class="tag">After</span>
+          <p>
+            <span class="L" lang="en">A 6-month roadmap, channel-fit scores and KPI benchmarks — prepared before production starts.</span>
+            <span class="L" lang="ko">생산 시작 전에 6개월 로드맵·채널 적합도·KPI 기준을 준비.</span>
+            <span class="L" lang="ja">生産開始前に、6ヶ月ロードマップ・チャネル適合度・KPIの目安を用意。</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 03 How to use ===== -->
+<section class="chapter" id="howto">
+  <div class="wrap">
+    <div class="ch-head"><span class="ch-num">03</span>
+      <div>
+        <div class="ch-label">
+          <span class="L" lang="en">How to use</span>
+          <span class="L" lang="ko">사용 방법</span>
+          <span class="L" lang="ja">使い方</span>
+        </div>
+        <h2 class="ch-title">
+          <span class="L" lang="en">Your first week with K2J Bridge.</span>
+          <span class="L" lang="ko">K2J Bridge와 함께하는 첫 일주일.</span>
+          <span class="L" lang="ja">K2J Bridgeと過ごす、最初の1週間。</span>
+        </h2>
+      </div>
+    </div>
+    <p class="ch-sub">
+      <span class="L" lang="en">No sign-up, no credit card. The demo dashboard opens in your browser and works out of the box with sample data. Follow the five steps below.</span>
+      <span class="L" lang="ko">회원가입도, 신용카드도 필요 없습니다. 데모 대시보드는 브라우저에서 바로 열리며 샘플 데이터로 즉시 작동합니다. 아래 다섯 단계를 따라 해보세요.</span>
+      <span class="L" lang="ja">会員登録もクレジットカードも不要です。デモダッシュボードはブラウザでそのまま開き、サンプルデータで即座に動きます。以下の5ステップに沿ってお試しください。</span>
+    </p>
+
+    <div class="url-plate reveal">
+      <div>
+        <div class="lab">
+          <span class="L" lang="en">Demo dashboard</span>
+          <span class="L" lang="ko">데모 대시보드</span>
+          <span class="L" lang="ja">デモダッシュボード</span>
+        </div>
+        <div class="url">manexion202604001-cell.github.io/Github/k2j-bridge/dashboard.html</div>
+      </div>
+      <a class="go" href="dashboard.html">
+        <span class="L" lang="en">Open</span>
+        <span class="L" lang="ko">열기</span>
+        <span class="L" lang="ja">開く</span>
+      </a>
+    </div>
+
+    <div class="howto">
+      <div class="ht-step reveal">
+        <div class="ht-no">1</div>
+        <div>
+          <span class="ht-chip">
+            <span class="L" lang="en">Day 1 · 10 min</span>
+            <span class="L" lang="ko">1일차 · 10분</span>
+            <span class="L" lang="ja">1日目 · 10分</span>
+          </span>
+          <h3 class="ht-title">
+            <span class="L" lang="en">Read the market</span>
+            <span class="L" lang="ko">시장을 읽는다</span>
+            <span class="L" lang="ja">市場を読む</span>
+            <span class="ht-tab">Trend Analysis</span>
+          </h3>
+          <p class="ht-body">
+            <span class="L" lang="en">Open the "Trend Analysis" tab. Scan the fast-rising ranking, the category growth graph, and the AI review insights. Note which complaints keep appearing — that is where product opportunities hide.</span>
+            <span class="L" lang="ko">"Trend Analysis" 탭을 엽니다. 급상승 랭킹, 카테고리 성장 그래프, AI 리뷰 인사이트를 훑어보세요. 반복해서 등장하는 소비자 불만을 메모하세요 — 상품 기회는 그 안에 숨어 있습니다.</span>
+            <span class="L" lang="ja">「Trend Analysis」タブを開きます。急上昇ランキング、カテゴリ成長グラフ、レビューAIインサイトに目を通してください。繰り返し登場する不満をメモしましょう — 商品機会はそこに隠れています。</span>
+          </p>
+          <div class="ht-get"><b>
+              <span class="L" lang="en">You leave with</span>
+              <span class="L" lang="ko">결과물</span>
+              <span class="L" lang="ja">得られるもの</span></b>
+            <span>
+              <span class="L" lang="en">1–2 candidate categories worth planning for.</span>
+              <span class="L" lang="ko">기획할 가치가 있는 후보 카테고리 1–2개.</span>
+              <span class="L" lang="ja">企画する価値のある候補カテゴリ1〜2個。</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ht-step reveal">
+        <div class="ht-no">2</div>
+        <div>
+          <span class="ht-chip">
+            <span class="L" lang="en">Day 1 · 15 min</span>
+            <span class="L" lang="ko">1일차 · 15분</span>
+            <span class="L" lang="ja">1日目 · 15分</span>
+          </span>
+          <h3 class="ht-title">
+            <span class="L" lang="en">Generate a product plan</span>
+            <span class="L" lang="ko">상품 기획안을 생성한다</span>
+            <span class="L" lang="ja">商品企画をつくる</span>
+            <span class="ht-tab">AI Product Planning</span>
+          </h3>
+          <p class="ht-body">
+            <span class="L" lang="en">In the "AI Product Planning" tab, choose your category, price band and channel, then press Generate. You receive an OEM concept, suggested pricing, 3 package images, a regulation checklist and matched factories. Use the profit simulator, then print or save the proposal as a PDF for internal sharing. (Optional: add your own AI API key in the ⚙️ settings for live generation — it is stored only in your browser.)</span>
+            <span class="L" lang="ko">"AI Product Planning" 탭에서 카테고리·가격대·판매 채널을 고르고 Generate를 누르세요. OEM 콘셉트, 권장 가격, 패키지 이미지 3안, 규제 체크리스트, 매칭 공장이 생성됩니다. 수익 시뮬레이터를 돌려본 뒤, 제안서를 인쇄하거나 PDF로 저장해 사내에 공유하세요. (선택: ⚙️ 설정에 본인의 AI API 키를 넣으면 실시간 생성 — 키는 브라우저에만 저장됩니다.)</span>
+            <span class="L" lang="ja">「AI Product Planning」タブでカテゴリ・価格帯・販路を選び、Generateを押します。OEMコンセプト、推奨価格、パッケージ画像3案、規制チェックリスト、マッチング工場が生成されます。収益シミュレーターを試したら、提案書を印刷またはPDF保存して社内に共有しましょう。(任意: ⚙️設定に自分のAI APIキーを入れるとリアルタイム生成 — キーはブラウザにのみ保存されます。)</span>
+          </p>
+          <div class="ht-get"><b>
+              <span class="L" lang="en">You leave with</span>
+              <span class="L" lang="ko">결과물</span>
+              <span class="L" lang="ja">得られるもの</span></b>
+            <span>
+              <span class="L" lang="en">an OEM concept sheet your team can react to.</span>
+              <span class="L" lang="ko">팀이 바로 논의할 수 있는 OEM 기획서 한 장.</span>
+              <span class="L" lang="ja">チームがすぐ議論できるOEM企画書一枚。</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ht-step reveal">
+        <div class="ht-no">3</div>
+        <div>
+          <span class="ht-chip">
+            <span class="L" lang="en">Day 2 · 20 min</span>
+            <span class="L" lang="ko">2일차 · 20분</span>
+            <span class="L" lang="ja">2日目 · 20分</span>
+          </span>
+          <h3 class="ht-title">
+            <span class="L" lang="en">Build the design brief</span>
+            <span class="L" lang="ko">디자인 브리프를 만든다</span>
+            <span class="L" lang="ja">デザインブリーフを固める</span>
+            <span class="ht-tab">Design Inspiration</span>
+          </h3>
+          <p class="ht-body">
+            <span class="L" lang="en">In the "Design" tab, search a keyword or tap a category chip. Browse the real-photo masonry feed, open the source pages you like, and collect 5–10 references that match your product's direction.</span>
+            <span class="L" lang="ko">"Design" 탭에서 키워드를 검색하거나 카테고리 칩을 탭하세요. 실사진 피드를 살펴보고 마음에 드는 출처 페이지를 열어, 상품 방향에 맞는 레퍼런스 5–10장을 모으세요.</span>
+            <span class="L" lang="ja">「Design」タブでキーワード検索、またはカテゴリチップをタップ。実写のマソンリーフィードを眺め、気になる出典ページを開き、商品の方向性に合うリファレンスを5〜10枚集めます。</span>
+          </p>
+          <div class="ht-get"><b>
+              <span class="L" lang="en">You leave with</span>
+              <span class="L" lang="ko">결과물</span>
+              <span class="L" lang="ja">得られるもの</span></b>
+            <span>
+              <span class="L" lang="en">a concrete brief your designer can execute without guessing.</span>
+              <span class="L" lang="ko">디자이너가 헤매지 않고 작업할 수 있는 구체적인 브리프.</span>
+              <span class="L" lang="ja">デザイナーが迷わず動ける具体的なブリーフ。</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ht-step reveal">
+        <div class="ht-no">4</div>
+        <div>
+          <span class="ht-chip">
+            <span class="L" lang="en">Day 2–3 · 30 min</span>
+            <span class="L" lang="ko">2–3일차 · 30분</span>
+            <span class="L" lang="ja">2〜3日目 · 30分</span>
+          </span>
+          <h3 class="ht-title">
+            <span class="L" lang="en">Source the factory, prove the numbers</span>
+            <span class="L" lang="ko">공장을 찾고, 숫자로 증명한다</span>
+            <span class="L" lang="ja">工場を探し、数字で裏づける</span>
+            <span class="ht-tab">Factories &amp; Costs</span>
+          </h3>
+          <p class="ht-body">
+            <span class="L" lang="en">In the "Factories &amp; Costs" tab, filter the directory by category, sort by MOQ or lead time, and copy an RFQ email draft with one click. Press "Use in cost planner" on a factory, enter your retail price and cost items, and watch landed cost, margin and break-even update live. Save each product, then download the portfolio as CSV.</span>
+            <span class="L" lang="ko">"Factories &amp; Costs" 탭에서 카테고리로 공장을 거르고, MOQ나 리드타임으로 정렬한 뒤, 견적요청 메일 초안을 원클릭 복사하세요. 공장의 "Use in cost planner"를 누르고 판매가와 원가 항목을 입력하면 착륙 원가·마진·손익분기가 실시간으로 갱신됩니다. 상품별로 저장하고, 포트폴리오를 CSV로 내려받으세요.</span>
+            <span class="L" lang="ja">「Factories &amp; Costs」タブでカテゴリ絞り込み・MOQやリードタイムで並び替えし、見積依頼メール文をワンクリックでコピー。工場の「Use in cost planner」を押し、売価と原価項目を入力すると、着荷原価・粗利・損益分岐がリアルタイムに更新されます。商品ごとに保存し、ポートフォリオをCSVでダウンロード。</span>
+          </p>
+          <div class="ht-get"><b>
+              <span class="L" lang="en">You leave with</span>
+              <span class="L" lang="ko">결과물</span>
+              <span class="L" lang="ja">得られるもの</span></b>
+            <span>
+              <span class="L" lang="en">a unit-cost &amp; break-even table ready for the decision meeting.</span>
+              <span class="L" lang="ko">의사결정 회의에 바로 올릴 수 있는 단위 원가·손익분기 테이블.</span>
+              <span class="L" lang="ja">意思決定会議にそのまま出せる単位原価・損益分岐テーブル。</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ht-step reveal">
+        <div class="ht-no">5</div>
+        <div>
+          <span class="ht-chip">
+            <span class="L" lang="en">Week 2 · Planning meeting</span>
+            <span class="L" lang="ko">2주차 · 기획 회의</span>
+            <span class="L" lang="ja">2週目 · 企画会議</span>
+          </span>
+          <h3 class="ht-title">
+            <span class="L" lang="en">Draft the launch plan</span>
+            <span class="L" lang="ko">런칭 플랜을 그린다</span>
+            <span class="L" lang="ja">ローンチ計画を描く</span>
+            <span class="ht-tab">Marketing</span>
+          </h3>
+          <p class="ht-body">
+            <span class="L" lang="en">In the "Marketing" tab, review the 6-month roadmap to launch, the channel-fit scores, and the KPI benchmarks. Map them onto your internal calendar and close the meeting with a shared schedule.</span>
+            <span class="L" lang="ko">"Marketing" 탭에서 출시까지의 6개월 로드맵, 채널 적합도, KPI 기준을 확인하세요. 사내 일정에 대입해, 회의를 공유된 스케줄로 마무리합니다.</span>
+            <span class="L" lang="ja">「Marketing」タブで、発売までの6ヶ月ロードマップ、チャネル適合度、KPIの目安を確認。社内カレンダーに落とし込み、会議を共有スケジュールで締めくくります。</span>
+          </p>
+          <div class="ht-get"><b>
+              <span class="L" lang="en">You leave with</span>
+              <span class="L" lang="ko">결과물</span>
+              <span class="L" lang="ja">得られるもの</span></b>
+            <span>
+              <span class="L" lang="en">a launch plan draft the whole team has agreed on.</span>
+              <span class="L" lang="ko">팀 전체가 합의한 런칭 플랜 초안.</span>
+              <span class="L" lang="ja">チーム全員が合意したローンチ計画のドラフト。</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 04 Notes & start ===== -->
+<section class="chapter" id="start" style="border-bottom:none">
+  <div class="wrap">
+    <div class="ch-head"><span class="ch-num">04</span>
+      <div>
+        <div class="ch-label">
+          <span class="L" lang="en">Notes &amp; Start</span>
+          <span class="L" lang="ko">유의사항과 시작</span>
+          <span class="L" lang="ja">ご利用にあたって</span>
+        </div>
+        <h2 class="ch-title">
+          <span class="L" lang="en">Good to know, before you begin.</span>
+          <span class="L" lang="ko">시작하기 전에 알아두세요.</span>
+          <span class="L" lang="ja">始める前に、知っておいてほしいこと。</span>
+        </h2>
+      </div>
+    </div>
+
+    <div class="notes reveal">
+      <div class="note">
+        <h4>
+          <span class="L" lang="en">Sample data</span>
+          <span class="L" lang="ko">샘플 데이터</span>
+          <span class="L" lang="ja">サンプルデータ</span>
+        </h4>
+        <p>
+          <span class="L" lang="en">Rankings, figures and factory listings in the demo are illustrative sample data. The use cases shown are model scenarios, not client results.</span>
+          <span class="L" lang="ko">데모의 랭킹·수치·공장 정보는 설명용 샘플 데이터입니다. 소개된 활용 사례는 모델 시나리오이며, 실제 고객 실적이 아닙니다.</span>
+          <span class="L" lang="ja">デモのランキング・数値・工場情報は説明用のサンプルデータです。掲載の活用例はモデルケースであり、実際の顧客実績ではありません。</span>
+        </p>
+      </div>
+      <div class="note">
+        <h4>
+          <span class="L" lang="en">Your keys stay yours</span>
+          <span class="L" lang="ko">키는 브라우저에만</span>
+          <span class="L" lang="ja">キーはブラウザにのみ</span>
+        </h4>
+        <p>
+          <span class="L" lang="en">AI generation is optional (BYOK). API keys are stored only in your browser's localStorage and sent directly to the AI provider — never to our servers.</span>
+          <span class="L" lang="ko">AI 생성은 선택사항(BYOK)입니다. API 키는 브라우저 localStorage에만 저장되어 AI 제공사로 직접 전송되며, 저희 서버에는 절대 전송·저장되지 않습니다.</span>
+          <span class="L" lang="ja">AI生成は任意(BYOK)です。APIキーはブラウザのlocalStorageにのみ保存され、AI提供元へ直接送信されます。当サイトのサーバーには一切送信・保存されません。</span>
+        </p>
+      </div>
+      <div class="note">
+        <h4>
+          <span class="L" lang="en">Simplified estimates</span>
+          <span class="L" lang="ko">간이 계산</span>
+          <span class="L" lang="ja">簡易計算について</span>
+        </h4>
+        <p>
+          <span class="L" lang="en">The cost planner and profit simulator are simplified models (tax, FX and returns excluded). Consult specialists before final business decisions.</span>
+          <span class="L" lang="ko">원가 플래너와 수익 시뮬레이터는 간이 모델입니다(세금·환율·반품 미반영). 최종 의사결정 전에는 전문가 검토를 권장합니다.</span>
+          <span class="L" lang="ja">原価プランナーと収益シミュレーターは簡易モデルです(税・為替・返品は未考慮)。最終的な事業判断の前に専門家の確認を推奨します。</span>
+        </p>
+      </div>
+      <div class="note">
+        <h4>
+          <span class="L" lang="en">Print this guide</span>
+          <span class="L" lang="ko">이 자료의 인쇄</span>
+          <span class="L" lang="ja">この資料の印刷</span>
+        </h4>
+        <p>
+          <span class="L" lang="en">This page is print-ready. Use your browser's Print → "Save as PDF" to circulate it internally in any of the three languages.</span>
+          <span class="L" lang="ko">이 페이지는 인쇄에 최적화되어 있습니다. 브라우저의 인쇄 → "PDF로 저장"으로 세 언어 중 원하는 언어의 자료를 사내에 공유하세요.</span>
+          <span class="L" lang="ja">このページは印刷に最適化されています。ブラウザの印刷 →「PDFに保存」で、3言語いずれの版でも社内に配布できます。</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="start-row reveal">
+      <a class="btn btn-solid" href="dashboard.html">
+        <span class="L" lang="en">Open the demo dashboard</span>
+        <span class="L" lang="ko">데모 대시보드 열기</span>
+        <span class="L" lang="ja">デモダッシュボードを開く</span>
+      </a>
+      <a class="btn btn-line" href="index.html">
+        <span class="L" lang="en">Visit the landing page</span>
+        <span class="L" lang="ko">랜딩 페이지 보기</span>
+        <span class="L" lang="ja">ランディングページを見る</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span class="wordmark">K2J BRIDGE</span>
+    <span>
+      <span class="L" lang="en">From Korea to Japan — one-stop development of products that sell.</span>
+      <span class="L" lang="ko">한국에서 일본으로 — 팔리는 상품을 원스톱으로.</span>
+      <span class="L" lang="ja">韓国から日本へ — 売れる商品をワンストップで。</span>
+    </span>
+    <span>© 2026 K2J Bridge</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var KEY = "k2j_intro_lang";
+  var root = document.documentElement;
+  var btns = document.querySelectorAll(".lang-switch button");
+
+  function detect() {
+    try {
+      var saved = localStorage.getItem(KEY);
+      if (saved === "en" || saved === "ko" || saved === "ja") return saved;
+    } catch (e) {}
+    var nav = (navigator.language || "en").toLowerCase();
+    if (nav.indexOf("ko") === 0) return "ko";
+    if (nav.indexOf("ja") === 0) return "ja";
+    return "en";
+  }
+  function apply(lang) {
+    root.dataset.lang = lang;
+    root.setAttribute("lang", lang);
+    btns.forEach(function (b) { b.classList.toggle("on", b.dataset.lang === lang); });
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+  }
+  btns.forEach(function (b) {
+    b.addEventListener("click", function () { apply(b.dataset.lang); });
+  });
+  apply(detect());
+})();
+(function () {
+  var targets = document.querySelectorAll(".reveal");
+  if (!targets.length || !("IntersectionObserver" in window)) return;
+  document.body.classList.add("reveal-init");
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -6% 0px" });
+  targets.forEach(function (t) { io.observe(t); });
+})();
+</script>
+</body>
+</html>
