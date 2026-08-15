@@ -110,6 +110,25 @@
     padding: 9px 18px; border-radius: 999px;
   }
 
+  /* ===== Framed screenshots ===== */
+  .shot {
+    border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden;
+    background: #fff; box-shadow: 0 26px 60px -22px rgba(22, 23, 28, .28);
+  }
+  .shot .bar { height: 28px; background: #eceae1; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--hairline); }
+  .shot .bar i { width: 8px; height: 8px; border-radius: 50%; background: #d3ccba; }
+  .shot img { display: block; width: 100%; }
+  .cover-shot { margin-top: 70px; }
+  .ht-shot { margin-top: 24px; max-width: 760px; }
+  .ht-collage { margin-top: 24px; max-width: 760px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ht-collage img { display: block; width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid var(--hairline); }
+
+  .p-photo { height: 148px; margin: -38px -32px 24px; overflow: hidden; border-bottom: 1px solid var(--hairline); }
+  .p-photo img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.82); }
+
+  .punch { margin-top: 46px; font-family: var(--serif); font-size: clamp(19px, 2.6vw, 26px); line-height: 1.55; max-width: 30em; }
+  .punch em { font-style: italic; color: var(--bronze); }
+
   /* ===== 02 Before / After ===== */
   .ba { margin-top: 56px; border-top: 1px solid var(--ink); }
   .ba-row {
@@ -260,14 +279,14 @@
       </span>
     </div>
     <h1>
-      <span class="L" lang="en">Market entry into Japan,<br><em>engineered by data.</em></span>
-      <span class="L" lang="ko">일본 시장 진출을,<br><em>데이터로 설계하다.</em></span>
-      <span class="L" lang="ja">日本市場への参入を、<br><em>データで設計する。</em></span>
+      <span class="L" lang="en">Stop guessing.<br><em>Japan's data already knows what sells.</em></span>
+      <span class="L" lang="ko">감으로 승부하던 시대는 끝났다.<br><em>무엇이 팔릴지는, 데이터가 이미 알고 있다.</em></span>
+      <span class="L" lang="ja">勘で戦う時代は、終わった。<br><em>何が売れるかは、データがもう知っている。</em></span>
     </h1>
     <p class="sub">
-      <span class="L" lang="en">K2J Bridge is a one-stop platform for Korean companies entering Japan. It turns live data from major Japanese e-commerce malls into OEM product concepts, design directions, factory sourcing with cost management, and launch plans. This guide explains who it is for, what changes before and after, and exactly how to use it.</span>
-      <span class="L" lang="ko">K2J Bridge는 일본 진출을 준비하는 한국 기업을 위한 원스톱 플랫폼입니다. 일본 주요 이커머스 몰의 실시간 데이터를 OEM 상품 기획, 디자인 방향, 공장 소싱·원가 관리, 런칭 플랜으로 연결합니다. 이 자료는 누가, 언제 사용하는지, 도입 전후로 무엇이 달라지는지, 그리고 구체적인 사용 방법을 안내합니다.</span>
-      <span class="L" lang="ja">K2J Bridgeは、日本進出をめざす韓国企業のためのワンストップ・プラットフォームです。日本の主要ECモールのライブデータを、OEM商品企画・デザイン方針・工場ソーシングと原価管理・ローンチ計画へとつなげます。本資料では「誰が、どんな時に使うのか」「導入前後で何が変わるのか」「具体的な使い方」をご案内します。</span>
+      <span class="L" lang="en">While your competitors debate in meeting rooms, K2J Bridge reads Japan's major e-commerce malls every single day — and turns what it finds into OEM product concepts, design directions, factory costings and launch plans. Read this guide once, and you will know exactly who wins with it, what changes, and how to run it. Then open the demo.</span>
+      <span class="L" lang="ko">경쟁사가 회의실에서 토론하는 동안, K2J Bridge는 매일 일본 주요 이커머스 몰을 읽습니다. 그리고 그것을 OEM 상품 기획, 디자인 방향, 공장 원가, 런칭 플랜으로 바꿉니다. 이 자료를 한 번 읽으면 누가 이기는지, 무엇이 달라지는지, 어떻게 쓰는지 전부 알게 됩니다. 그다음은, 데모를 여는 일만 남습니다.</span>
+      <span class="L" lang="ja">競合が会議室で議論している間に、K2J Bridgeは毎日、日本の主要ECモールを読み続けています。そしてそれを、OEM商品企画・デザイン方針・工場原価・ローンチ計画に変える。この資料を一度読めば、誰が勝つのか、何が変わるのか、どう使うのか — すべてわかります。あとは、デモを開くだけ。</span>
     </p>
     <div class="cover-foot">
       <div class="monogram">K→J</div>
@@ -294,6 +313,10 @@
         </div>
       </div>
     </div>
+    <figure class="shot cover-shot reveal">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <img src="assets/shot-trend.jpg" alt="K2J Bridge — EC Trend Radar dashboard" loading="lazy">
+    </figure>
   </div>
 </div>
 
@@ -308,20 +331,21 @@
           <span class="L" lang="ja">利用者と利用シーン</span>
         </div>
         <h2 class="ch-title">
-          <span class="L" lang="en">Who uses it, and when.</span>
-          <span class="L" lang="ko">누가, 언제 사용하나요.</span>
-          <span class="L" lang="ja">誰が、どんな時に使うのか。</span>
+          <span class="L" lang="en">Sound familiar? Then this was built for you.</span>
+          <span class="L" lang="ko">혹시, 당신의 이야기 아닌가요?</span>
+          <span class="L" lang="ja">心当たり、ありませんか。</span>
         </h2>
       </div>
     </div>
     <p class="ch-sub">
-      <span class="L" lang="en">K2J Bridge is built for teams that must make Japan-market decisions without a local office — with evidence instead of guesswork.</span>
-      <span class="L" lang="ko">K2J Bridge는 현지 조직 없이 일본 시장에 대한 의사결정을 내려야 하는 팀을 위해 만들어졌습니다. 감이 아닌 근거로 판단할 수 있도록.</span>
-      <span class="L" lang="ja">K2J Bridgeは、現地拠点を持たずに日本市場の意思決定を迫られるチームのために作られています。勘ではなく、根拠で判断できるように。</span>
+      <span class="L" lang="en">Three teams. One common enemy: making Japan-market decisions with zero evidence. If you recognize yourself below, you already know why you need this.</span>
+      <span class="L" lang="ko">세 개의 팀, 하나의 공통된 적 — '근거 제로'의 일본 진출 결정. 아래에서 자신의 모습이 보인다면, 이 플랫폼이 왜 필요한지 이미 알고 있는 겁니다.</span>
+      <span class="L" lang="ja">3つのチームに共通する敵は、「根拠ゼロ」のまま下される日本市場の意思決定。下の誰かに自分が重なったなら — これが必要な理由は、もうわかっているはずです。</span>
     </p>
 
     <div class="personas">
       <div class="persona reveal">
+        <div class="p-photo"><img src="assets/case-1.jpg" alt="" loading="lazy"></div>
         <span class="p-num">I</span>
         <div class="p-role">
           <span class="L" lang="en">Head of Overseas Sales</span>
@@ -345,6 +369,7 @@
         </p>
       </div>
       <div class="persona reveal">
+        <div class="p-photo"><img src="assets/case-2.jpg" alt="" loading="lazy"></div>
         <span class="p-num">II</span>
         <div class="p-role">
           <span class="L" lang="en">New Business Team</span>
@@ -368,6 +393,7 @@
         </p>
       </div>
       <div class="persona reveal">
+        <div class="p-photo"><img src="assets/case-3.jpg" alt="" loading="lazy"></div>
         <span class="p-num">III</span>
         <div class="p-role">
           <span class="L" lang="en">Founder / Brand Director</span>
@@ -435,10 +461,15 @@
           <span class="L" lang="ja">導入前 / 導入後</span>
         </div>
         <h2 class="ch-title">
-          <span class="L" lang="en">What changes when your team runs on K2J Bridge.</span>
-          <span class="L" lang="ko">K2J Bridge 도입 후, 팀의 일하는 방식이 달라집니다.</span>
-          <span class="L" lang="ja">K2J Bridge導入で、チームの働き方はこう変わる。</span>
+          <span class="L" lang="en">Before and after. The gap is brutal.</span>
+          <span class="L" lang="ko">도입 전과 후 — 그 차이는 잔인할 정도.</span>
+          <span class="L" lang="ja">導入前と、導入後。その差は残酷なほど。</span>
         </h2>
+        <p class="ch-sub">
+          <span class="L" lang="en">Same team. Same budget. Different weapons.</span>
+          <span class="L" lang="ko">같은 팀. 같은 예산. 달라진 것은 무기뿐.</span>
+          <span class="L" lang="ja">同じチーム。同じ予算。違うのは、武器だけ。</span>
+        </p>
       </div>
     </div>
 
@@ -587,16 +618,16 @@
           <span class="L" lang="ja">使い方</span>
         </div>
         <h2 class="ch-title">
-          <span class="L" lang="en">Your first week with K2J Bridge.</span>
-          <span class="L" lang="ko">K2J Bridge와 함께하는 첫 일주일.</span>
-          <span class="L" lang="ja">K2J Bridgeと過ごす、最初の1週間。</span>
+          <span class="L" lang="en">One week. From zero to a launch plan.</span>
+          <span class="L" lang="ko">단 일주일. 제로에서 런칭 플랜까지.</span>
+          <span class="L" lang="ja">たった1週間で、ゼロからローンチ計画まで。</span>
         </h2>
       </div>
     </div>
     <p class="ch-sub">
-      <span class="L" lang="en">No sign-up, no credit card. The demo dashboard opens in your browser and works out of the box with sample data. Follow the five steps below.</span>
-      <span class="L" lang="ko">회원가입도, 신용카드도 필요 없습니다. 데모 대시보드는 브라우저에서 바로 열리며 샘플 데이터로 즉시 작동합니다. 아래 다섯 단계를 따라 해보세요.</span>
-      <span class="L" lang="ja">会員登録もクレジットカードも不要です。デモダッシュボードはブラウザでそのまま開き、サンプルデータで即座に動きます。以下の5ステップに沿ってお試しください。</span>
+      <span class="L" lang="en">No sign-up. No credit card. No excuses. The demo opens in your browser and runs instantly on sample data — the five steps below take you from cold start to a decision-ready plan. Actual screens shown at every step.</span>
+      <span class="L" lang="ko">회원가입 없음. 카드 없음. 변명도 없음. 데모는 브라우저에서 즉시 열리고 샘플 데이터로 바로 작동합니다. 아래 다섯 단계면 맨손에서 의사결정용 플랜까지 도달합니다. 각 단계마다 실제 화면을 실었습니다.</span>
+      <span class="L" lang="ja">会員登録なし。カードなし。言い訳もなし。デモはブラウザで即座に開き、サンプルデータでそのまま動きます。以下の5ステップで、ゼロから意思決定に使える計画まで一気に到達 — 各ステップに実際の画面を掲載しています。</span>
     </p>
 
     <div class="url-plate reveal">
@@ -645,6 +676,10 @@
               <span class="L" lang="ja">企画する価値のある候補カテゴリ1〜2個。</span>
             </span>
           </div>
+          <figure class="shot ht-shot">
+            <div class="bar"><i></i><i></i><i></i></div>
+            <img src="assets/shot-trend.jpg" alt="Trend Analysis tab" loading="lazy">
+          </figure>
         </div>
       </div>
 
@@ -677,6 +712,10 @@
               <span class="L" lang="ja">チームがすぐ議論できるOEM企画書一枚。</span>
             </span>
           </div>
+          <figure class="shot ht-shot">
+            <div class="bar"><i></i><i></i><i></i></div>
+            <img src="assets/shot-plan.jpg" alt="AI Product Planning tab" loading="lazy">
+          </figure>
         </div>
       </div>
 
@@ -708,6 +747,11 @@
               <span class="L" lang="ko">디자이너가 헤매지 않고 작업할 수 있는 구체적인 브리프.</span>
               <span class="L" lang="ja">デザイナーが迷わず動ける具体的なブリーフ。</span>
             </span>
+          </div>
+          <div class="ht-collage">
+            <img src="assets/case-1.jpg" alt="" loading="lazy">
+            <img src="assets/case-2.jpg" alt="" loading="lazy">
+            <img src="assets/case-3.jpg" alt="" loading="lazy">
           </div>
         </div>
       </div>
@@ -741,6 +785,10 @@
               <span class="L" lang="ja">意思決定会議にそのまま出せる単位原価・損益分岐テーブル。</span>
             </span>
           </div>
+          <figure class="shot ht-shot">
+            <div class="bar"><i></i><i></i><i></i></div>
+            <img src="assets/shot-factory.jpg" alt="Factories &amp; Costs tab" loading="lazy">
+          </figure>
         </div>
       </div>
 
@@ -773,6 +821,10 @@
               <span class="L" lang="ja">チーム全員が合意したローンチ計画のドラフト。</span>
             </span>
           </div>
+          <figure class="shot ht-shot">
+            <div class="bar"><i></i><i></i><i></i></div>
+            <img src="assets/shot-marketing.jpg" alt="Marketing tab" loading="lazy">
+          </figure>
         </div>
       </div>
     </div>
@@ -848,6 +900,11 @@
       </div>
     </div>
 
+    <p class="punch reveal">
+      <span class="L" lang="en">Japan's mall rankings update again today. The only question is <em>who reads them first</em> — you, or your competitor.</span>
+      <span class="L" lang="ko">일본 몰의 랭킹은 오늘도 갱신됩니다. 남은 질문은 하나 — <em>먼저 읽는 쪽이 당신인가, 경쟁사인가.</em></span>
+      <span class="L" lang="ja">日本のECランキングは、今日も更新されている。問題はただひとつ — <em>先に読むのが、あなたか競合か。</em></span>
+    </p>
     <div class="start-row reveal">
       <a class="btn btn-solid" href="dashboard.html">
         <span class="L" lang="en">Open the demo dashboard</span>
