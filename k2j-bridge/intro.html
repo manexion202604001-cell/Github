@@ -5,18 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>K2J Bridge — Introduction Guide</title>
 <meta name="description" content="K2J Bridge introduction guide — who it is for, before/after, and how to use it. Available in English, Korean, and Japanese.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&family=Noto+Serif+KR:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ivory: #f7f5f0;
-    --ivory-2: #efece4;
-    --ink: #16171c;
-    --ink-soft: #3c3d45;
-    --muted: #7b7a72;
-    --hairline: #ddd8cc;
-    --bronze: #8a6d3f;
-    --bronze-soft: rgba(138, 109, 63, .09);
-    --serif: "Georgia", "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "Batang", "Nanum Myeongjo", "Noto Serif KR", "Noto Serif JP", serif;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    --forest: #16352D;
+    --pine: #23463D;
+    --ivory: #F3F0E8;
+    --ivory-2: #ECE8DC;
+    --ink: #202522;
+    --ink-soft: #41453f;
+    --muted: #75736A;
+    --hairline: rgba(32, 37, 34, .16);
+    --bronze: #A88B57;
+    --bronze-soft: rgba(168, 139, 87, .1);
+    --line-bone: rgba(243, 240, 232, .18);
+    --bone-dim: rgba(243, 240, 232, .74);
+    --serif: "Cormorant Garamond", "Noto Serif JP", "Noto Serif KR", "Hiragino Mincho ProN", "Yu Mincho", "Batang", Georgia, serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -240,6 +247,95 @@
     body { background: #fff; }
     .chapter, .cover { border-bottom: none; page-break-after: always; padding: 40px 0; }
     footer { page-break-before: avoid; }
+  }
+
+  /* ===== Quiet Luxury overlay — Forest / Bone / Gold ===== */
+  ::selection { background: var(--forest); color: var(--ivory); }
+  :focus-visible { outline: 1px solid var(--bronze); outline-offset: 3px; }
+
+  /* Top bar — deep forest */
+  .topbar {
+    background: rgba(22, 53, 45, .92);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line-bone);
+  }
+  .topbar .wordmark { color: var(--ivory); }
+  .topbar .wordmark small { color: var(--bone-dim); }
+  .lang-switch { border-color: var(--line-bone); border-radius: 0; background: transparent; }
+  .lang-switch button { color: var(--bone-dim); }
+  .lang-switch button.on { background: var(--ivory); color: var(--forest); }
+  .top-demo { color: var(--ivory); border-bottom-color: var(--bronze); }
+  .top-demo:hover { color: var(--bronze); }
+
+  /* Cover — deep forest chapter */
+  .cover { background: var(--forest); color: var(--ivory); border-bottom: none; }
+  .cover-meta { color: var(--bone-dim); }
+  .cover-meta::after { background: var(--line-bone); }
+  .cover h1 { color: var(--ivory); font-weight: 500; }
+  .cover h1 em { color: var(--bronze); }
+  .cover .sub { color: var(--bone-dim); }
+  .monogram { border-color: var(--bronze); color: var(--ivory); border-radius: 0; }
+  .cover-index { color: var(--bone-dim); }
+  .cover-index b { color: var(--bronze); }
+  .cover .shot { border-color: var(--line-bone); box-shadow: none; }
+
+  /* Radii — architectural */
+  .shot, .shot .bar, .p-photo, .ht-collage img, .ht-chip, .ba-col .tag, .ht-no, .moment-chips span, .btn { border-radius: 0 !important; }
+  .shot { box-shadow: none; }
+  .shot .bar { background: var(--ivory-2); }
+  .ht-no { border-color: var(--bronze); color: var(--forest); }
+
+  /* Chapter typography */
+  .ch-num { color: rgba(32, 37, 34, .16); }
+  .ch-label { color: var(--bronze); }
+  .ba-after .tag { background: var(--forest); color: var(--ivory); }
+  .ba-arrow { color: var(--bronze); }
+
+  /* URL plate & persona */
+  .url-plate { background: var(--forest); color: var(--ivory); border-radius: 0; border: 1px solid var(--line-bone); }
+  .url-plate .lab { color: var(--bronze); }
+  .url-plate a.go { border-color: rgba(243, 240, 232, .4); border-radius: 0; }
+  .url-plate a.go:hover { background: var(--ivory); color: var(--forest); }
+  .personas, .notes { background: transparent; }
+  .persona, .note { background: transparent; }
+  .p-num { color: var(--bronze); }
+  .p-photo img { filter: saturate(.5) contrast(1.05) sepia(.06); }
+
+  /* Buttons */
+  .btn { letter-spacing: .18em; text-transform: uppercase; font-size: 12px; }
+  .btn-solid { background: var(--forest); color: var(--ivory); }
+  .btn-solid:hover { background: var(--pine); }
+  .btn-line { border-color: var(--forest); color: var(--forest); }
+  .btn-line:hover { border-color: var(--bronze); color: var(--bronze); }
+
+  /* Footer — forest */
+  footer { background: var(--forest); border-top: none; padding: 54px 0; }
+  .foot { color: var(--bone-dim); }
+  .foot .wordmark { color: var(--ivory); }
+
+  @media print {
+    .cover { background: #fff; color: var(--ink); }
+    .cover h1, .cover .sub, .cover-meta, .cover-index, .monogram { color: var(--ink); }
+  }
+
+  /* ===== Chapter 02 — bold forest section (editorial color switching) ===== */
+  #beforeafter { background: var(--forest); color: var(--ivory); border-bottom: none; }
+  #beforeafter .ch-num { color: rgba(243, 240, 232, .16); }
+  #beforeafter .ch-title { color: var(--ivory); }
+  #beforeafter .ch-sub { color: var(--bone-dim); }
+  #beforeafter .ba { border-top: 1px solid var(--line-bone); }
+  #beforeafter .ba-row { border-bottom: 1px solid var(--line-bone); }
+  #beforeafter .ba-theme { color: var(--ivory); }
+  #beforeafter .ba-theme small { color: var(--bone-dim); }
+  #beforeafter .ba-before .tag { background: transparent; border: 1px solid var(--line-bone); color: var(--bone-dim); }
+  #beforeafter .ba-before p { color: rgba(243, 240, 232, .55); }
+  #beforeafter .ba-after .tag { background: var(--bronze); color: var(--forest); }
+  #beforeafter .ba-after p { color: var(--ivory); }
+  #beforeafter .ba-arrow { color: var(--bronze); }
+  @media print {
+    #beforeafter { background: #fff; color: var(--ink); }
+    #beforeafter .ch-title, #beforeafter .ba-theme, #beforeafter .ba-after p { color: var(--ink); }
+    #beforeafter .ba-before p, #beforeafter .ch-sub { color: var(--muted); }
   }
 </style>
 </head>
