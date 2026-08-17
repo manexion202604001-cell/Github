@@ -462,6 +462,46 @@
     .shot .bar { background: #eee; }
     .url-plate { background: #f2f2ef; color: #202522; }
   }
+
+  /* ===== FoldText — 3D fold-in reveal (vanilla port of React Bits FoldText) ===== */
+  .fold-seg {
+    display: inline-block;
+    perspective: 700px;
+    transform-style: preserve-3d;
+    vertical-align: baseline;
+  }
+  .fold-piece {
+    position: relative;
+    display: inline-block;
+    line-height: inherit;
+    transform-origin: 50% 0%;
+    backface-visibility: hidden;
+    transform: rotateX(-92deg);
+    opacity: 0;
+    transition: transform .6s cubic-bezier(.215, .61, .355, 1), opacity .6s cubic-bezier(.215, .61, .355, 1);
+  }
+  .fold-piece::after {
+    content: "";
+    position: absolute;
+    inset: -0.08em -0.02em;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    border-radius: 0.08em;
+    opacity: .55;
+    transition: opacity .6s cubic-bezier(.215, .61, .355, 1);
+    transition-delay: inherit;
+    background: linear-gradient(180deg, rgba(0, 0, 0, .58) 0%, rgba(0, 0, 0, .22) 42%, rgba(255, 255, 255, .26) 100%);
+  }
+  .fold-in .fold-piece { transform: rotateX(0deg); opacity: 1; }
+  .fold-in .fold-piece::after { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .fold-piece { transform: none !important; opacity: 1 !important; transition: none !important; }
+    .fold-piece::after { display: none !important; }
+  }
+  @media print {
+    .fold-piece { transform: none !important; opacity: 1 !important; }
+    .fold-piece::after { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -1190,6 +1230,91 @@
     });
   }, { rootMargin: "0px 0px -6% 0px" });
   targets.forEach(function (t) { io.observe(t); });
+})();
+</script>
+
+<script>
+/* FoldText — fold every piece of text into place (vanilla port of React Bits FoldText:
+   hinge=top, perspective=700, ease≈power3.out, stagger, crease shading) */
+(function () {
+  if (!("IntersectionObserver" in window)) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  var SELECTORS = [
+    ".wordmark", ".top-demo",
+    ".cover-meta > span", ".cover h1", ".cover .sub", ".monogram", ".cover-index div",
+    ".ch-label", ".ch-title", ".ch-sub",
+    ".p-num", ".p-role", ".p-org", ".p-sit", ".p-line",
+    ".moments-label", ".moment-chips span",
+    ".ba-theme", ".ba-col .tag", ".ba-col p",
+    ".url-plate .lab", ".url-plate a.go",
+    ".ht-chip", ".ht-title", ".ht-body", ".ht-get",
+    ".note h4", ".note p", ".punch",
+    ".btn", ".foot span"
+  ].join(", ");
+
+  var CJK = /[\u3000-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF]/;
+  var STAGGER = 0.022;
+  var MAX_DELAY = 0.9;
+
+  var targets = Array.prototype.slice.call(document.querySelectorAll(SELECTORS));
+
+  targets.forEach(function (el) {
+    if (el.dataset.folded) return;
+    el.dataset.folded = "1";
+
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    var idx = 0;
+    nodes.forEach(function (node) {
+      var raw = node.nodeValue;
+      if (!raw || !raw.trim()) return;
+
+      var charMode = CJK.test(raw);
+      var parts;
+      if (charMode) {
+        var NO_START = /^[、。，．,.!！?？・ーー〜…:：;；%％)）」』〉》>]/;
+        var NO_END = /[(（「『〈《]$/;
+        parts = [];
+        Array.from(raw).forEach(function (ch) {
+          var prev = parts.length ? parts[parts.length - 1] : null;
+          var isSpace = /^\s$/.test(ch);
+          if (!isSpace && prev !== null && !/^\s+$/.test(prev) && (NO_START.test(ch) || NO_END.test(prev))) {
+            parts[parts.length - 1] += ch;
+          } else {
+            parts.push(ch);
+          }
+        });
+      } else {
+        parts = raw.split(/(\s+)/);
+      }
+      var frag = document.createDocumentFragment();
+
+      parts.forEach(function (part) {
+        if (!part) return;
+        if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+        var seg = document.createElement("span");
+        seg.className = "fold-seg";
+        var piece = document.createElement("span");
+        piece.className = "fold-piece";
+        piece.textContent = part;
+        piece.style.transitionDelay = Math.min(idx * STAGGER, MAX_DELAY).toFixed(3) + "s";
+        idx++;
+        seg.appendChild(piece);
+        frag.appendChild(seg);
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+  });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("fold-in"); io.unobserve(en.target); }
+    });
+  }, { rootMargin: "0px 0px -6% 0px" });
+  targets.forEach(function (el) { io.observe(el); });
 })();
 </script>
 </body>
