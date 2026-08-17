@@ -7,7 +7,7 @@
 <meta name="description" content="K2J Bridge introduction guide — who it is for, before/after, and how to use it. Available in English, Korean, and Japanese.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&family=Noto+Serif+KR:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Noto+Serif+KR:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --forest: #16352D;
@@ -337,6 +337,12 @@
     #beforeafter .ch-title, #beforeafter .ba-theme, #beforeafter .ba-after p { color: var(--ink); }
     #beforeafter .ba-before p, #beforeafter .ch-sub { color: var(--muted); }
   }
+
+  /* ===== Japanese mode — full mincho (serif) body, including numerals ===== */
+  html[data-lang="ja"] body {
+    font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", "Cormorant Garamond", Georgia, serif;
+  }
+  html[data-lang="ja"] b, html[data-lang="ja"] strong { font-weight: 600; }
 </style>
 </head>
 <body>
