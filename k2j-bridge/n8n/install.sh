@@ -11,7 +11,7 @@
 #   [instance-url] 省略時: https://manexion.app.n8n.cloud
 #
 # After running: open the workflow in n8n, paste your keys into the
-# Config node (Anthropic / Google AI Studio / Rakuten), and save.
+# Config node (Anthropic / OpenRouter / Rakuten), and save.
 
 set -euo pipefail
 
@@ -64,6 +64,6 @@ echo "Webhook URL:  $BASE/webhook/k2j-plan"
 echo ""
 echo "Next steps:"
 echo "  1. Open the workflow in n8n and paste your keys into the Config node"
-echo "     (anthropicApiKey / geminiApiKey / rakutenAppId), then Save."
+echo "     (anthropicApiKey / openrouterApiKey / rakutenAppId), then Save."
 echo "  2. In the dashboard's '⚙️ n8n Orchestration Settings', click"
 echo "     'Use manexion n8n' (or paste the URL above) and Save."

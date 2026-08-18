@@ -29,8 +29,8 @@
             },
             {
               "id": "cfg-2",
-              "name": "geminiApiKey",
-              "value": "PASTE_YOUR_GOOGLE_AI_STUDIO_KEY",
+              "name": "openrouterApiKey",
+              "value": "PASTE_YOUR_OPENROUTER_KEY",
               "type": "string"
             },
             {
@@ -137,21 +137,31 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={{ $('Config').first().json.geminiApiKey }}",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "content-type",
               "value": "application/json"
+            },
+            {
+              "name": "authorization",
+              "value": "=Bearer {{ $('Config').first().json.openrouterApiKey }}"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.prompt }] }] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'google/gemini-2.5-flash-image', messages: [{ role: 'user', content: $json.prompt }], modalities: ['image', 'text'] }) }}",
         "options": {
-          "timeout": 120000
+          "timeout": 120000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          }
         }
       },
       "id": "b1000000-0000-0000-0000-000000000008",
@@ -159,11 +169,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [980, 0],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
-        "jsCode": "// Assemble the final response: plan + 3 data-URL images (missing ones stay null)\nconst plan = $('Parse Plan').first().json.plan;\nconst images = [null, null, null];\n$input.all().forEach((item, i) => {\n  const idx = $('Parse Plan').all()[i] ? $('Parse Plan').all()[i].json.idx : i;\n  const parts = item.json.candidates?.[0]?.content?.parts || [];\n  const imgPart = parts.find(p => p.inlineData && p.inlineData.data);\n  if (imgPart) images[idx] = `data:${imgPart.inlineData.mimeType || 'image/png'};base64,${imgPart.inlineData.data}`;\n});\nreturn [{\n  json: {\n    plan,\n    images,\n    meta: {\n      generatedAt: new Date().toISOString(),\n      orchestrator: 'n8n',\n      liveDataUsed: !!$('Build Claude Request').first().json.claudeBody.system.includes('liveMarketData contains REAL')\n    }\n  }\n}];"
+        "jsCode": "// Assemble the final response: plan + 3 data-URL images (missing ones stay null)\nconst plan = $('Parse Plan').first().json.plan;\nconst images = [null, null, null];\n$input.all().forEach((item, i) => {\n  const idx = $('Parse Plan').all()[i] ? $('Parse Plan').all()[i].json.idx : i;\n  let url = null;\n  // OpenRouter (chat/completions) format\n  const orImages = item.json.choices?.[0]?.message?.images || [];\n  const orHit = orImages.find(p => p.image_url && p.image_url.url);\n  if (orHit) url = orHit.image_url.url;\n  // Gemini native format (fallback)\n  if (!url) {\n    const parts = item.json.candidates?.[0]?.content?.parts || [];\n    const imgPart = parts.find(p => p.inlineData && p.inlineData.data);\n    if (imgPart) url = `data:${imgPart.inlineData.mimeType || 'image/png'};base64,${imgPart.inlineData.data}`;\n  }\n  if (url && /^data:image\\//.test(url)) images[idx] = url;\n});\nreturn [{\n  json: {\n    plan,\n    images,\n    meta: {\n      generatedAt: new Date().toISOString(),\n      orchestrator: 'n8n',\n      imageProvider: 'openrouter/google/gemini-2.5-flash-image',\n      liveDataUsed: !!$('Build Claude Request').first().json.claudeBody.system.includes('liveMarketData contains REAL')\n    }\n  }\n}];"
       },
       "id": "b1000000-0000-0000-0000-000000000009",
       "name": "Assemble Response",

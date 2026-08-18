@@ -18,7 +18,7 @@
    ```
    https://raw.githubusercontent.com/manexion202604001-cell/Github/main/k2j-bridge/n8n/k2j-product-planning.json
    ```
-2. **Configノード**にキーを3つ貼る(下記参照)→ 保存 → **Active** をON
+2. **Configノード**にキーを貼る(下記参照)→ 保存 → **Active** をON
 3. ダッシュボードの `⚙️ n8n Orchestration Settings` で **「Use manexion n8n」ボタン → Save**(URLは自動入力されます)
 
 または、ターミナルで1コマンド(n8nの `Settings → API` でAPIキー発行後):
@@ -34,7 +34,8 @@
 1. **インポート** — n8nの `Workflows → Import from File` で `k2j-product-planning.json` を取り込む
 2. **Configノードを編集** — 以下の値を自分のものに置き換える
    - `anthropicApiKey` — [console.anthropic.com](https://console.anthropic.com/settings/keys) で発行
-   - `geminiApiKey` — [Google AI Studio](https://aistudio.google.com/app/apikey) で発行(Nano Banana = gemini-2.5-flash-image 用)
+   - `openrouterApiKey` — [openrouter.ai/keys](https://openrouter.ai/settings/keys) で発行(Nano Banana = `google/gemini-2.5-flash-image` 用。クレジットを少額チャージしておく)
+     - ※Google AI Studio直叩きにしない理由: Gemini APIの無料枠は画像生成モデルの上限が0回(`limit: 0`)のため、Google Cloud課金設定なしでは使えない。OpenRouterならプリペイドだけで同モデルが使える
    - `rakutenAppId` — [楽天ウェブサービス](https://webservice.rakuten.co.jp/)で無料発行(空のままでもOK。その場合ライブ実データなしで生成)
    - ※本番運用ではConfigノード直書きではなく、n8nのCredentials(Header Auth等)への移行を推奨
 3. **アクティベート** — ワークフローを `Active` にする
@@ -53,7 +54,7 @@ Webhook(CORS対応)
   → Build Claude Request(実データを根拠に組み込んだ強化プロンプト)
   → Claude(商品企画をJSON生成)
   → Parse Plan(検証+画像コンセプト3件へ分岐)
-  → Nano Banana ×3(gemini-2.5-flash-image でパッケージ画像生成)
+  → Nano Banana ×3(OpenRouter経由 google/gemini-2.5-flash-image でパッケージ画像生成。1件ずつ間隔を空けて送信+自動リトライ)
   → Assemble(plan + images を結合)
   → Respond(JSONで返却)
 ```
@@ -64,7 +65,7 @@ Webhook(CORS対応)
 {
   "plan": { "brandName": "...", "productName": "...", "marketEvidence": ["..."], ... },
   "images": ["data:image/png;base64,...", "...", "..."],
-  "meta": { "generatedAt": "...", "orchestrator": "n8n", "liveDataUsed": true }
+  "meta": { "generatedAt": "...", "orchestrator": "n8n", "imageProvider": "openrouter/google/gemini-2.5-flash-image", "liveDataUsed": true }
 }
 ```
 
