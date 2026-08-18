@@ -1,0 +1,215 @@
+{
+  "name": "K2J Bridge — AI Product Planning (Claude + Nano Banana)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "k2j-plan",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "b1000000-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-560, 0],
+      "webhookId": "k2j-plan"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-1",
+              "name": "anthropicApiKey",
+              "value": "PASTE_YOUR_ANTHROPIC_API_KEY",
+              "type": "string"
+            },
+            {
+              "id": "cfg-2",
+              "name": "geminiApiKey",
+              "value": "PASTE_YOUR_GOOGLE_AI_STUDIO_KEY",
+              "type": "string"
+            },
+            {
+              "id": "cfg-3",
+              "name": "rakutenAppId",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "cfg-4",
+              "name": "anthropicModel",
+              "value": "claude-sonnet-5",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "b1000000-0000-0000-0000-000000000002",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-340, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the webhook payload (sent as text/plain to avoid CORS preflight)\nconst item = $input.first().json;\nlet payload = item.body;\nif (typeof payload === 'string') {\n  try { payload = JSON.parse(payload); } catch (e) { payload = {}; }\n}\npayload = payload || {};\nconst genreDefaults = { beauty: 100939, food: 100227, living: 562637 };\nconst category = ['beauty', 'food', 'living'].includes(payload.category) ? payload.category : 'beauty';\nreturn [{\n  json: {\n    category,\n    categoryLabel: payload.categoryLabel || category,\n    priceRange: String(payload.priceRange || ''),\n    channel: String(payload.channel || ''),\n    genreId: Number(payload.genreId) || genreDefaults[category],\n    referenceTrendSummary: payload.referenceTrendSummary || null,\n    rakutenAppId: item.rakutenAppId || '',\n    anthropicModel: item.anthropicModel || 'claude-sonnet-5'\n  }\n}];"
+      },
+      "id": "b1000000-0000-0000-0000-000000000003",
+      "name": "Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-120, 0]
+    },
+    {
+      "parameters": {
+        "url": "=https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20220601?applicationId={{ $json.rakutenAppId }}&genreId={{ $json.genreId }}&format=json&formatVersion=2&hits=10",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "b1000000-0000-0000-0000-000000000004",
+      "name": "Rakuten Ranking (live)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [100, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the grounded Claude request (same strengthened prompt as the dashboard)\nconst prep = $('Prepare').first().json;\nconst rk = $input.first().json;\nconst items = Array.isArray(rk.Items) ? rk.Items.map(x => x.Item || x) : [];\n\nconst context = {\n  category: prep.categoryLabel,\n  priceRange: prep.priceRange,\n  channel: prep.channel,\n  referenceTrendSummary: prep.referenceTrendSummary\n};\nlet hasLive = false;\nif (items.length) {\n  hasLive = true;\n  const prices = items.map(i => Number(i.itemPrice)).filter(Number.isFinite).sort((a, b) => a - b);\n  const median = prices.length ? (prices.length % 2 ? prices[Math.floor(prices.length / 2)] : Math.round((prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2)) : null;\n  context.liveMarketData = {\n    source: 'Rakuten Ichiba Ranking API — real-time best sellers, fetched moments ago',\n    fetchedAt: new Date().toISOString(),\n    medianPriceYen: median,\n    topItems: items.slice(0, 10).map(i => ({\n      rank: i.rank,\n      name: String(i.itemName || '').slice(0, 70),\n      priceYen: Number(i.itemPrice) || null,\n      reviewCount: Number(i.reviewCount) || 0,\n      reviewAverage: Number(i.reviewAverage) || null\n    }))\n  };\n}\n\nconst liveRules = hasLive ? `\\n- liveMarketData contains REAL best-selling items fetched from Rakuten Ichiba minutes ago. Treat it as the primary evidence: analyze what the top items have in common (function, format, claims), find an unserved gap, and design the concept to win that gap rather than imitate the leaders.\\n- Anchor pricing to liveMarketData: position the target retail price relative to medianPriceYen and the observed price range, and say so explicitly in the price section.\\n- In marketEvidence, cite at least 2 concrete observations from liveMarketData and state the gap this concept exploits. Refer to items generically (by rank or characteristic), never by their brand names.` : `\\n- Only reference trend data comes from referenceTrendSummary; treat it as directional, not real-time, and keep claims proportionate.`;\n\nconst system = `You are a senior product manager and market analyst who supports Korean companies in developing OEM products for the Japanese market. You have deep knowledge of Japanese consumer behavior, e-commerce merchandising, and Japanese regulations (薬機法 / Pharmaceutical and Medical Device Act, 食品表示法 / Food Labeling Act, 景品表示法 / Act against Unjustifiable Premiums, PSE for electricals).\\nBased on the provided Japanese market data, propose exactly one highly original OEM product concept.\\n\\nGrounding rules (critical for accuracy):\\n- Base every section on the data provided. Do NOT invent market facts that contradict it.${liveRules}\\n- The concept must be feasible for a Korean OEM/ODM factory to produce and export to Japan.\\n- Regulatory bullets must name the specific Japanese law/rule and the concrete action required — no generic advice.\\n\\nOutput constraints:\\n- Keep the JSON field names exactly as specified below, and write ALL JSON field values in English (currency amounts may use the yen sign, e.g. ¥1,980).\\n- The brand name and product name must be completely original coined words that never duplicate or resemble any real brand or product in Japan or Korea.\\n- Your output must consist of the JSON only, with no other text and no code fences.\\n- Every hex value in colors must use the \\\"#rrggbb\\\" format.\\n\\n{\\n  \\\"brandName\\\": \\\"Original brand name in Latin letters\\\",\\n  \\\"productName\\\": \\\"Product name (in English)\\\",\\n  \\\"packageLabel\\\": \\\"Short package label in capital letters (max 12 characters)\\\",\\n  \\\"packageSub\\\": \\\"Short package sub-copy in Latin letters (max 24 characters)\\\",\\n  \\\"lead\\\": \\\"Product concept summary in English (about 160 characters)\\\",\\n  \\\"marketEvidence\\\": [\\\"3 bullet points citing the specific market data observations that justify this concept\\\"],\\n  \\\"target\\\": [\\\"3 bullet points\\\"],\\n  \\\"spec\\\": [\\\"3 bullet points\\\"],\\n  \\\"price\\\": [\\\"3 bullet points — the first must contain a target retail price such as ¥1,980\\\"],\\n  \\\"regulatory\\\": [\\\"3 bullet points, each naming the specific law and required action\\\"],\\n  \\\"images\\\": [\\n    {\\\"name\\\": \\\"Concept A\\\", \\\"desc\\\": \\\"Design intent (about 80 characters)\\\", \\\"colors\\\": {\\\"bg1\\\":\\\"#hex\\\",\\\"bg2\\\":\\\"#hex\\\",\\\"body\\\":\\\"#hex\\\",\\\"cap\\\":\\\"#hex\\\",\\\"text\\\":\\\"#hex\\\",\\\"mist\\\":\\\"#hex\\\"}},\\n    {\\\"name\\\": \\\"Concept B\\\", \\\"desc\\\": \\\"...\\\", \\\"colors\\\": {\\\"bg1\\\":\\\"#hex\\\",\\\"bg2\\\":\\\"#hex\\\",\\\"body\\\":\\\"#hex\\\",\\\"cap\\\":\\\"#hex\\\",\\\"text\\\":\\\"#hex\\\",\\\"mist\\\":\\\"#hex\\\"}},\\n    {\\\"name\\\": \\\"Concept C\\\", \\\"desc\\\": \\\"...\\\", \\\"colors\\\": {\\\"bg1\\\":\\\"#hex\\\",\\\"bg2\\\":\\\"#hex\\\",\\\"body\\\":\\\"#hex\\\",\\\"cap\\\":\\\"#hex\\\",\\\"text\\\":\\\"#hex\\\",\\\"mist\\\":\\\"#hex\\\"}}\\n  ]\\n}`;\n\nconst user = `Based on the following conditions and Japanese EC market data, propose one OEM product concept in the JSON format specified. Write all field values in English.\\n\\n${JSON.stringify(context, null, 2)}`;\n\nreturn [{\n  json: {\n    claudeBody: {\n      model: prep.anthropicModel,\n      max_tokens: 3000,\n      system,\n      messages: [{ role: 'user', content: user }]\n    }\n  }\n}];"
+      },
+      "id": "b1000000-0000-0000-0000-000000000005",
+      "name": "Build Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Config').first().json.anthropicApiKey }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claudeBody) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "b1000000-0000-0000-0000-000000000006",
+      "name": "Claude (plan)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude's JSON plan and fan out one item per product image concept\nconst res = $input.first().json;\nconst text = (res.content || []).filter(b => b.type === 'text').map(b => b.text).join('');\nconst jsonStr = text.trim().replace(/^```(json)?\\s*/i, '').replace(/```\\s*$/i, '');\nlet plan;\ntry { plan = JSON.parse(jsonStr); } catch (e) { throw new Error('Could not parse the Claude response as JSON: ' + text.slice(0, 200)); }\nconst prep = $('Prepare').first().json;\nconst images = Array.isArray(plan.images) ? plan.images.slice(0, 3) : [];\nreturn images.map((img, idx) => {\n  const colorWords = Object.values(img.colors || {}).filter(Boolean).join(', ');\n  return {\n    json: {\n      idx,\n      plan,\n      prompt: [\n        `Professional commercial product photograph of an original ${prep.categoryLabel} product package design concept.`,\n        `Product concept name: \\\"${plan.productName}\\\"; design direction \\\"${img.name}\\\": ${img.desc}.`,\n        `Color palette to use on the packaging: ${colorWords}.`,\n        'Clean white or softly gradient studio background, soft even studio lighting, realistic packaging mockup, high detail, centered composition.',\n        'Do not depict any real, existing brand names, logos, or trademarks — the packaging text should be generic or illegible.'\n      ].join(' ')\n    }\n  };\n});"
+      },
+      "id": "b1000000-0000-0000-0000-000000000007",
+      "name": "Parse Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={{ $('Config').first().json.geminiApiKey }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.prompt }] }] }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "b1000000-0000-0000-0000-000000000008",
+      "name": "Nano Banana (images)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [980, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Assemble the final response: plan + 3 data-URL images (missing ones stay null)\nconst plan = $('Parse Plan').first().json.plan;\nconst images = [null, null, null];\n$input.all().forEach((item, i) => {\n  const idx = $('Parse Plan').all()[i] ? $('Parse Plan').all()[i].json.idx : i;\n  const parts = item.json.candidates?.[0]?.content?.parts || [];\n  const imgPart = parts.find(p => p.inlineData && p.inlineData.data);\n  if (imgPart) images[idx] = `data:${imgPart.inlineData.mimeType || 'image/png'};base64,${imgPart.inlineData.data}`;\n});\nreturn [{\n  json: {\n    plan,\n    images,\n    meta: {\n      generatedAt: new Date().toISOString(),\n      orchestrator: 'n8n',\n      liveDataUsed: !!$('Build Claude Request').first().json.claudeBody.system.includes('liveMarketData contains REAL')\n    }\n  }\n}];"
+      },
+      "id": "b1000000-0000-0000-0000-000000000009",
+      "name": "Assemble Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b1000000-0000-0000-0000-00000000000a",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1420, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Config", "type": "main", "index": 0 }]] },
+    "Config": { "main": [[{ "node": "Prepare", "type": "main", "index": 0 }]] },
+    "Prepare": { "main": [[{ "node": "Rakuten Ranking (live)", "type": "main", "index": 0 }]] },
+    "Rakuten Ranking (live)": { "main": [[{ "node": "Build Claude Request", "type": "main", "index": 0 }]] },
+    "Build Claude Request": { "main": [[{ "node": "Claude (plan)", "type": "main", "index": 0 }]] },
+    "Claude (plan)": { "main": [[{ "node": "Parse Plan", "type": "main", "index": 0 }]] },
+    "Parse Plan": { "main": [[{ "node": "Nano Banana (images)", "type": "main", "index": 0 }]] },
+    "Nano Banana (images)": { "main": [[{ "node": "Assemble Response", "type": "main", "index": 0 }]] },
+    "Assemble Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

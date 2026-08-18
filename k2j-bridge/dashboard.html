@@ -689,15 +689,32 @@ input:focus, select:focus, textarea:focus {
     </div>
     <div class="api-panel" id="imageApiPanel">
       <p class="api-desc">
-        Enter your own image generation API key and the product images will be created as <b>actual AI-generated images</b> instead of package mockup diagrams.<br>
-        <b>The key is stored only in this browser (localStorage) and is sent directly from your browser to the image generation API provider. It is never sent to or stored on this site's servers.</b>
-        API usage fees are billed to your own API account. Do not use this on a shared computer.<br>
-        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get an API key here →</a>
+        Enter your own <b>Google AI Studio API key</b> and the product images will be created as <b>actual AI-generated images by Gemini 2.5 Flash Image ("Nano Banana")</b> instead of package mockup diagrams.<br>
+        <b>The key is stored only in this browser (localStorage) and is sent directly from your browser to Google's Gemini API. It is never sent to or stored on this site's servers.</b>
+        API usage fees are billed to your own Google account. Do not use this on a shared computer.<br>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a Google AI Studio API key here →</a>
       </p>
       <div class="api-row">
-        <input type="text" id="imageApiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+        <input type="text" id="imageApiKeyInput" placeholder="AIza..." autocomplete="off" spellcheck="false">
         <button class="btn-save" id="imageApiSaveBtn" type="button">Save</button>
         <button class="btn-clear" id="imageApiClearBtn" type="button">Delete</button>
+      </div>
+    </div>
+
+    <div class="api-bar">
+      <span class="api-status" id="n8nStatus">ℹ️ Direct mode — generation calls the AI APIs straight from this browser</span>
+      <button class="api-toggle" id="n8nToggleBtn" type="button">⚙️ n8n Orchestration Settings</button>
+    </div>
+    <div class="api-panel" id="n8nPanel">
+      <p class="api-desc">
+        Manage plan generation with <b>n8n</b>: set the <b>production webhook URL</b> of the bundled workflow (<code>n8j-bridge/n8n/k2j-product-planning.json</code> in this repository — import it into your n8n, fill in the credentials, activate) and the ✨ Generate button will run <b>through your n8n instance</b> instead of calling the AI APIs from the browser.<br>
+        In n8n mode, <b>API keys live only in n8n's credential store</b> (nothing in this browser), every run is logged in n8n's execution history with retries and error handling, and the workflow fetches the live Rakuten ranking, generates the concept with Claude, and renders the 3 product images with <b>Nano Banana</b> server-side.<br>
+        The URL is stored only in this browser (localStorage). If the n8n call fails, generation automatically falls back to direct browser mode.
+      </p>
+      <div class="api-row">
+        <input type="text" id="n8nUrlInput" placeholder="https://your-n8n.example.com/webhook/k2j-plan" autocomplete="off" spellcheck="false">
+        <button class="btn-save" id="n8nSaveBtn" type="button">Save</button>
+        <button class="btn-clear" id="n8nClearBtn" type="button">Delete</button>
       </div>
     </div>
 
@@ -1629,8 +1646,8 @@ refreshApiStatus();
 
 // ================= Product image generation API settings (stored in the browser only / BYOK) =================
 const IMAGE_KEY_STORAGE = "k2j_image_api_key";
+const NANOBANANA_MODEL = "gemini-2.5-flash-image"; // Google "Nano Banana"
 // Try the first model, and retry with the next model only on model/parameter-related errors
-const IMAGE_MODELS = ["dall-e-3", "gpt-image-1"];
 
 function getImageKey() {
   return localStorage.getItem(IMAGE_KEY_STORAGE) || "";
@@ -1662,11 +1679,9 @@ document.getElementById("imageApiSaveBtn").addEventListener("click", async () =>
   const statusEl = document.getElementById("imageApiStatus");
   statusEl.textContent = "⏳ Checking the connection to the image generation API…";
   try {
-    const res = await fetch("https://api.openai.com/v1/models", {
-      headers: { "authorization": `Bearer ${v}` },
-    });
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${NANOBANANA_MODEL}?key=${encodeURIComponent(v)}`);
     if (res.ok) {
-      statusEl.textContent = "✅ Image generation API key set — connection OK. Real AI images will be created on generation";
+      statusEl.textContent = "✅ Gemini (Nano Banana) key set — connection OK. Real AI images will be created on generation";
       statusEl.classList.add("on");
     } else {
       let detail = "";
@@ -1695,24 +1710,19 @@ function buildImagePrompt(catLabel, data, img) {
   ].join(" ");
 }
 
-async function requestImageWithModel(key, model, prompt) {
+async function generateProductImage(prompt) {
+  const key = getImageKey();
+  if (!key) return null;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   let res;
   try {
-    // Optional parameters differ per model, so send only the minimal payload valid for all models
-    res = await fetch("https://api.openai.com/v1/images/generations", {
+    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${NANOBANANA_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "authorization": `Bearer ${key}`,
-      },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        model,
-        prompt,
-        size: "1024x1024",
-        n: 1,
+        contents: [{ parts: [{ text: prompt }] }],
       }),
       signal: controller.signal,
     });
@@ -1723,39 +1733,15 @@ async function requestImageWithModel(key, model, prompt) {
   if (!res.ok) {
     let detail = "";
     try { detail = (await res.json()).error?.message || ""; } catch (e) { /* noop */ }
-    throw new Error(`Image generation API error (${res.status})${detail ? ": " + detail : ""}`);
+    throw new Error(`Nano Banana API error (${res.status})${detail ? ": " + detail.slice(0, 140) : ""}`);
   }
 
   const resData = await res.json();
-  const item = resData.data && resData.data[0];
-  if (item && item.b64_json) return `data:image/png;base64,${item.b64_json}`;
-  if (item && item.url) return item.url;
-  throw new Error("The image generation API returned an invalid response");
-}
-
-function isModelSpecificError(err) {
-  return /model|parameter|verified|organization/i.test((err && err.message) || "");
-}
-
-let imageModelStartIdx = 0; // starting position so models found to be unsupported are skipped next time
-
-async function generateProductImage(prompt) {
-  const key = getImageKey();
-  if (!key) return null;
-  let lastErr = null;
-  for (let m = imageModelStartIdx; m < IMAGE_MODELS.length; m++) {
-    try {
-      const out = await requestImageWithModel(key, IMAGE_MODELS[m], prompt);
-      imageModelStartIdx = m;
-      return out;
-    } catch (err) {
-      lastErr = err;
-      // Errors that switching models cannot fix (invalid key, no credit, etc.) abort immediately
-      if (!isModelSpecificError(err)) throw err;
-      if (m + 1 < IMAGE_MODELS.length) imageModelStartIdx = m + 1;
-    }
-  }
-  throw lastErr;
+  const parts = resData.candidates?.[0]?.content?.parts || [];
+  const imgPart = parts.find(p => p.inlineData && p.inlineData.data);
+  if (imgPart) return `data:${imgPart.inlineData.mimeType || "image/png"};base64,${imgPart.inlineData.data}`;
+  const blockReason = resData.promptFeedback?.blockReason;
+  throw new Error(blockReason ? `Generation blocked (${blockReason})` : "Nano Banana returned no image data");
 }
 
 let currentImageRenderToken = 0;
@@ -1768,10 +1754,12 @@ function describeImageError(err) {
 
 async function generateProposalImages(cat, catLabel, data, token) {
   // Generate the 3 concepts sequentially rather than in parallel, to avoid hitting per-minute rate limits
+  const fromN8n = (typeof externalImages !== "undefined" && externalImages) ? externalImages : null;
   for (let i = 0; i < data.images.length; i++) {
     const img = data.images[i];
     try {
-      const dataUrl = await generateProductImage(buildImagePrompt(catLabel, data, img));
+      const dataUrl = (fromN8n && fromN8n[i]) ? fromN8n[i] : await generateProductImage(buildImagePrompt(catLabel, data, img));
+      if (!dataUrl) throw new Error("No image source available");
       if (token !== currentImageRenderToken) return;
       const visual = document.getElementById(`img-visual-${i}`);
       const badge = document.getElementById(`img-badge-${i}`);
@@ -1781,11 +1769,12 @@ async function generateProposalImages(cat, catLabel, data, token) {
       if (token !== currentImageRenderToken) return;
       const visual = document.getElementById(`img-visual-${i}`);
       const badge = document.getElementById(`img-badge-${i}`);
+      const quietFallback = (err && err.message === "No image source available");
       if (visual) {
         visual.innerHTML = SVG_BY_CAT[cat]("_" + cat + i + "_fallback" + token, img.colors, { label: data.packageLabel, sub: data.packageSub, big: data.statBig, badge: data.badge })
-          + `<div class="img-gen-error">⚠️ ${escapeHtml(describeImageError(err))}</div>`;
+          + (quietFallback ? "" : `<div class="img-gen-error">⚠️ ${escapeHtml(describeImageError(err))}</div>`);
       }
-      if (badge) badge.textContent = "ℹ️ SAMPLE (image generation failed)";
+      if (badge) badge.textContent = quietFallback ? "ℹ️ SAMPLE" : "ℹ️ SAMPLE (image generation failed)";
     }
   }
 }
@@ -1838,21 +1827,59 @@ function refreshProductSelect() {
 refreshProductSelect();
 
 // ================= Plan generation request to the Claude API =================
-function buildPrompt(cat, priceLabel, channelLabel) {
+function medianOf(nums) {
+  const a = nums.filter(n => Number.isFinite(n)).sort((x, y) => x - y);
+  if (!a.length) return null;
+  const mid = Math.floor(a.length / 2);
+  return a.length % 2 ? a[mid] : Math.round((a[mid - 1] + a[mid]) / 2);
+}
+
+function buildPlanContext(cat, priceLabel, channelLabel, liveItems) {
   const catLabel = { beauty: "Beauty & Cosmetics", food: "Food", living: "Home Goods & Appliances" }[cat];
   const trend = TREND[cat];
   const context = {
     category: catLabel,
     priceRange: priceLabel,
     channel: channelLabel,
-    topRankedProducts: trend.rank.slice(0, 3).map(r => ({ name: r.name, growth: r.growth, tags: r.tags })),
-    reviewInsights: trend.insights.map(i => ({ type: i.type, title: i.title, body: i.body })),
+    referenceTrendSummary: {
+      topRankedProducts: trend.rank.slice(0, 3).map(r => ({ name: r.name, growth: r.growth, tags: r.tags })),
+      reviewInsights: trend.insights.map(i => ({ type: i.type, title: i.title, body: i.body })),
+    },
   };
+  if (Array.isArray(liveItems) && liveItems.length) {
+    context.liveMarketData = {
+      source: "Rakuten Ichiba Ranking API — real-time best sellers, fetched moments ago",
+      fetchedAt: new Date().toISOString(),
+      medianPriceYen: medianOf(liveItems.map(it => Number(it.itemPrice))),
+      topItems: liveItems.slice(0, 10).map(it => ({
+        rank: it.rank,
+        name: String(it.itemName || "").slice(0, 70),
+        priceYen: Number(it.itemPrice) || null,
+        reviewCount: Number(it.reviewCount) || 0,
+        reviewAverage: Number(it.reviewAverage) || null,
+      })),
+    };
+  }
+  return { catLabel, context };
+}
 
-  const system = `You are an excellent product manager and marketer who supports Korean companies in developing OEM products for the Japanese market.
-Based on the provided Japanese market (domestic e-commerce mall) trend data, propose exactly one highly original OEM product concept.
+function buildPrompt(cat, priceLabel, channelLabel, liveItems) {
+  const { context } = buildPlanContext(cat, priceLabel, channelLabel, liveItems);
+  const hasLive = !!context.liveMarketData;
 
-Important constraints:
+  const system = `You are a senior product manager and market analyst who supports Korean companies in developing OEM products for the Japanese market. You have deep knowledge of Japanese consumer behavior, e-commerce merchandising, and Japanese regulations (薬機法 / Pharmaceutical and Medical Device Act, 食品表示法 / Food Labeling Act, 景品表示法 / Act against Unjustifiable Premiums, PSE for electricals).
+Based on the provided Japanese market data, propose exactly one highly original OEM product concept.
+
+Grounding rules (critical for accuracy):
+- Base every section on the data provided. Do NOT invent market facts that contradict it.${hasLive ? `
+- liveMarketData contains REAL best-selling items fetched from Rakuten Ichiba minutes ago. Treat it as the primary evidence: analyze what the top items have in common (function, format, claims), find an unserved gap, and design the concept to win that gap rather than imitate the leaders.
+- Anchor pricing to liveMarketData: position the target retail price relative to medianPriceYen and the observed price range, and say so explicitly in the price section.
+- In marketEvidence, cite at least 2 concrete observations from liveMarketData (e.g. "8 of 10 top items are X", "median price ¥N", "items with >1,000 reviews all claim Y") and state the gap this concept exploits. Refer to items generically (by rank or characteristic), never by their brand names.` : `
+- Only reference trend data comes from referenceTrendSummary; treat it as directional, not real-time, and keep claims proportionate.`}
+- The concept must be feasible for a Korean OEM/ODM factory to produce and export to Japan.
+- Regulatory bullets must name the specific Japanese law/rule and the concrete action required (e.g. labeling, testing, certification) — no generic advice.
+
+Output constraints:
 - Keep the JSON field names exactly as specified below, and write ALL JSON field values in English (currency amounts may use the yen sign, e.g. ¥1,980).
 - The brand name and product name must be completely original coined words. They must never duplicate or resemble any famous brand or product name that may actually exist in Japan or Korea; names that imitate existing real products are strictly forbidden.
 - Your output must consist of the following JSON format only, with no other text (no explanations, preambles, or code fences).
@@ -1864,10 +1891,11 @@ Important constraints:
   "packageLabel": "Short package label in capital letters (max 12 characters)",
   "packageSub": "Short package sub-copy in Latin letters (max 24 characters)",
   "lead": "Product concept summary in English (about 160 characters)",
+  "marketEvidence": ["3 bullet points citing the specific market data observations that justify this concept and the gap it targets"],
   "target": ["3 bullet points describing the target audience"],
   "spec": ["3 bullet points on formula / specifications"],
-  "price": ["3 bullet points on pricing and cost planning — the first one must contain a target retail price figure such as ¥1,980"],
-  "regulatory": ["3 bullet points on Japanese regulatory checkpoints"],
+  "price": ["3 bullet points on pricing and cost planning — the first one must contain a target retail price figure such as ¥1,980${hasLive ? " and reference the live median price" : ""}"],
+  "regulatory": ["3 bullet points on Japanese regulatory checkpoints, each naming the specific law and required action"],
   "images": [
     {"name": "Name of concept A", "desc": "Design intent in English (about 80 characters)", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
     {"name": "Name of concept B", "desc": "...", "colors": {"bg1":"#hex","bg2":"#hex","body":"#hex","cap":"#hex","text":"#hex","mist":"#hex"}},
@@ -1875,7 +1903,7 @@ Important constraints:
   ]
 }`;
 
-  const user = `Based on the following conditions and EC mall trend data, propose one OEM product concept in the JSON format specified. Write all field values in English.
+  const user = `Based on the following conditions and Japanese EC market data, propose one OEM product concept in the JSON format specified. Write all field values in English.
 
 ${JSON.stringify(context, null, 2)}`;
 
@@ -1932,9 +1960,19 @@ function describeClaudeError(err) {
   return (err && err.message) ? err.message : String(err);
 }
 
-async function generateWithClaude(cat, priceLabel, channelLabel) {
-  const { system, user } = buildPrompt(cat, priceLabel, channelLabel);
-  return callClaudeAPI(system, user, 2000);
+async function generateWithClaude(cat, priceLabel, channelLabel, liveItems) {
+  const { system, user } = buildPrompt(cat, priceLabel, channelLabel, liveItems);
+  return callClaudeAPI(system, user, 3000);
+}
+
+async function tryFetchLiveItemsForPlan(cat) {
+  if (typeof getRakutenId !== "function" || !getRakutenId()) return null;
+  try {
+    const data = await fetchRakutenRanking(cat);
+    return (data.Items || []).map(x => x.Item || x);
+  } catch (e) {
+    return null; // live grounding is best-effort
+  }
 }
 
 // ================= Plan data normalization (missing fields fall back to the sample) =================
@@ -1952,6 +1990,7 @@ function normalizeProposal(cat, raw) {
     statBig: (raw.statBig || (cat === "food" ? fb.statBig : "") || "").toString().slice(0, 6),
     badge: (cat === "food" ? (fb.badge || "") : "").toString().slice(0, 12),
     lead: (raw.lead || fb.lead).toString().slice(0, 220),
+    marketEvidence: (Array.isArray(raw.marketEvidence) && raw.marketEvidence.length) ? raw.marketEvidence.slice(0, 4).map(String) : null,
     target: pickArr(raw.target, fb.target),
     spec: pickArr(raw.spec, fb.spec),
     price: pickArr(raw.price, fb.price),
@@ -2059,6 +2098,7 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
   const factories = PROPOSALS[cat].factories;
   lastProposalContext = { cat, priceLabel, channelLabel, data, factories };
   const items = [
+    ...(data.marketEvidence ? [{ icon: "📊", title: "Market Evidence (why this will sell)", list: data.marketEvidence }] : []),
     { icon: "🎯", title: "Target", list: data.target },
     { icon: "⚗️", title: "Formula & Specs", list: data.spec },
     { icon: "💰", title: "Pricing & Cost Plan", list: data.price },
@@ -2066,7 +2106,7 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
   ];
   const defaultPrice = parseYen((data.price || [])[0]) || 2000;
   const tmQuery = encodeURIComponent(`"${data.brandName || data.productName}" 商標`);
-  const imgLiveMode = !!getImageKey();
+  const imgLiveMode = !!getImageKey() || !!(typeof externalImages !== "undefined" && externalImages && externalImages.length);
   const myImageToken = ++currentImageRenderToken;
 
   document.getElementById("proposal").innerHTML = `
@@ -2153,6 +2193,69 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
 }
 
 // ================= Plan generator (on button click) =================
+// ================= n8n orchestration (BYO workflow — manage runs, keys and logs in n8n) =================
+const N8N_URL_STORAGE = "k2j_n8n_webhook_url";
+let externalImages = null; // images pre-generated by the n8n workflow (data: URLs)
+
+function getN8nUrl() { return (localStorage.getItem(N8N_URL_STORAGE) || "").trim(); }
+
+function refreshN8nStatus() {
+  const el = document.getElementById("n8nStatus");
+  const url = getN8nUrl();
+  if (url) {
+    el.textContent = "🟠 n8n mode — generation runs through your n8n workflow (keys & logs managed in n8n)";
+    el.classList.add("on");
+  } else {
+    el.textContent = "ℹ️ Direct mode — generation calls the AI APIs straight from this browser";
+    el.classList.remove("on");
+  }
+  document.getElementById("n8nUrlInput").value = url;
+}
+document.getElementById("n8nToggleBtn").addEventListener("click", () => {
+  document.getElementById("n8nPanel").classList.toggle("show");
+});
+document.getElementById("n8nSaveBtn").addEventListener("click", () => {
+  const v = document.getElementById("n8nUrlInput").value.trim();
+  if (!/^https:\/\//.test(v)) { alert("Please enter the full https:// webhook URL of your n8n workflow."); return; }
+  localStorage.setItem(N8N_URL_STORAGE, v);
+  document.getElementById("n8nPanel").classList.remove("show");
+  refreshN8nStatus();
+});
+document.getElementById("n8nClearBtn").addEventListener("click", () => {
+  localStorage.removeItem(N8N_URL_STORAGE);
+  refreshN8nStatus();
+});
+refreshN8nStatus();
+
+async function generateViaN8n(cat, priceLabel, channelLabel) {
+  const { catLabel, context } = buildPlanContext(cat, priceLabel, channelLabel, null);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 180000);
+  let res;
+  try {
+    // text/plain keeps this a CORS "simple request" (no preflight needed)
+    res = await fetch(getN8nUrl(), {
+      method: "POST",
+      headers: { "content-type": "text/plain;charset=UTF-8" },
+      body: JSON.stringify({
+        category: cat,
+        categoryLabel: catLabel,
+        priceRange: priceLabel,
+        channel: channelLabel,
+        genreId: (typeof RAKUTEN_GENRES !== "undefined" && RAKUTEN_GENRES[cat]) || null,
+        referenceTrendSummary: context.referenceTrendSummary,
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  if (!res.ok) throw new Error(`n8n workflow error (HTTP ${res.status})`);
+  const out = await res.json();
+  if (!out || typeof out !== "object" || !out.plan) throw new Error("The n8n workflow returned an unexpected response (missing 'plan')");
+  return out;
+}
+
 document.getElementById("genBtn").addEventListener("click", async () => {
   const btn = document.getElementById("genBtn");
   const loading = document.getElementById("genLoading");
@@ -2162,26 +2265,45 @@ document.getElementById("genBtn").addEventListener("click", async () => {
   const price = document.getElementById("planPrice").value;
   const channel = document.getElementById("planChannel").value;
   const hasKey = !!getClaudeKey();
+  const hasN8n = !!getN8nUrl();
 
   btn.disabled = true;
   box.classList.remove("show");
-  loadingText.textContent = hasKey
-    ? "Calling the AI API to analyze EC mall trend data and generate a product concept…"
-    : "Analyzing EC mall trend data and generating a product concept and image concepts… (sample mode)";
+  loadingText.textContent = hasN8n
+    ? "Running your n8n workflow: fetching live market data → generating the concept → rendering Nano Banana images…"
+    : hasKey
+      ? "Fetching live market data and calling the AI API to generate a grounded product concept…"
+      : "Analyzing EC mall trend data and generating a product concept and image concepts… (sample mode)";
   loading.classList.add("show");
 
   let liveMode = false;
   let errorNote = "";
   let raw = null;
+  externalImages = null;
 
-  if (hasKey) {
+  if (hasN8n) {
     try {
-      raw = await generateWithClaude(cat, price, channel);
+      const out = await generateViaN8n(cat, price, channel);
+      raw = out.plan;
+      if (Array.isArray(out.images) && out.images.length) {
+        externalImages = out.images.filter(u => typeof u === "string" && /^data:image\//.test(u));
+      }
       liveMode = true;
     } catch (err) {
-      errorNote = describeClaudeError(err);
+      errorNote = "n8n: " + ((err && err.message) || String(err)) + (hasKey ? " — fell back to direct browser mode." : "");
     }
-  } else {
+  }
+
+  if (!raw && hasKey) {
+    try {
+      const liveItems = await tryFetchLiveItemsForPlan(cat);
+      if (liveItems) loadingText.textContent = "Live ranking fetched — generating a concept grounded in real-time market data…";
+      raw = await generateWithClaude(cat, price, channel, liveItems);
+      liveMode = true;
+    } catch (err) {
+      errorNote = (errorNote ? errorNote + " " : "") + describeClaudeError(err);
+    }
+  } else if (!raw && !hasKey && !hasN8n) {
     await new Promise(r => setTimeout(r, 1200));
   }
 
