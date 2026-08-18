@@ -1700,15 +1700,119 @@ document.getElementById("imageApiClearBtn").addEventListener("click", () => {
 });
 refreshImageApiStatus();
 
-function buildImagePrompt(catLabel, data, img) {
-  const colorWords = Object.values(img.colors || {}).filter(Boolean).join(", ");
-  return [
-    `Professional commercial product photograph of an original ${catLabel} product package design concept.`,
-    `Product concept name: "${data.productName}"; design direction "${img.name}": ${img.desc}.`,
-    `Color palette to use on the packaging: ${colorWords}.`,
-    "Clean white or softly gradient studio background, soft even studio lighting, realistic packaging mockup, high detail, centered composition.",
-    "Do not depict any real, existing brand names, logos, or trademarks — the packaging text should be generic or illegible.",
-  ].join(" ");
+// Three art-direction templates for the 3 package concepts:
+// A) luxury minimal, B) modern D2C, C) Japanese minimalism
+const K2J_IMAGE_STYLES = [
+  (c) => `【${c.name}】の新しい商品パッケージデザインを制作してください。
+目的は、既存商品の雰囲気を少し変更する程度ではなく、「ブランド価値そのものが一段階上がった」と感じさせる、完全にリデザインされたプレミアムパッケージです。
+
+デザインコンセプト:
+海外の高級コスメ、香水、ファッションブランドのような、極めて洗練されたラグジュアリー・ミニマルデザイン。Aesop、Le Labo、Byredo、Diptyque、LOEWEのように、過度に装飾せず、余白・タイポグラフィ・素材感だけで高級感を成立させてください。ただし特定ブランドのデザインをコピーせず、完全オリジナルとして設計してください。
+
+デザイン要件:
+- 一目で高価格帯の商品だと感じる佇まい
+- ミニマルで余白を大胆に使用
+- 商品名「${c.name}」をブランドの主役として配置
+- ロゴ・商品名・説明文の情報階層を明確にする
+- タイポグラフィは上品かつファッション性の高いもの
+- 不要な装飾、アイコン、派手なグラデーションは使用しない
+- 色数は2〜3色程度に抑える
+- マットな紙、エンボス、箔押し、型押しなど高級印刷を想定
+- パッケージの紙・インク・印刷の質感までリアルに表現
+- 正面だけではなく側面まで一貫したブランドデザイン
+- 実際に量産・販売可能そうな現実的なパッケージ構造
+
+カラー:
+ベース: 深みのあるダークグリーン / ブラック / アイボリー / オフホワイト
+アクセント: 控えめなゴールドまたはシルバー
+高級感は「派手さ」ではなく、素材・余白・文字組み・ディテールから感じられるようにしてください。
+
+撮影表現:
+完成したパッケージを、世界的なブランドの広告キャンペーン用商品写真のように撮影してください。
+高級スタジオ撮影 / 柔らかなサイドライティング / リアルな影 / 高精細な紙・印刷・箔の質感 / 商品が最も美しく見える3/4アングル / 背景はシンプル。
+commercial product photography, photorealistic, ultra detailed, premium editorial photography, realistic packaging mockup, 8K quality.
+
+AIっぽい過剰な装飾や非現実的な形状にはせず、「このまま商品化して百貨店に並べられる」レベルの完成度にしてください。`,
+
+  (c) => `【${c.name}】/【${c.cat}】の新しい商品パッケージを、ゼロからブランドリニューアルするつもりでデザインしてください。
+目標は、「InstagramやTikTokで思わず撮影したくなる」「海外のD2Cブランドのように若く、洗練され、記憶に残る」パッケージです。
+
+ブランドコンセプト:
+Modern / Bold / Clean / Intelligent / Global
+現代的な海外スタートアップブランド、デザインホテル、D2Cブランドのような、ミニマルさと大胆さを両立したデザインにしてください。既存の一般的な日本の商品パッケージにありがちな情報過多・説明過多なデザインにはしないでください。
+
+デザイン要件:
+- 遠くから見てもブランドを認識できる
+- 商品名「${c.name}」を大胆に配置
+- 大きなタイポグラフィをデザイン要素として使用
+- グラフィックはシンプルながら特徴的
+- 余白を十分に取る
+- SNSの写真でも映える
+- 若い層にも高価格帯ユーザーにも受け入れられる
+- 男女どちらにも偏りすぎないユニセックスデザイン
+- パッケージ正面・側面・背面で統一されたデザインシステム
+- SKU展開しやすいブランド設計
+- 実際の商品として製造可能な構造
+
+カラーディレクション:
+洗練されたカラーコントラストを使用。例: Deep Green × Cream / Cobalt Blue × Off White / Burgundy × Pale Beige / Charcoal × Electric Lime。
+ただし安っぽい原色表現にはせず、彩度・明度を微調整したデザイナーズカラーにしてください。
+
+タイポグラフィ:
+現代的なサンセリフフォントを中心に、大胆な文字サイズと繊細な文字サイズを組み合わせる。タイポグラフィ自体がブランドアイデンティティになるレベルで設計してください。
+
+商品撮影:
+新商品のローンチキャンペーン用キービジュアルとして表現。
+premium studio product photography, soft directional lighting, realistic shadows, clean architectural background, editorial composition, ultra realistic material texture, sharp typography, photorealistic packaging, high-end commercial photography, 8K.
+
+Pinterest、Behance、海外デザインアワードに掲載されても違和感のない、完成度の高いブランドパッケージを制作してください。テンプレート感、Canva感、AI生成感は禁止。完全なオリジナルブランドデザインとして仕上げてください。`,
+
+  (c) => `【${c.name}】/【${c.cat}】の新商品パッケージをデザインしてください。
+コンセプトは、「日本の美意識を、現代のラグジュアリーブランドとして再解釈する」。
+伝統的な和風パッケージそのものではなく、日本独自の余白、美意識、自然、静けさ、職人性を、極めて現代的なデザインへ昇華してください。
+
+世界観:
+Japanese minimalism × Contemporary luxury × Craftsmanship × Quiet elegance
+「和柄を入れれば日本らしい」という安易な表現は禁止。日本らしさは、余白・紙質・文字組み・微細なテクスチャ・不完全さ・静けさによって表現してください。
+
+デザイン要件:
+- 非常に静かで上品なファーストインプレッション
+- 商品名「${c.name}」を象徴的に配置
+- 情報量を最低限まで削ぎ落とす
+- 日本語と英語を美しく組み合わせる
+- 縦組みまたは余白を活かしたレイアウトも検討
+- 和紙、厚紙、自然素材などを想起させる質感
+- エンボス、空押し、箔押しなど繊細な特殊加工
+- 手に取った時の触覚まで想像できるデザイン
+- 高級旅館、茶室、ギャラリーのような静謐な空気感
+- 海外市場でも「Japanese Premium Brand」として成立するデザイン
+
+カラー:
+自然から抽出したような低彩度カラー。候補: 墨黒 / 深緑 / 生成り / 灰白 / 土色 / 藍 / 銅。
+アクセントカラーは最大1色。派手なゴールドではなく、控えめな箔・金属表現を使用してください。
+
+商品撮影:
+日本の高級ブランドの広告ビジュアルとして表現。
+soft natural light, subtle shadow, Japanese architectural minimalism, textured paper, premium packaging photography, tactile material details, quiet luxury, highly realistic, editorial product photography, cinematic composition, photorealistic, 8K.
+
+商品だけが主張するのではなく、空間・光・余白を含めてブランド世界観を表現してください。「日本のお土産」のようなデザインではなく、東京・パリ・ニューヨークの高級セレクトショップでも販売できる、世界水準の商品パッケージとして完成させてください。`,
+];
+
+function buildImagePrompt(catLabel, data, img, idx) {
+  const c = {
+    name: data.productName || data.brandName || "New Product",
+    brand: data.brandName || data.productName || "",
+    cat: catLabel,
+    lead: data.lead || "",
+  };
+  const style = K2J_IMAGE_STYLES[(idx || 0) % K2J_IMAGE_STYLES.length];
+  return style(c) + `
+
+制作上の注意:
+- パッケージに表記する主要な文字はブランド名「${c.brand}」と商品名「${c.name}」を主体とし、その他の文字は小さく控えめにすること。
+- 実在する既存ブランドのロゴ・商標・実在パッケージをそのまま描かないこと(挙げたブランド名はあくまで方向性の参照)。
+- 商品カテゴリ: ${c.cat}。商品コンセプト: ${c.lead}
+- 画像はウォーターマークやUI要素を含まない、商品パッケージのみの広告写真とすること。`;
 }
 
 async function generateProductImage(prompt) {
@@ -1759,7 +1863,7 @@ async function generateProposalImages(cat, catLabel, data, token) {
   for (let i = 0; i < data.images.length; i++) {
     const img = data.images[i];
     try {
-      const dataUrl = (fromN8n && fromN8n[i]) ? fromN8n[i] : await generateProductImage(buildImagePrompt(catLabel, data, img));
+      const dataUrl = (fromN8n && fromN8n[i]) ? fromN8n[i] : await generateProductImage(buildImagePrompt(catLabel, data, img, i));
       if (!dataUrl) throw new Error("No image source available");
       if (token !== currentImageRenderToken) return;
       const visual = document.getElementById(`img-visual-${i}`);
