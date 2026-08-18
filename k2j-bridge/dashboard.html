@@ -609,7 +609,25 @@ input:focus, select:focus, textarea:focus {
   <!-- ================= Trend ================= -->
   <section class="panel active" id="panel-trend">
     <h2 class="page-title">EC Trend Radar</h2>
-    <p class="page-sub">Japanese market reference data is analyzed daily, centered on <b>major Japanese e-commerce malls</b>. We extract what is selling right now from rankings, mega sales, and reviews (this demo shows sample data)</p>
+    <p class="page-sub">Japanese market reference data is analyzed daily, centered on <b>major Japanese e-commerce malls</b>. We extract what is selling right now from rankings, mega sales, and reviews. <b>Set a free Rakuten Application ID in the settings below and the ranking switches to real-time best-seller data from Rakuten Ichiba</b>, one of Japan's largest e-commerce malls (without a key, sample data is shown).</p>
+
+    <div class="api-bar">
+      <span class="api-status" id="liveStatus">ℹ️ Showing sample rankings (no Rakuten Application ID set)</span>
+      <button class="api-toggle" id="liveToggleBtn" type="button">⚙️ Live Ranking Settings</button>
+    </div>
+    <div class="api-panel" id="livePanel">
+      <p class="api-desc">
+        Enter your own <b>Rakuten Web Service Application ID</b> (free to issue) and the ranking below switches from sample data to the <b>real-time best-seller ranking of Rakuten Ichiba</b>, fetched live from the official Rakuten Ichiba Ranking API in your browser.<br>
+        <b>The ID is stored only in this browser (localStorage) and requests go directly from your browser to Rakuten's official API. Nothing is sent to or stored on this site's servers.</b><br>
+        Qoo10 and Amazon Japan do not offer public browser-accessible ranking APIs, so use the buttons under the ranking to open their official best-seller pages live instead.<br>
+        <a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Issue a free Rakuten Application ID here →</a>
+      </p>
+      <div class="api-row">
+        <input type="text" id="rakutenIdInput" placeholder="Rakuten Application ID (numbers only)" autocomplete="off" spellcheck="false">
+        <button class="btn-save" id="rakutenSaveBtn" type="button">Save</button>
+        <button class="btn-clear" id="rakutenClearBtn" type="button">Delete</button>
+      </div>
+    </div>
 
     <div class="cat-row" id="catRow">
       <button class="cat-btn active" data-cat="beauty">Beauty &amp; Cosmetics</button>
@@ -621,11 +639,13 @@ input:focus, select:focus, textarea:focus {
 
     <div class="grid g2 mt">
       <div class="card">
-        <h3>⬆️ Fast-Rising EC Ranking (last 7 days)</h3>
+        <h3 id="rankTitle">⬆️ Fast-Rising EC Ranking (last 7 days)</h3>
+        <div class="img-note" id="rankMeta">Sample data for illustration</div>
         <table>
-          <thead><tr><th></th><th>Product genre</th><th>Position on EC malls</th><th>Search / sales growth</th></tr></thead>
+          <thead id="rankHead"><tr><th></th><th>Product genre</th><th>Position on EC malls</th><th>Search / sales growth</th></tr></thead>
           <tbody id="rankBody"></tbody>
         </table>
+        <div class="ref-links" id="rankLinks"></div>
       </div>
       <div>
         <div class="card">
@@ -1423,10 +1443,153 @@ document.querySelectorAll(".cat-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
+    currentTrendCat = btn.dataset.cat;
     renderTrend(btn.dataset.cat);
+    if (typeof refreshLiveRanking === "function") refreshLiveRanking(btn.dataset.cat);
   });
 });
 renderTrend("beauty");
+
+// ================= Live EC ranking (Rakuten Ichiba Ranking API / BYOK) =================
+const RAKUTEN_ID_STORAGE = "k2j_rakuten_app_id";
+const RAKUTEN_GENRES = { beauty: 100939, food: 100227, living: 562637 }; // 美容・コスメ / 食品 / 家電
+const LIVE_LINKS = {
+  beauty: [
+    ["Rakuten ranking ↗", "https://ranking.rakuten.co.jp/daily/100939/"],
+    ["Qoo10 bestsellers ↗", "https://www.qoo10.jp/gmkt.inc/Bestsellers/"],
+    ["Amazon JP bestsellers ↗", "https://www.amazon.co.jp/gp/bestsellers/beauty/"],
+  ],
+  food: [
+    ["Rakuten ranking ↗", "https://ranking.rakuten.co.jp/daily/100227/"],
+    ["Qoo10 bestsellers ↗", "https://www.qoo10.jp/gmkt.inc/Bestsellers/"],
+    ["Amazon JP bestsellers ↗", "https://www.amazon.co.jp/gp/bestsellers/food-beverage/"],
+  ],
+  living: [
+    ["Rakuten ranking ↗", "https://ranking.rakuten.co.jp/daily/562637/"],
+    ["Qoo10 bestsellers ↗", "https://www.qoo10.jp/gmkt.inc/Bestsellers/"],
+    ["Amazon JP bestsellers ↗", "https://www.amazon.co.jp/gp/bestsellers/electronics/"],
+  ],
+};
+let currentTrendCat = "beauty";
+let liveReqSeq = 0;
+
+function escHtml(v) {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function getRakutenId() { return (localStorage.getItem(RAKUTEN_ID_STORAGE) || "").trim(); }
+
+function updateLiveStatus() {
+  const el = document.getElementById("liveStatus");
+  if (getRakutenId()) {
+    el.textContent = "\u{1F7E2} LIVE — real-time Rakuten Ichiba best-seller ranking enabled";
+    el.classList.add("on");
+  } else {
+    el.textContent = "\u2139\uFE0F Showing sample rankings (no Rakuten Application ID set)";
+    el.classList.remove("on");
+  }
+}
+
+function renderRankLinks(cat) {
+  document.getElementById("rankLinks").innerHTML =
+    '<span class="img-note" style="margin:0 6px 0 0;">Open the real rankings live:</span>' +
+    LIVE_LINKS[cat].map(([label, url]) =>
+      `<a class="ref-btn" href="${url}" target="_blank" rel="noopener">${label}</a>`).join("");
+}
+
+function fetchRakutenRanking(cat) {
+  return new Promise((resolve, reject) => {
+    const appId = getRakutenId();
+    if (!appId) return reject(new Error("no-key"));
+    const cb = "__k2jRakutenCb" + (++liveReqSeq);
+    const script = document.createElement("script");
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Request timed out")); }, 10000);
+    function cleanup() { clearTimeout(timer); try { delete window[cb]; } catch (e) {} script.remove(); }
+    window[cb] = data => {
+      cleanup();
+      if (data && data.Items && data.Items.length) resolve(data);
+      else reject(new Error((data && (data.error_description || data.error)) || "The API returned no items"));
+    };
+    script.onerror = () => { cleanup(); reject(new Error("Could not reach the Rakuten API")); };
+    script.src = "https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20220601"
+      + "?applicationId=" + encodeURIComponent(appId)
+      + "&genreId=" + RAKUTEN_GENRES[cat]
+      + "&format=json&formatVersion=2&hits=10&callback=" + cb;
+    document.head.appendChild(script);
+  });
+}
+
+function renderLiveRanking(cat, data) {
+  const items = (data.Items || []).map(x => x.Item || x).slice(0, 10);
+  document.getElementById("rankTitle").textContent = "\u2B06\uFE0F Real-Time Best-Seller Ranking — Rakuten Ichiba";
+  document.getElementById("rankHead").innerHTML =
+    "<tr><th></th><th>Product (opens the live listing)</th><th>Price</th><th>Reviews</th></tr>";
+  document.getElementById("rankMeta").innerHTML =
+    `<b style="color:var(--mint)">\u25CF LIVE</b> — fetched from the official Rakuten Ichiba Ranking API at ${new Date().toLocaleTimeString()} · updated continuously by Rakuten`;
+  document.getElementById("rankBody").innerHTML = items.map(it => {
+    const rank = it.rank || "";
+    const name = escHtml(String(it.itemName || "").slice(0, 80));
+    const url = /^https?:\/\//.test(it.itemUrl || "") ? it.itemUrl : "#";
+    const shop = escHtml(it.shopName || "");
+    const price = it.itemPrice ? "¥" + Number(it.itemPrice).toLocaleString() : "–";
+    const rev = (it.reviewCount || 0) > 0
+      ? `★ ${it.reviewAverage || "–"} <span class="psub">(${Number(it.reviewCount).toLocaleString()})</span>`
+      : '<span class="psub">–</span>';
+    return `<tr>
+      <td><span class="rk ${Number(rank) <= 3 ? "hot" : ""}">${escHtml(rank)}</span></td>
+      <td>
+        <div class="pname"><a href="${escHtml(url)}" target="_blank" rel="noopener">${name}</a></div>
+        <div class="psub">${shop}</div>
+      </td>
+      <td class="psub" style="white-space:nowrap">${price}</td>
+      <td><span class="growth up" style="white-space:nowrap">${rev}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+function refreshLiveRanking(cat) {
+  renderRankLinks(cat);
+  if (!getRakutenId()) {
+    document.getElementById("rankTitle").textContent = "\u2B06\uFE0F Fast-Rising EC Ranking (last 7 days)";
+    document.getElementById("rankHead").innerHTML =
+      "<tr><th></th><th>Product genre</th><th>Position on EC malls</th><th>Search / sales growth</th></tr>";
+    document.getElementById("rankMeta").textContent = "Sample data for illustration";
+    return;
+  }
+  document.getElementById("rankMeta").textContent = "Fetching the real-time ranking from Rakuten Ichiba…";
+  fetchRakutenRanking(cat)
+    .then(data => { if (cat === currentTrendCat) renderLiveRanking(cat, data); })
+    .catch(err => {
+      if (cat !== currentTrendCat) return;
+      document.getElementById("rankMeta").innerHTML =
+        `<span style="color:var(--coral)">\u26A0\uFE0F Live fetch failed (${escHtml(err.message)}) — showing sample data instead.</span>`;
+    });
+}
+
+(function initLiveRanking() {
+  const toggle = document.getElementById("liveToggleBtn");
+  const panel = document.getElementById("livePanel");
+  const input = document.getElementById("rakutenIdInput");
+  toggle.addEventListener("click", () => panel.classList.toggle("show"));
+  input.value = getRakutenId();
+  document.getElementById("rakutenSaveBtn").addEventListener("click", () => {
+    const v = input.value.trim();
+    if (!v) { alert("Please enter your Rakuten Application ID."); return; }
+    localStorage.setItem(RAKUTEN_ID_STORAGE, v);
+    panel.classList.remove("show");
+    updateLiveStatus();
+    refreshLiveRanking(currentTrendCat);
+  });
+  document.getElementById("rakutenClearBtn").addEventListener("click", () => {
+    localStorage.removeItem(RAKUTEN_ID_STORAGE);
+    input.value = "";
+    updateLiveStatus();
+    renderTrend(currentTrendCat);
+    refreshLiveRanking(currentTrendCat);
+  });
+  updateLiveStatus();
+  refreshLiveRanking(currentTrendCat);
+})();
 
 // ================= AI API settings (stored in the browser only / BYOK) =================
 const CLAUDE_KEY_STORAGE = "k2j_claude_api_key";
