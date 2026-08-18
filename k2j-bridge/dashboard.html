@@ -712,7 +712,8 @@ input:focus, select:focus, textarea:focus {
         The URL is stored only in this browser (localStorage). If the n8n call fails, generation automatically falls back to direct browser mode.
       </p>
       <div class="api-row">
-        <input type="text" id="n8nUrlInput" placeholder="https://your-n8n.example.com/webhook/k2j-plan" autocomplete="off" spellcheck="false">
+        <input type="text" id="n8nUrlInput" placeholder="https://manexion.app.n8n.cloud/webhook/k2j-plan" autocomplete="off" spellcheck="false">
+        <button class="btn-clear" id="n8nPrefillBtn" type="button">Use manexion n8n</button>
         <button class="btn-save" id="n8nSaveBtn" type="button">Save</button>
         <button class="btn-clear" id="n8nClearBtn" type="button">Delete</button>
       </div>
@@ -2224,6 +2225,9 @@ document.getElementById("n8nSaveBtn").addEventListener("click", () => {
 document.getElementById("n8nClearBtn").addEventListener("click", () => {
   localStorage.removeItem(N8N_URL_STORAGE);
   refreshN8nStatus();
+});
+document.getElementById("n8nPrefillBtn").addEventListener("click", () => {
+  document.getElementById("n8nUrlInput").value = "https://manexion.app.n8n.cloud/webhook/k2j-plan";
 });
 refreshN8nStatus();
 
