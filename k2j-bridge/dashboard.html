@@ -200,6 +200,16 @@
   .factory .f-logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: #eef1fd; flex-shrink: 0; }
   .factory .f-name { font-weight: 800; font-size: 13.5px; }
   .factory .f-meta { font-size: 11.5px; color: var(--sub); }
+  .factory .ai-verdict-slot { width: 100%; }
+  .factory .ai-verdict-slot:empty { display: none; }
+  .ai-verdict { width: 100%; background: #f4f7ff; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12px; line-height: 1.55; }
+  .ai-verdict .av-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .ai-score { display: inline-block; background: #2c47f5; color: #fff; border-radius: 999px; padding: 2px 10px; font-weight: 800; font-size: 11px; white-space: nowrap; }
+  .ai-verdict .av-verdict { font-weight: 700; }
+  .ai-verdict .av-list { margin: 6px 0 0 16px; padding: 0; }
+  .ai-verdict .av-risk { margin-top: 6px; color: #8a5b00; }
+  .ai-verdict .av-ask { margin-top: 4px; color: var(--sub); }
+  .fd-ai-note { font-size: 11px; color: var(--sub); align-self: center; }
   .match { margin-left: auto; font-size: 12px; font-weight: 900; color: var(--mint); white-space: nowrap; }
   .rfq-btn {
     font-size: 11px; font-weight: 700; padding: 7px 13px; border-radius: 999px;
@@ -805,6 +815,10 @@ input:focus, select:focus, textarea:focus {
           <button class="fd-chip" data-fcat="beauty">Beauty</button>
           <button class="fd-chip" data-fcat="food">Food</button>
           <button class="fd-chip" data-fcat="living">Home &amp; Appliances</button>
+        </div>
+        <div class="fd-controls">
+          <button class="rfq-btn" type="button" id="fdAiBtn">🤖 AI Fit Analysis — why these factories?</button>
+          <span class="fd-ai-note" id="fdAiNote">AI scores every listed factory against your latest generated plan (or the selected category) and explains why it is — or isn't — recommended</span>
         </div>
         <div class="fd-list" id="fdList"></div>
       </div>
@@ -2018,7 +2032,7 @@ ${JSON.stringify(context, null, 2)}`;
 async function callClaudeAPI(system, user, maxTokens) {
   const key = getClaudeKey();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   let res;
   try {
@@ -2147,6 +2161,76 @@ function updateProfitSim() {
   netEl.className = "sim-val " + (netMonth >= 0 ? "up" : "down");
   document.getElementById("simBreakeven").textContent = breakeven.toLocaleString() + " units/mo";
 }
+
+// ================= AI factory-fit judgement (why is this factory recommended?) =================
+async function aiJudgeFactories(planCtx, factories) {
+  const system = `You are a sourcing and OEM/ODM manufacturing expert who helps brands select Korean factories for products exported to Japan. Judge each candidate factory's fit for THIS specific product plan, using only the facts provided (capabilities, MOQ, lead time, certifications, unit-cost range, region, rating) plus well-known Japanese market requirements (薬機法 for cosmetics, 食品表示法/HACCP for food, PSE for electricals).
+Scoring rules:
+- Score each factory 0-100 for fit with THIS plan. Differentiate honestly — do not cluster everyone at 90+.
+- "reasons" must cite concrete facts: MOQ vs a realistic first order, certifications vs the plan's regulatory checkpoints, unit-cost range vs the target retail price (manufacturing cost should stay around 25-30% of retail), lead time vs launch timing, and capability match with the spec.
+- "risk" is the single most important watch-out for this pairing.
+- "ask" is one sharp, specific question to include in the RFQ to this factory.
+Output ONLY JSON, no code fences and no other text:
+{"results":[{"name":"factory name exactly as given","score":0,"verdict":"one sentence — why (or why not) this factory is recommended for this product","reasons":["…","…"],"risk":"…","ask":"…"}]}
+Write all values in English.`;
+  const user = `Product plan:\n${JSON.stringify(planCtx, null, 2)}\n\nCandidate factories:\n${JSON.stringify(factories, null, 2)}\n\nJudge every candidate factory, in the same order.`;
+  const out = await callClaudeAPI(system, user, 4000);
+  const arr = (out && Array.isArray(out.results)) ? out.results : [];
+  const map = {};
+  arr.forEach(r => { if (r && r.name) map[String(r.name)] = r; });
+  return map;
+}
+
+function factoryVerdictHtml(r) {
+  if (!r) return "";
+  const score = Math.max(0, Math.min(100, parseInt(r.score, 10) || 0));
+  const reasons = (Array.isArray(r.reasons) ? r.reasons : []).slice(0, 3);
+  return '<div class="ai-verdict">' +
+    '<div class="av-head"><span class="ai-score">🤖 AI fit ' + score + '/100</span><span class="av-verdict">' + escapeHtml(r.verdict || "") + '</span></div>' +
+    (reasons.length ? '<ul class="av-list">' + reasons.map(x => '<li>' + escapeHtml(x) + '</li>').join("") + '</ul>' : "") +
+    (r.risk ? '<div class="av-risk">⚠️ Risk: ' + escapeHtml(r.risk) + '</div>' : "") +
+    (r.ask ? '<div class="av-ask">✉️ Ask in the RFQ: ' + escapeHtml(r.ask) + '</div>' : "") +
+  '</div>';
+}
+
+// "Why these?" button in the proposal's matching-factories section
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("#aiWhyBtn");
+  if (!btn) return;
+  if (!lastProposalContext) return;
+  if (!getClaudeKey()) { alert("The AI judgement needs your AI API key — set it in ⚙️ AI Plan Generation Settings (it is required even when plan generation runs through n8n)."); return; }
+  btn.disabled = true;
+  btn.textContent = "🤖 Judging fit…";
+  try {
+    const ctx = lastProposalContext;
+    const planCtx = {
+      productName: ctx.data.productName,
+      brandName: ctx.data.brandName,
+      category: ctx.cat,
+      concept: ctx.data.lead,
+      spec: ctx.data.spec,
+      price: ctx.data.price,
+      regulatory: ctx.data.regulatory,
+    };
+    const cands = ctx.factories.map(f => ({ name: f.name, profile: f.meta }));
+    const map = await aiJudgeFactories(planCtx, cands);
+    ctx.factories.forEach((f, i) => {
+      const slot = document.getElementById("ai-verdict-f" + i);
+      if (!slot) return;
+      const r = map[f.name];
+      slot.innerHTML = r ? factoryVerdictHtml(r) : '<div class="ai-verdict">No judgement was returned for this factory.</div>';
+      if (r) {
+        const m = slot.closest(".factory").querySelector(".match");
+        if (m) m.textContent = "🤖 " + Math.max(0, Math.min(100, parseInt(r.score, 10) || 0)) + "/100";
+      }
+    });
+    btn.textContent = "🤖 AI judged ✓ (run again)";
+  } catch (err) {
+    btn.textContent = "🤖 AI judge: why these factories?";
+    alert("AI judgement failed: " + describeClaudeError(err));
+  }
+  btn.disabled = false;
+});
 
 function buildRfqText(ctx, factory) {
   const catLabel = { beauty: "Beauty & Cosmetics", food: "Food", living: "Home Goods & Appliances" }[ctx.cat];
@@ -2279,7 +2363,9 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
           </div>`).join("")}
       </div>
 
-      <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 Matching OEM/ODM factories (sample)</h3>
+      <h3 style="font-size:14px;font-weight:800;margin:20px 0 4px">🏭 Matching OEM/ODM factories (sample)
+        <button id="aiWhyBtn" class="rfq-btn no-print" type="button" style="margin-left:8px">🤖 AI judge: why these factories?</button>
+      </h3>
       ${factories.map((f, i) => `
         <div class="factory">
           <span class="f-logo">${f.emoji}</span>
@@ -2289,6 +2375,7 @@ function renderProposal(cat, priceLabel, channelLabel, data, liveMode, errorNote
           </div>
           <span class="match">${f.match}</span>
           <button class="rfq-btn no-print" type="button" data-fidx="${i}">📋 Copy RFQ email</button>
+          <div class="ai-verdict-slot" id="ai-verdict-f${i}"></div>
         </div>`).join("")}
       <textarea id="rfqFallbackBox" class="rfq-fallback no-print" readonly style="display:none" rows="10"></textarea>
       <p class="pin-note no-print">📋 The RFQ text is copied to your clipboard — paste it into an actual email to the factory contact (the factory information above is sample data).</p>
@@ -2451,6 +2538,12 @@ document.getElementById("genBtn").addEventListener("click", async () => {
   var fdList = document.getElementById("fdList");
   var fdCat = "all";
   var linkedFactory = null;
+  var aiVerdicts = null; // factory name -> AI judgement (set by the AI Fit Analysis button)
+
+  function aiScoreOf(f) {
+    var r = aiVerdicts && aiVerdicts[f.name];
+    return r ? Math.max(0, Math.min(100, parseInt(r.score, 10) || 0)) : -1;
+  }
 
   function yen(n) { return "¥" + Math.round(n).toLocaleString("en-US"); }
 
@@ -2463,6 +2556,7 @@ document.getElementById("genBtn").addEventListener("click", async () => {
     });
     var sort = fdSort.value;
     rows.sort(function (a, b) {
+      if (sort === "ai") return aiScoreOf(b) - aiScoreOf(a);
       if (sort === "moq") return a.moq - b.moq;
       if (sort === "lead") return a.lead - b.lead;
       if (sort === "cost") return a.cost[0] - b.cost[0];
@@ -2487,14 +2581,66 @@ document.getElementById("genBtn").addEventListener("click", async () => {
             f.certs.map(function (c) { return '<span class="fd-badge cert">' + escapeHtml(c) + '</span>'; }).join("") +
           '</div>' +
         '</div>' +
-        '<span class="match">★ ' + f.rating.toFixed(1) + '</span>' +
+        '<span class="match">' + (aiScoreOf(f) >= 0 ? '🤖 ' + aiScoreOf(f) + '/100' : '★ ' + f.rating.toFixed(1)) + '</span>' +
         '<div class="fd-actions">' +
           '<button class="rfq-btn" data-fdi="' + idx + '">📋 Copy RFQ email</button>' +
           '<button class="fd-use-btn" data-fdu="' + idx + '">→ Use in cost planner</button>' +
         '</div>' +
+        ((aiVerdicts && aiVerdicts[f.name]) ? '<div class="ai-verdict-slot">' + factoryVerdictHtml(aiVerdicts[f.name]) + '</div>' : '') +
       '</div>';
     }).join("");
   }
+
+  // --- AI Fit Analysis: judge every listed factory against the latest plan (or the selected category) ---
+  var fdAiBtn = document.getElementById("fdAiBtn");
+  fdAiBtn.addEventListener("click", async function () {
+    if (typeof getClaudeKey !== "function" || !getClaudeKey()) {
+      alert("The AI judgement needs your AI API key — set it in ⚙️ AI Plan Generation Settings (AI Product Planning tab). It is required even when plan generation runs through n8n.");
+      return;
+    }
+    var ctx = (typeof lastProposalContext !== "undefined" && lastProposalContext) ? lastProposalContext : null;
+    var planCtx;
+    if (ctx && ctx.data) {
+      planCtx = {
+        productName: ctx.data.productName,
+        brandName: ctx.data.brandName,
+        category: ctx.cat,
+        concept: ctx.data.lead,
+        spec: ctx.data.spec,
+        price: ctx.data.price,
+        regulatory: ctx.data.regulatory,
+      };
+    } else {
+      planCtx = {
+        category: fdCat === "all" ? "any" : fdCat,
+        note: "No generated product plan yet — judge each factory's general fit for exporting a typical mid-price (around ¥2,000-¥3,000 retail) " + (fdCat === "all" ? "consumer" : CAT_LABEL[fdCat]) + " product from Korea to Japan, with a realistic first order of about 3,000-5,000 units.",
+      };
+    }
+    var rows = FACTORY_DIR.filter(function (f) { return fdCat === "all" || f.cat === fdCat; });
+    var cands = rows.map(function (f) {
+      return { name: f.name, region: f.region, category: f.cat, capabilities: f.caps, moq: f.moq, leadTimeDays: f.lead, certifications: f.certs, unitCostRangeJpy: f.cost, rating: f.rating };
+    });
+    fdAiBtn.disabled = true;
+    fdAiBtn.textContent = "🤖 Judging " + rows.length + " factories… (up to ~30s)";
+    try {
+      aiVerdicts = await aiJudgeFactories(planCtx, cands);
+      if (!fdSort.querySelector('option[value="ai"]')) {
+        var opt = document.createElement("option");
+        opt.value = "ai";
+        opt.textContent = "Sort: AI fit score";
+        fdSort.appendChild(opt);
+      }
+      fdSort.value = "ai";
+      renderDirectory();
+      var basis = (ctx && ctx.data) ? 'your plan "' + ctx.data.productName + '"' : "the selected category";
+      document.getElementById("fdAiNote").textContent = "✅ Judged against " + basis + " — sorted by AI fit score. Each card now shows why it is (or isn't) recommended.";
+      fdAiBtn.textContent = "🤖 Re-run AI Fit Analysis";
+    } catch (err) {
+      alert("AI judgement failed: " + (typeof describeClaudeError === "function" ? describeClaudeError(err) : String(err)));
+      fdAiBtn.textContent = "🤖 AI Fit Analysis — why these factories?";
+    }
+    fdAiBtn.disabled = false;
+  });
 
   function buildDirRfq(f) {
     return [
