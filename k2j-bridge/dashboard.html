@@ -1963,7 +1963,7 @@ function describeClaudeError(err) {
 
 async function generateWithClaude(cat, priceLabel, channelLabel, liveItems) {
   const { system, user } = buildPrompt(cat, priceLabel, channelLabel, liveItems);
-  return callClaudeAPI(system, user, 3000);
+  return callClaudeAPI(system, user, 6000);
 }
 
 async function tryFetchLiveItemsForPlan(cat) {
