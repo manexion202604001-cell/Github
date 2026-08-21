@@ -42,6 +42,24 @@ export async function upsertIntegration(input: UpsertIntegrationInput, organizat
   }
 
   const config = input.model ? { model: input.model } : {}
+  const secret = input.secret?.trim()
+
+  // キー省略時は保存済みのキーを維持する(モデル・Providerの切替だけを許可)
+  if (!secret) {
+    const existing = await db.integration.findUnique({
+      where: {
+        organizationId_kind_provider: {
+          organizationId: context.organizationId,
+          kind: input.kind,
+          provider: input.provider,
+        },
+      },
+      select: { encryptedSecret: true },
+    })
+    if (!existing?.encryptedSecret) {
+      throw AppError.validation('このProviderは未設定です。APIキーを入力してください。')
+    }
+  }
 
   const [, saved] = await db.$transaction([
     // 同じ種別の他Providerは無効化し、常に1種別1つが有効になるようにする
@@ -63,12 +81,13 @@ export async function upsertIntegration(input: UpsertIntegrationInput, organizat
         provider: input.provider,
         enabled: true,
         config,
-        encryptedSecret: encryptSecret(input.secret.trim()),
+        // create経路に来るのは上の検証を通ったときのみ = secretは必ず存在する
+        encryptedSecret: encryptSecret(secret ?? ''),
       },
       update: {
         enabled: true,
         config,
-        encryptedSecret: encryptSecret(input.secret.trim()),
+        ...(secret ? { encryptedSecret: encryptSecret(secret) } : {}),
       },
     }),
   ])

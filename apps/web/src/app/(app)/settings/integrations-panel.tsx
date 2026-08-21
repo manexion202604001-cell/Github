@@ -26,16 +26,17 @@ export function IntegrationsPanel({ initial, canManage }: { initial: Row[]; canM
   const [savingKind, setSavingKind] = useState<string | null>(null)
 
   const save = async (kind: string, provider: string, secret: string, model: string) => {
-    if (!secret.trim()) {
-      setError('APIキーを入力してください')
-      return
-    }
     setError(null)
     setSavingKind(kind)
     try {
       await api('/api/integrations', {
         method: 'POST',
-        body: { kind, provider, secret: secret.trim(), model: model.trim() || undefined },
+        body: {
+          kind,
+          provider,
+          secret: secret.trim() || undefined,
+          model: model.trim() || undefined,
+        },
       })
       router.refresh()
     } catch (err) {
@@ -157,11 +158,70 @@ function IntegrationForm({
         </div>
       </div>
       {option.hasModel ? (
-        <div className="mt-3 max-w-xs">
-          <Field label="モデル(任意)" hint="空欄なら推奨モデルを使用">
-            <Input value={model} onChange={(event) => setModel(event.target.value)} disabled={disabled} />
-          </Field>
-        </div>
+        <ModelPicker
+          models={selected?.models ?? []}
+          value={model}
+          onChange={setModel}
+          disabled={disabled}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+
+const CUSTOM = '__custom__'
+
+/**
+ * モデル選択。定義済みモデルはプルダウンで切替、
+ * 「カスタム入力」を選ぶと任意のモデルIDを直接入力できる(新モデル対応)。
+ */
+function ModelPicker({
+  models,
+  value,
+  onChange,
+  disabled,
+}: {
+  models: readonly { id: string; label: string }[]
+  value: string
+  onChange: (value: string) => void
+  disabled: boolean
+}) {
+  const isPreset = models.some((entry) => entry.id === value)
+  const [customMode, setCustomMode] = useState(!isPreset && value !== '')
+
+  return (
+    <div className="mt-3 grid max-w-lg gap-3 sm:grid-cols-2">
+      <Field label="モデル" hint="いつでも切り替えできます(キーの再入力は不要)">
+        <Select
+          value={customMode ? CUSTOM : value}
+          onChange={(event) => {
+            if (event.target.value === CUSTOM) {
+              setCustomMode(true)
+            } else {
+              setCustomMode(false)
+              onChange(event.target.value)
+            }
+          }}
+          disabled={disabled}
+        >
+          {models.map((entry) => (
+            <option key={entry.id || 'default'} value={entry.id}>
+              {entry.label}
+            </option>
+          ))}
+          <option value={CUSTOM}>カスタム入力…</option>
+        </Select>
+      </Field>
+      {customMode ? (
+        <Field label="モデルID" hint="Provider公式のモデルIDを入力">
+          <Input
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="例: claude-opus-5"
+            disabled={disabled}
+          />
+        </Field>
       ) : null}
     </div>
   )
