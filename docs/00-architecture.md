@@ -265,3 +265,26 @@ export interface ProviderRegistry<T extends Provider> {
 | R7 | LLM出力のJSON不整合 | 機能停止 | `completeJson` でzodスキーマ検証 + 1回リトライ + 失敗時fallback値 |
 | R8 | 個人情報のProvider送信(要件111) | コンプライアンス | Context構築時にallowlist方式で明示的にフィールドを選択。PIIはマスク |
 | R9 | 既存GitHub Pagesサイトへの影響 | 既存業務停止 | `apps/web` に隔離、既存HTML無変更、workflow無変更 |
+
+---
+
+## 9. 実装履歴(Phase 9以降の追加)
+
+設計時のPhase 1〜8(MVP)は完了。以降の追加実装:
+
+| Phase | 内容 |
+|---|---|
+| 9 | 運用機能: 設定画面(BYOK APIキー管理・暗号化保存)/ メンバー招待・権限管理 / 利用量ダッシュボード / メール実送信(Resend) |
+| 9.5 | ブランド適用(UCCHAU)/ rectangular UI / モデル切替プルダウン |
+| 10 | LP公開URL(/lp/[slug])/ 競合CSVエクスポート / 監査ログ画面 / Job自動復旧cron(/api/jobs/sweep) |
+| 10.5 | 市場データの複数ソース併用(楽天+Amazon(Rainforest API)を同時取得・マージ、レビューは出所ソースへ問い合わせ) |
+| 11 | 次商品提案 → ワンクリック新プロジェクト作成(要件127のループ完成)/ ダッシュボード「AIからの提案」 |
+| 11.5 | コードレビュー2回(機能パス+セキュリティ監査)。テナント分離・OAuthリンク・権限昇格・Job復旧・レート制限等の13件を修正 |
+
+### 運用構成(現行)
+
+- 本番: Vercel(main push で自動デプロイ)+ Supabase(DB/Storage)
+- 環境変数管理: GitHub Actions `vercel-setup.yml`(GitHub Secrets → Vercel API)。
+  `.github/vercel-setup-trigger` の更新pushで再実行
+- BYOK: AI/画像/市場データのキーはアプリ内設定画面から組織単位で登録(暗号化)
+- cron: `/api/jobs/sweep`(日次、CRON_SECRET認証)が停止Jobを復旧
