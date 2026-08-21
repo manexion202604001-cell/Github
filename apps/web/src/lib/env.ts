@@ -61,6 +61,11 @@ export const env = {
   storage: {
     provider: read('STORAGE_PROVIDER', 'local'),
     localDir: read('STORAGE_LOCAL_DIR', '.storage'),
+    supabase: {
+      url: read('SUPABASE_URL'),
+      serviceRoleKey: read('SUPABASE_SERVICE_ROLE_KEY'),
+      bucket: read('SUPABASE_STORAGE_BUCKET', 'product-os'),
+    },
     s3: {
       endpoint: read('S3_ENDPOINT'),
       region: read('S3_REGION'),

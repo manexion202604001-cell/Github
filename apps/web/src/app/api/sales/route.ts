@@ -4,6 +4,10 @@ import { apiHandler, jsonOk, parseBody } from '@/server/api'
 import { AppError } from '@/lib/errors'
 import { deleteSales, listSales, startSalesAnalysis, upsertSales } from '@/features/sales/service'
 
+/** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
+export const maxDuration = 60
+
+
 const salesSchema = z.object({
   projectId: z.string().min(1),
   periodStart: z.coerce.date(),

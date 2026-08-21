@@ -30,13 +30,23 @@ export async function enqueueJob(input: EnqueueInput): Promise<Job> {
   })
 
   if (env.jobs.inline) {
-    // 意図的に await しない。API はジョブIDを即返し、クライアントはポーリングする。
-    void runJob(job.id).catch((error: unknown) => {
-      logger.error('job.inline_failed', {
-        jobId: job.id,
-        error: error instanceof Error ? error.message : String(error),
+    // API はジョブIDを即返し、クライアントはポーリングする。
+    // サーバーレス(Vercel等)ではレスポンス送信後にプロセスが凍結されるため、
+    // next/server の after() で実行を予約する。それ以外の環境では fire-and-forget。
+    const execute = () =>
+      runJob(job.id).catch((error: unknown) => {
+        logger.error('job.inline_failed', {
+          jobId: job.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
       })
-    })
+
+    try {
+      const { after } = await import('next/server')
+      after(execute)
+    } catch {
+      void execute()
+    }
   }
 
   return job

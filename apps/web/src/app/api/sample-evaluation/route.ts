@@ -5,6 +5,10 @@ import { AppError } from '@/lib/errors'
 import { listSamples, saveSample, startSampleEvaluation } from '@/features/samples/service'
 import { optionalString } from '@/validators/common'
 
+/** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
+export const maxDuration = 60
+
+
 const score = z.number().int().min(0).max(10).nullable()
 
 const saveSchema = z.object({

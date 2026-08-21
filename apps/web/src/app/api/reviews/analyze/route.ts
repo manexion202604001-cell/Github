@@ -2,6 +2,10 @@ import { z } from 'zod'
 import { apiHandler, jsonOk, parseBody } from '@/server/api'
 import { startReviewAnalysis } from '@/features/market-research/service'
 
+/** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
+export const maxDuration = 60
+
+
 const schema = z.object({ projectId: z.string().min(1) })
 
 /** レビュー解析・不満クラスタリング(要件26, 27)。 */

@@ -14,7 +14,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "worker": "tsx src/jobs/worker-runner.ts"
+    "worker": "tsx src/jobs/worker-runner.ts",
+    "vercel-build": "prisma generate && prisma db push --skip-generate --accept-data-loss && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",

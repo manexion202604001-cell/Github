@@ -8,6 +8,9 @@ import {
   startSpecificationGeneration,
 } from '@/features/specifications/service'
 
+/** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
+export const maxDuration = 60
+
 const schema = z.object({
   projectId: z.string().min(1),
   /** 'spec' = 商品仕様生成 / 'oem-document' = OEM仕様書 / 'revision' = 次回ロット修正依頼書 */

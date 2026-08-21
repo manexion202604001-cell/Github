@@ -9,6 +9,9 @@ import {
   updateImprovementStatus,
 } from '@/features/improvements/service'
 
+/** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
+export const maxDuration = 60
+
 const generateSchema = z.object({
   projectId: z.string().min(1),
   phase: z.enum(['DESIGN', 'POST_SALE']).default('DESIGN'),

@@ -4,6 +4,10 @@ import { apiHandler, jsonOk, parseBody } from '@/server/api'
 import { AppError } from '@/lib/errors'
 import { getLatestResearch, startMarketResearch } from '@/features/market-research/service'
 
+/** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
+export const maxDuration = 60
+
+
 const schema = z.object({
   projectId: z.string().min(1),
   keyword: z.string().max(120).optional(),
