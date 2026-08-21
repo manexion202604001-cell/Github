@@ -1,0 +1,43 @@
+# 本番の診断エンドポイントを叩き、実際の例外内容を取得する(調査用)
+name: Health Check
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/health-check-trigger']
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Fetch CRON_SECRET from Vercel and call /api/debug/health
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -sS --fail "https://api.vercel.com/v9/projects?limit=100" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/projects.json
+          PROJECT_ID=$(jq -r '[.projects[] | select((.link.repoId|tostring)=="1216588499")][0].id' /tmp/projects.json)
+          echo "project: $PROJECT_ID"
+
+          ENV_ID=$(curl -sS --fail "https://api.vercel.com/v9/projects/${PROJECT_ID}/env" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.envs[] | select(.key=="CRON_SECRET") | .id' | head -1)
+          if [ -z "$ENV_ID" ]; then echo "::error::CRON_SECRET が見つかりません"; exit 1; fi
+          SECRET=$(curl -sS --fail "https://api.vercel.com/v1/projects/${PROJECT_ID}/env/${ENV_ID}?decrypt=true" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.value')
+          echo "::add-mask::$SECRET"
+
+          # デプロイ直後は404のことがあるためリトライ
+          for i in $(seq 1 12); do
+            status=$(curl -sS -o /tmp/health.json -w "%{http_code}" \
+              -H "Authorization: Bearer ${SECRET}" \
+              "https://github-ucchau.vercel.app/api/debug/health" || echo 000)
+            echo "[try $i] HTTP $status"
+            if [ "$status" = "200" ]; then break; fi
+            sleep 20
+          done
+          echo "=== HEALTH RESULT ==="
+          cat /tmp/health.json | jq .
