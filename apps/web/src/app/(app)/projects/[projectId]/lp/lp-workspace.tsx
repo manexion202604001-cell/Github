@@ -32,6 +32,7 @@ type PageView = {
   headline: string | null
   subheadline: string | null
   status: string
+  publicSlug: string | null
   sections: SectionView[]
 }
 
@@ -104,6 +105,7 @@ export function LPWorkspace({ projectId, page }: { projectId: string; page: Page
               <a href={`/api/lp?projectId=${projectId}`} target="_blank" rel="noopener noreferrer">
                 <Button variant="secondary">JSONを開く</Button>
               </a>
+              <PublishControl projectId={projectId} publicSlug={page.publicSlug} status={page.status} />
             </>
           ) : null}
         </CardBody>
@@ -300,5 +302,63 @@ function AddSection({ projectId: _projectId, onAdd }: { projectId: string; onAdd
         追加
       </Button>
     </div>
+  )
+}
+
+
+/** 公開URLの発行と表示(要件57 Preview URL)。 */
+function PublishControl({
+  projectId,
+  publicSlug,
+  status,
+}: {
+  projectId: string
+  publicSlug: string | null
+  status: string
+}) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+
+  const publish = async () => {
+    setBusy(true)
+    setPublishError(null)
+    try {
+      await api('/api/lp', { method: 'PATCH', body: { action: 'publish', projectId } })
+      router.refresh()
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : '公開に失敗しました')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (status === 'PUBLISHED' && publicSlug) {
+    const url = `/lp/${publicSlug}`
+    return (
+      <span className="inline-flex items-center gap-2">
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <Button variant="secondary">公開ページを開く</Button>
+        </a>
+        <button
+          type="button"
+          className="text-[12px] text-ink-subtle underline-offset-2 hover:text-brand hover:underline"
+          onClick={() => {
+            void navigator.clipboard.writeText(`${window.location.origin}${url}`)
+          }}
+        >
+          URLをコピー
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <Button variant="secondary" onClick={publish} loading={busy}>
+        公開URLを発行
+      </Button>
+      {publishError ? <span className="text-[12px] text-critical">{publishError}</span> : null}
+    </span>
   )
 }

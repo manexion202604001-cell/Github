@@ -184,3 +184,11 @@ export async function exportHtml(projectId: string): Promise<string> {
   if (!page) throw AppError.notFound('LPが見つかりません')
   return renderLandingPageHtml(toRenderPage(page))
 }
+
+/** 公開URL用。認証なしで参照できるのは PUBLISHED のLPのみ。 */
+export async function getPublicLandingPage(slug: string) {
+  return db.landingPage.findFirst({
+    where: { publicSlug: slug, status: 'PUBLISHED' },
+    include: { sections: { orderBy: { order: 'asc' } } },
+  })
+}

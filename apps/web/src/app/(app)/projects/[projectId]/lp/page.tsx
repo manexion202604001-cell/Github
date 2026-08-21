@@ -19,6 +19,7 @@ export default async function LPPage({ params }: { params: Promise<{ projectId: 
               headline: page.headline,
               subheadline: page.subheadline,
               status: page.status,
+              publicSlug: page.publicSlug,
               sections: page.sections.map((section) => ({
                 id: section.id,
                 kind: section.kind,

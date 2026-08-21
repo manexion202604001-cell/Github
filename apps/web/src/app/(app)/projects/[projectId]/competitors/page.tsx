@@ -1,6 +1,7 @@
 import { listCompetitors } from '@/features/market-research/service'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { DataTable } from '@/components/ui/table'
 import { EmptyState } from '@/components/ui/feedback'
 
@@ -14,6 +15,15 @@ export default async function CompetitorsPage({ params }: { params: Promise<{ pr
       <CardHeader
         title={`競合商品(${competitors.length}件)`}
         description="市場調査で取得した競合の一覧です。価格・評価・USPを比較できます。"
+        action={
+          competitors.length > 0 ? (
+            <a href={`/api/competitors/export?projectId=${projectId}`}>
+              <Button variant="secondary" size="sm">
+                CSVダウンロード
+              </Button>
+            </a>
+          ) : undefined
+        }
       />
       <CardBody className="p-0">
         <DataTable

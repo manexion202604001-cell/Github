@@ -3,6 +3,7 @@ import { requireOrganization } from '@/server/authz'
 import { listIntegrations } from '@/features/integrations/service'
 import {
   getUsageSummary,
+  listAuditLogs,
   listMembers,
   listPendingInvites,
   listRecentAIJobs,
@@ -10,21 +11,23 @@ import {
 import { IntegrationsPanel } from './integrations-panel'
 import { MembersPanel } from './members-panel'
 import { UsagePanel } from './usage-panel'
+import { AuditPanel } from './audit-panel'
 
 export const metadata: Metadata = { title: '設定' }
 export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
   const context = await requireOrganization()
-  const [integrations, members, invites, usage, recentJobs] = await Promise.all([
+  const canManage = context.role === 'OWNER' || context.role === 'ADMIN'
+
+  const [integrations, members, invites, usage, recentJobs, auditLogs] = await Promise.all([
     listIntegrations(context.organizationId),
     listMembers(context.organizationId),
     listPendingInvites(context.organizationId),
     getUsageSummary(context.organizationId),
     listRecentAIJobs(context.organizationId),
+    canManage ? listAuditLogs(context.organizationId) : Promise.resolve([]),
   ])
-
-  const canManage = context.role === 'OWNER' || context.role === 'ADMIN'
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -70,6 +73,12 @@ export default async function SettingsPage() {
           createdAt: job.createdAt.toISOString(),
         }))}
       />
+
+      {canManage ? (
+        <AuditPanel
+          logs={auditLogs.map((log) => ({ ...log, createdAt: log.createdAt.toISOString() }))}
+        />
+      ) : null}
     </div>
   )
 }

@@ -308,3 +308,22 @@ export async function listRecentAIJobs(organizationId: string, limit = 20) {
     },
   })
 }
+
+/** 監査ログの閲覧(要件113)。Admin以上。 */
+export async function listAuditLogs(organizationId: string, limit = 50) {
+  await requireOrganizationRole(organizationId, 'ADMIN')
+  const logs = await db.auditLog.findMany({
+    where: { organizationId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: { user: { select: { name: true, email: true } } },
+  })
+  return logs.map((log) => ({
+    id: log.id,
+    action: log.action,
+    entityType: log.entityType,
+    summary: log.summary,
+    actor: log.user?.name ?? log.user?.email ?? 'システム',
+    createdAt: log.createdAt,
+  }))
+}
