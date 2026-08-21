@@ -16,6 +16,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
+            <Link
+              href="/settings"
+              className="text-[13px] font-semibold text-ink-muted transition-colors hover:text-brand"
+            >
+              設定
+            </Link>
             <span className="hidden text-[13px] text-ink-muted sm:inline">{user.name ?? user.email}</span>
             <LogoutButton />
           </div>

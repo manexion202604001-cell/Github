@@ -76,6 +76,12 @@ export const env = {
     },
   },
 
+  mail: {
+    provider: read('MAIL_PROVIDER', 'console'),
+    resendApiKey: read('RESEND_API_KEY'),
+    from: read('MAIL_FROM', 'UCCHAU <onboarding@resend.dev>'),
+  },
+
   jobs: {
     inline: readBool('JOBS_INLINE', true),
     workerToken: read('JOB_WORKER_TOKEN'),

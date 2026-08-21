@@ -4,6 +4,7 @@ import { AppError } from '@/lib/errors'
 import { requireProjectAccess } from '@/server/authz'
 import { enqueueJob } from '@/jobs/queue'
 import { marketDataProviders } from '@/providers/market-data'
+import { marketDataChainFor } from '@/server/org-providers'
 
 export async function startMarketResearch(projectId: string, input: { keyword?: string; marketplace?: string }) {
   const context = await requireProjectAccess(projectId, 'EDITOR')
@@ -19,7 +20,7 @@ export async function startMarketResearch(projectId: string, input: { keyword?: 
       status: 'PENDING',
       keyword,
       marketplace: input.marketplace ?? 'amazon.co.jp',
-      source: marketDataProviders().get().id,
+      source: (await marketDataChainFor(context.organizationId))[0]?.id ?? 'mock',
     },
   })
 
@@ -96,5 +97,13 @@ export async function startReviewAnalysis(projectId: string) {
 
 export function providerInfo() {
   const provider = marketDataProviders().get()
+  return { id: provider.id, label: provider.sourceLabel, synthetic: provider.synthetic }
+}
+
+/** 組織のBYOK設定を反映したProvider情報(画面表示用)。 */
+export async function providerInfoFor(projectId: string) {
+  const context = await requireProjectAccess(projectId)
+  const provider = (await marketDataChainFor(context.organizationId))[0]
+  if (!provider) return providerInfo()
   return { id: provider.id, label: provider.sourceLabel, synthetic: provider.synthetic }
 }

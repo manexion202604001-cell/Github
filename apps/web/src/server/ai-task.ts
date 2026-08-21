@@ -1,6 +1,7 @@
 import 'server-only'
 import type { z } from 'zod'
 import { aiProviders } from '@/providers/ai'
+import { aiChainFor } from '@/server/org-providers'
 import { runWithFallback } from '@/providers/registry'
 import { AppError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
@@ -47,7 +48,9 @@ export async function runAITask<TInput, TOutput>(
   context: AITaskContext,
 ): Promise<AITaskResult<TOutput>> {
   const registry = aiProviders()
-  const chain = registry.chain(context.providerId ? [context.providerId] : undefined)
+  const chain = context.providerId
+    ? registry.chain([context.providerId])
+    : await aiChainFor(context.organizationId)
   const primary = chain[0] ?? registry.get()
 
   if (primary.synthetic) {
@@ -95,7 +98,9 @@ export async function runAIChat(
   context: AITaskContext & { purpose: string },
 ): Promise<{ text: string; synthetic: boolean }> {
   const registry = aiProviders()
-  const chain = registry.chain(context.providerId ? [context.providerId] : undefined)
+  const chain = context.providerId
+    ? registry.chain([context.providerId])
+    : await aiChainFor(context.organizationId)
 
   const outcome = await runWithFallback(chain, (provider) =>
     provider.complete({

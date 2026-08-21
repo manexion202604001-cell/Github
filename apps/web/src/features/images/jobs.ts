@@ -2,7 +2,8 @@ import 'server-only'
 import { z } from 'zod'
 import { db } from '@/server/db'
 import { AppError } from '@/lib/errors'
-import { imageProviders, IMAGE_ANGLES, ANGLE_LABEL, type GeneratedImage } from '@/providers/image'
+import { IMAGE_ANGLES, ANGLE_LABEL, type GeneratedImage } from '@/providers/image'
+import { imageChainFor } from '@/server/org-providers'
 import { runWithFallback } from '@/providers/registry'
 import { recordUsage } from '@/server/usage'
 import { advanceStage } from '@/features/projects/service'
@@ -52,8 +53,7 @@ function describe(product: {
 const generateConcepts: JobHandler = async (context) => {
   const { projectId } = projectPayload.parse(context.payload)
   const product = await loadProduct(projectId)
-  const registry = imageProviders()
-  const chain = registry.chain()
+  const chain = await imageChainFor(context.organizationId)
   const description = describe(product)
 
   const set = await db.$transaction(async (tx) => {
@@ -127,8 +127,7 @@ const generateMultiAngle: JobHandler = async (context) => {
   const anchorBytes = await loadImageBytes(anchor.url)
   if (!anchorBytes) throw new Error('アンカー画像を読み込めませんでした')
 
-  const registry = imageProviders()
-  const chain = registry.chain()
+  const chain = await imageChainFor(context.organizationId)
   const description = describe(product)
   const productDescription = [description.name, description.category, description.material, description.color]
     .filter((value): value is string => Boolean(value))
@@ -204,7 +203,7 @@ const generatePreset: JobHandler = async (context) => {
   const anchor = product.images[0]
   const anchorBytes = anchor ? await loadImageBytes(anchor.url) : null
   const description = describe(product)
-  const chain = imageProviders().chain()
+  const chain = await imageChainFor(context.organizationId)
 
   const prompt = `${buildConceptPrompt(description, {
     variant: 'A',
@@ -263,7 +262,7 @@ const editImage: JobHandler = async (context) => {
   const bytes = await loadImageBytes(source.url)
   if (!bytes) throw new Error('元画像を読み込めませんでした')
 
-  const chain = imageProviders().chain()
+  const chain = await imageChainFor(context.organizationId)
   const instruction = buildEditPrompt(payload.presetId, payload.value)
 
   const outcome = await runWithFallback(chain, (provider) =>

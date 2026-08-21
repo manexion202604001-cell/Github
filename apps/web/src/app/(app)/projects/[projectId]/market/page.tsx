@@ -1,4 +1,4 @@
-import { getLatestResearch, providerInfo } from '@/features/market-research/service'
+import { getLatestResearch, providerInfoFor } from '@/features/market-research/service'
 import { toStringArray } from '@/features/assistant/context'
 import { formatCurrency, formatPercent } from '@/lib/format'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
@@ -9,7 +9,7 @@ import { MarketActions, ComplaintChart } from './market-actions'
 /** STEP 3: 市場調査(要件21〜28)。 */
 export default async function MarketPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params
-  const [research, provider] = [await getLatestResearch(projectId), providerInfo()]
+  const [research, provider] = [await getLatestResearch(projectId), await providerInfoFor(projectId)]
 
   const complaints = (research?.reviews ?? [])
     .filter((review) => review.sentiment === 'NEGATIVE' || review.sentiment === 'IMPROVEMENT_REQUEST')

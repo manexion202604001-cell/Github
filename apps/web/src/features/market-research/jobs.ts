@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { db } from '@/server/db'
 import { AppError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
-import { marketDataProviders, type MarketProduct, type MarketReview } from '@/providers/market-data'
+import type { MarketProduct, MarketReview } from '@/providers/market-data'
+import { marketDataChainFor } from '@/server/org-providers'
 import { runWithFallback } from '@/providers/registry'
 import { runAITask } from '@/server/ai-task'
 import { recordUsage } from '@/server/usage'
@@ -23,9 +24,9 @@ const researchPayload = z.object({
 /** STEP 3: 市場データ取得 → AI分析 → 競合保存(要件21〜25)。 */
 const runResearch: JobHandler = async (context) => {
   const payload = researchPayload.parse(context.payload)
-  const registry = marketDataProviders()
-  const chain = registry.chain()
-  const primary = chain[0] ?? registry.get()
+  const chain = await marketDataChainFor(context.organizationId)
+  const primary = chain[0]
+  if (!primary) throw new Error('市場データProviderが利用できません')
 
   await db.marketResearch.update({
     where: { id: payload.researchId },
@@ -186,7 +187,7 @@ const runReviewAnalysis: JobHandler = async (context) => {
   })
   if (competitors.length === 0) throw new Error('競合商品が登録されていません')
 
-  const chain = marketDataProviders().chain()
+  const chain = await marketDataChainFor(context.organizationId)
   const reviews: MarketReview[] = []
 
   for (const [index, competitor] of competitors.entries()) {
