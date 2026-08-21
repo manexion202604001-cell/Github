@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getDashboard } from '@/features/projects/service'
 import { STAGE_LABEL, PROJECT_STAGES } from '@/features/projects/schema'
+import { TARGET_LABEL } from '@/features/improvements/labels'
 import { formatCurrency, formatPercent, relativeTime } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
@@ -111,7 +112,7 @@ export default async function DashboardPage() {
                       <Link href={`/projects/${suggestion.projectId}/improvement`} className="block">
                         <p className="text-[13px] leading-relaxed font-semibold">{suggestion.title}</p>
                         <p className="mt-0.5 text-[12px] text-ink-subtle">
-                          {suggestion.projectName} / {suggestion.target} / 優先度{suggestion.priority}
+                          {suggestion.projectName} / {TARGET_LABEL[suggestion.target] ?? suggestion.target} / 優先度{suggestion.priority}
                         </p>
                       </Link>
                     </li>

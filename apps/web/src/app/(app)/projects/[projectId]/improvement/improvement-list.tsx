@@ -5,19 +5,7 @@ import { api } from '@/hooks/api'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/field'
-
-const TARGET_LABEL: Record<string, string> = {
-  PRICE: '価格',
-  IMAGE: '画像',
-  LP: 'LP',
-  VIDEO: '動画',
-  SEO: 'SEO',
-  ADVERTISING: '広告',
-  SPECIFICATION: '商品仕様',
-  PACKAGING: 'パッケージ',
-  SIZE: 'サイズ',
-  NEXT_LOT: '次回ロット',
-}
+import { TARGET_LABEL } from '@/features/improvements/labels'
 
 const STATUS_LABEL: Record<string, string> = {
   PROPOSED: '提案中',

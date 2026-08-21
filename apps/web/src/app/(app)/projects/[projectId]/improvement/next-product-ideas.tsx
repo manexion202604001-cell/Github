@@ -16,19 +16,20 @@ type Idea = { type: string; name: string; reason: string }
  */
 export function NextProductIdeas({ ideas }: { ideas: Idea[] }) {
   const router = useRouter()
-  const [busyName, setBusyName] = useState<string | null>(null)
+  const [busyIndex, setBusyIndex] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   if (ideas.length === 0) return null
 
-  const createProject = async (idea: Idea) => {
-    setBusyName(idea.name)
+  const createProject = async (idea: Idea, index: number) => {
+    setBusyIndex(index)
     setError(null)
     try {
       const project = await api<{ id: string }>('/api/projects', {
         method: 'POST',
         body: {
-          name: idea.name,
+          // AI生成名はスキーマ上限(120字)に合わせて丸める
+          name: idea.name.slice(0, 120),
           description: `${idea.type}として提案: ${idea.reason}`,
           idea: `${idea.name}(${idea.type})を作りたい。背景: ${idea.reason}`,
         },
@@ -36,7 +37,7 @@ export function NextProductIdeas({ ideas }: { ideas: Idea[] }) {
       router.push(`/projects/${project.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'プロジェクトの作成に失敗しました')
-      setBusyName(null)
+      setBusyIndex(null)
     }
   }
 
@@ -48,9 +49,9 @@ export function NextProductIdeas({ ideas }: { ideas: Idea[] }) {
       />
       <CardBody className="space-y-3">
         {error ? <Notice tone="error">{error}</Notice> : null}
-        {ideas.map((idea) => (
+        {ideas.map((idea, index) => (
           <div
-            key={idea.name}
+            key={`${index}-${idea.name}`}
             className="flex flex-wrap items-center justify-between gap-3 border border-line px-4 py-3"
           >
             <div className="min-w-0">
@@ -65,8 +66,8 @@ export function NextProductIdeas({ ideas }: { ideas: Idea[] }) {
             <Button
               variant="secondary"
               size="sm"
-              loading={busyName === idea.name}
-              onClick={() => void createProject(idea)}
+              loading={busyIndex === index}
+              onClick={() => void createProject(idea, index)}
             >
               この案でプロジェクト作成
             </Button>

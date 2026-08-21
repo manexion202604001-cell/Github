@@ -154,27 +154,27 @@ export async function getDashboard(organizationId?: string) {
   const withRevenue = projects.filter((project) => project.estimatedMonthlyRevenue !== null)
   const withProfit = projects.filter((project) => project.estimatedProfitRate !== null)
 
-  const recentJobs = await db.job.findMany({
-    where: { organizationId: context.organizationId },
-    orderBy: { createdAt: 'desc' },
-    take: 8,
-    select: { id: true, kind: true, handler: true, status: true, createdAt: true, projectId: true, progress: true },
-  })
-
-  // AIからの提案: 全プロジェクトの未対応改善提案から優先度順に(要件8)
-  const suggestions = await db.improvement.findMany({
-    where: { status: 'PROPOSED', project: { organizationId: context.organizationId, archivedAt: null } },
-    orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
-    take: 5,
-    include: { project: { select: { id: true, name: true } } },
-  })
-
-  const openTasks = await db.projectTask.findMany({
-    where: { done: false, project: { organizationId: context.organizationId, archivedAt: null } },
-    orderBy: [{ createdAt: 'desc' }],
-    take: 10,
-    include: { project: { select: { id: true, name: true } } },
-  })
+  const [recentJobs, suggestions, openTasks] = await Promise.all([
+    db.job.findMany({
+      where: { organizationId: context.organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+      select: { id: true, kind: true, handler: true, status: true, createdAt: true, projectId: true, progress: true },
+    }),
+    // AIからの提案: 全プロジェクトの未対応改善提案から優先度順に(要件8)
+    db.improvement.findMany({
+      where: { status: 'PROPOSED', project: { organizationId: context.organizationId, archivedAt: null } },
+      orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
+      take: 5,
+      include: { project: { select: { id: true, name: true } } },
+    }),
+    db.projectTask.findMany({
+      where: { done: false, project: { organizationId: context.organizationId, archivedAt: null } },
+      orderBy: [{ createdAt: 'desc' }],
+      take: 10,
+      include: { project: { select: { id: true, name: true } } },
+    }),
+  ])
 
   return {
     organizationId: context.organizationId,
