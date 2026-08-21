@@ -30,6 +30,20 @@ jobs:
             -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.value')
           echo "::add-mask::$SECRET"
 
+          echo "=== RECENT DEPLOYMENTS ==="
+          curl -sS --fail "https://api.vercel.com/v6/deployments?projectId=${PROJECT_ID}&limit=8&target=production" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/deploys.json
+          jq -r '.deployments[] | "\(.state)\t\(.readyState // "-")\t\(.meta.githubCommitSha[0:7] // "-")\t\(.createdAt/1000|todate)\t\(.meta.githubCommitMessage[0:40] // "-")"' /tmp/deploys.json
+
+          echo "=== NEWEST NON-READY DEPLOYMENT BUILD LOG (if any) ==="
+          BAD_ID=$(jq -r '[.deployments[] | select(.state != "READY")][0].uid // empty' /tmp/deploys.json)
+          if [ -n "$BAD_ID" ]; then
+            curl -sS "https://api.vercel.com/v3/deployments/${BAD_ID}/events?builds=1&limit=120" \
+              -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.[] | select(.type=="stderr" or .type=="stdout" or .type=="error") | .payload.text // .text // empty' | tail -60
+          else
+            echo "(全デプロイREADY)"
+          fi
+
           # デプロイ直後は404のことがあるためリトライ
           for i in $(seq 1 12); do
             status=$(curl -sS -o /tmp/health.json -w "%{http_code}" \
@@ -40,4 +54,4 @@ jobs:
             sleep 20
           done
           echo "=== HEALTH RESULT ==="
-          cat /tmp/health.json | jq .
+          jq . /tmp/health.json || cat /tmp/health.json
