@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+/*
+ * MANEXION AI商品開発OS — デザイントークン(要件105〜107)
+ * Luxury Minimal / BtoB SaaS。淡いラベンダー背景・白カード・黒文字・Purpleは重要情報のみ。
+ * 過度なGradientとGlassmorphismは使わない。
+ */
+@theme {
+  --color-canvas: #f6f3ff;
+  --color-canvas-alt: #f2eefa;
+  --color-surface: #ffffff;
+  --color-ink: #111111;
+  --color-ink-muted: #5b5b66;
+  --color-ink-subtle: #8a8a99;
+  --color-brand: #6d4aff;
+  --color-brand-soft: #8b72e8;
+  --color-brand-wash: #efeaff;
+  --color-line: #ddd6f3;
+  --color-line-strong: #c8bced;
+  --color-positive: #157a5b;
+  --color-positive-wash: #e6f4ef;
+  --color-caution: #9a6511;
+  --color-caution-wash: #fdf3e2;
+  --color-critical: #b02a37;
+  --color-critical-wash: #fbeaec;
+
+  --radius-card: 18px;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+    font-weight: 700;
+  }
+
+  ::selection {
+    background: var(--color-brand-wash);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  /* 数値の桁を揃える。金額・スコアの比較で読み違えないため。 */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .mx-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+}
