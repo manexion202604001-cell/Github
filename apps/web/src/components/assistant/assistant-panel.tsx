@@ -59,7 +59,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          'fixed right-5 bottom-5 z-40 flex h-13 items-center gap-2 rounded-full px-5 font-bold text-white shadow-lg transition-colors',
+          'fixed right-5 bottom-5 z-40 flex h-13 items-center gap-2 px-5 font-bold text-white shadow-lg transition-colors',
           open ? 'bg-ink' : 'bg-brand hover:bg-brand-soft',
         )}
         style={{ height: 52 }}
@@ -68,7 +68,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
       </button>
 
       {open ? (
-        <div className="fixed right-5 bottom-20 z-40 flex max-h-[70dvh] w-[min(400px,calc(100vw-40px))] flex-col overflow-hidden rounded-[18px] border border-line bg-surface shadow-xl">
+        <div className="fixed right-5 bottom-20 z-40 flex max-h-[70dvh] w-[min(400px,calc(100vw-40px))] flex-col overflow-hidden border border-line bg-surface shadow-xl">
           <div className="border-b border-line px-5 py-3.5">
             <p className="text-[14px] font-bold">AI Assistant</p>
             <p className="text-[12px] text-ink-subtle">このプロジェクトのデータを踏まえて回答します</p>
@@ -83,7 +83,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
                     key={suggestion}
                     type="button"
                     onClick={() => void send(suggestion)}
-                    className="block w-full rounded-xl border border-line bg-canvas px-3.5 py-2.5 text-left text-[13px] text-ink-muted transition-colors hover:border-brand hover:text-brand"
+                    className="block w-full border border-line bg-canvas px-3.5 py-2.5 text-left text-[13px] text-ink-muted transition-colors hover:border-brand hover:text-brand"
                   >
                     {suggestion}
                   </button>
@@ -94,7 +94,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
                 <div
                   key={index}
                   className={cn(
-                    'max-w-[85%] rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap',
+                    'max-w-[85%] px-4 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap',
                     message.role === 'user' ? 'ml-auto bg-brand text-white' : 'bg-canvas-alt text-ink',
                   )}
                 >
@@ -102,7 +102,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
                 </div>
               ))
             )}
-            {loading ? <div className="w-14 rounded-2xl bg-canvas-alt px-4 py-2.5 text-[13px]">…</div> : null}
+            {loading ? <div className="w-14 bg-canvas-alt px-4 py-2.5 text-[13px]">…</div> : null}
           </div>
 
           <form
@@ -116,7 +116,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               placeholder="この商品売れそう?"
-              className="h-10 flex-1 rounded-xl border border-line bg-surface px-3.5 text-[13px] focus:border-brand focus:outline-none"
+              className="h-10 flex-1 border border-line bg-surface px-3.5 text-[13px] focus:border-brand focus:outline-none"
             />
             <Button type="submit" size="md" disabled={loading || input.trim() === ''}>
               送信

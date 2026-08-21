@@ -92,7 +92,7 @@ export default async function ScorePage({ params }: { params: Promise<{ projectI
                   <CardHeader title="AI改善提案" description="IMPROVE GO の場合、これらを反映すると開発可能な水準に到達します。" />
                   <CardBody className="space-y-3">
                     {improvements.map((improvement) => (
-                      <div key={improvement.item} className="rounded-xl border border-line bg-canvas p-4">
+                      <div key={improvement.item} className=" border border-line bg-canvas p-4">
                         <p className="text-[13px] font-bold">{improvement.item}</p>
                         <p className="mt-1 text-[13px]">
                           <span className="text-ink-subtle line-through">{improvement.current}</span>
@@ -111,7 +111,7 @@ export default async function ScorePage({ params }: { params: Promise<{ projectI
                   <CardHeader title="代替商品アイデア" description="NO GO の場合の代替案です。" />
                   <CardBody className="space-y-3">
                     {alternatives.map((idea) => (
-                      <div key={idea.name} className="rounded-xl border border-line bg-canvas p-4">
+                      <div key={idea.name} className=" border border-line bg-canvas p-4">
                         <p className="text-[13px] font-bold">{idea.name}</p>
                         <p className="mt-1 text-[12px] text-ink-muted">{idea.reason}</p>
                       </div>

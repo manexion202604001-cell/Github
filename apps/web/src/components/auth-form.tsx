@@ -30,7 +30,7 @@ function GoogleButton() {
   return (
     <a
       href="/api/auth/google"
-      className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink transition-colors hover:bg-canvas-alt"
+      className="flex h-10 w-full items-center justify-center gap-2 border border-line bg-surface text-sm font-semibold text-ink transition-colors hover:bg-canvas-alt"
     >
       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
         <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.3-2.1 3.7-5.1 3.7-8.6Z" />

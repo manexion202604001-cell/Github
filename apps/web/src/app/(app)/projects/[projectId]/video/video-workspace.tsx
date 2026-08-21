@@ -167,11 +167,11 @@ export function VideoWorkspace({
             <CardBody className="space-y-4">
               {video.strategy ? (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl bg-canvas px-4 py-3">
+                  <div className=" bg-canvas px-4 py-3">
                     <p className="text-[12px] font-bold text-ink-subtle">戦略</p>
                     <p className="mt-1 text-[13px] leading-relaxed">{video.strategy}</p>
                   </div>
-                  <div className="rounded-xl bg-canvas px-4 py-3">
+                  <div className=" bg-canvas px-4 py-3">
                     <p className="text-[12px] font-bold text-ink-subtle">コンセプト</p>
                     <p className="mt-1 text-[13px] leading-relaxed">{video.concept}</p>
                   </div>
@@ -185,7 +185,7 @@ export function VideoWorkspace({
                   {video.scenes.map((scene) => {
                     const sceneJob = video.jobs.find((item) => item.sceneId === scene.id)
                     return (
-                      <li key={scene.id} className="rounded-xl border border-line p-4">
+                      <li key={scene.id} className=" border border-line p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <Badge tone="brand">Scene {String(scene.order).padStart(2, '0')}</Badge>
@@ -216,7 +216,7 @@ export function VideoWorkspace({
                           {scene.narration ? <span>ナレーション: {scene.narration}</span> : null}
                         </div>
                         {sceneJob?.videoUrl ? (
-                          <div className="mt-3 max-w-60 overflow-hidden rounded-xl border border-line">
+                          <div className="mt-3 max-w-60 overflow-hidden border border-line">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={sceneJob.videoUrl} alt={`Scene ${scene.order}`} className="w-full" />
                           </div>

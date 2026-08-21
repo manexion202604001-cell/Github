@@ -4,7 +4,7 @@ import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type Selec
 import { cn } from '@/lib/cn'
 
 const CONTROL =
-  'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-subtle transition-colors hover:border-line-strong focus:border-brand focus:outline-none disabled:bg-canvas-alt disabled:text-ink-subtle'
+  'w-full border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-subtle transition-colors hover:border-line-strong focus:border-brand focus:outline-none disabled:bg-canvas-alt disabled:text-ink-subtle'
 
 export function Field({
   label,
@@ -100,7 +100,7 @@ export function Slider({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-line accent-brand"
+        className="h-1.5 w-full cursor-pointer appearance-none bg-line accent-brand"
       />
     </div>
   )

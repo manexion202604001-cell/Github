@@ -64,7 +64,7 @@ export function NewProjectForm() {
                 key={example}
                 type="button"
                 onClick={() => setIdea(example)}
-                className="rounded-full border border-line bg-canvas px-3 py-1 text-[12px] text-ink-muted transition-colors hover:border-brand hover:text-brand"
+                className=" border border-line bg-canvas px-3 py-1 text-[12px] text-ink-muted transition-colors hover:border-brand hover:text-brand"
               >
                 {example.slice(0, 24)}…
               </button>

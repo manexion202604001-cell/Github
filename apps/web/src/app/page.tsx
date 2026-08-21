@@ -84,7 +84,7 @@ export default function MarketingPage() {
             <ol className="mt-6 flex flex-wrap items-center justify-center gap-x-1 gap-y-3">
               {FLOW.map((step, index) => (
                 <li key={step} className="flex items-center gap-1">
-                  <span className="rounded-full border border-line bg-canvas px-3 py-1 text-[12px] font-semibold text-ink-muted">
+                  <span className=" border border-line bg-canvas px-3 py-1 text-[12px] font-semibold text-ink-muted">
                     {step}
                   </span>
                   {index < FLOW.length - 1 ? <span className="text-line-strong">→</span> : null}
@@ -97,7 +97,7 @@ export default function MarketingPage() {
         <section className="mx-auto max-w-6xl px-5 py-20">
           <div className="grid gap-5 sm:grid-cols-2">
             {FEATURES.map((feature) => (
-              <div key={feature.title} className="rounded-[18px] border border-line bg-surface p-7">
+              <div key={feature.title} className=" border border-line bg-surface p-7">
                 <h2 className="text-lg font-bold">{feature.title}</h2>
                 <p className="mt-3 text-[14px] leading-7 text-ink-muted">{feature.body}</p>
               </div>
@@ -106,7 +106,7 @@ export default function MarketingPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-24 text-center">
-          <div className="rounded-[18px] border border-line bg-surface px-6 py-14">
+          <div className=" border border-line bg-surface px-6 py-14">
             <h2 className="text-2xl font-bold sm:text-3xl">次の商品を、今日から開発する</h2>
             <p className="mx-auto mt-3 max-w-xl text-[14px] leading-7 text-ink-muted">
               APIキーの設定前でもサンプルデータで全工程を体験できます。

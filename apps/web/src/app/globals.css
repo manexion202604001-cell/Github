@@ -24,7 +24,7 @@
   --color-critical: #b02a37;
   --color-critical-wash: #fbeaec;
 
-  --radius-card: 18px;
+  --radius-card: 0px;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
 }

@@ -104,8 +104,8 @@ export function ComplaintChart({ items }: { items: { label: string; share: numbe
             <p className="text-[13px] font-bold">{item.label}</p>
             <p className="tabular text-[13px] font-bold text-brand">{formatPercent(item.share, 0)}</p>
           </div>
-          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-line">
-            <div className="h-full rounded-full bg-brand" style={{ width: `${(item.share / max) * 100}%` }} />
+          <div className="mt-1.5 h-2 overflow-hidden bg-line">
+            <div className="h-full bg-brand" style={{ width: `${(item.share / max) * 100}%` }} />
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-ink-muted">{item.summary}</p>
         </li>

@@ -14,7 +14,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn('flex flex-col items-center gap-3 px-6 py-14 text-center', className)}>
-      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-wash text-brand">
+      <div className="flex h-11 w-11 items-center justify-center bg-brand-wash text-brand">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
           <path d="M12 5v14M5 12h14" strokeLinecap="round" />
         </svg>
@@ -47,7 +47,7 @@ export function Notice({
   className?: string
 }) {
   return (
-    <div className={cn('rounded-xl border px-4 py-3 text-[13px] leading-relaxed', NOTICE[tone], className)}>
+    <div className={cn(' border px-4 py-3 text-[13px] leading-relaxed', NOTICE[tone], className)}>
       {title ? <p className="font-bold">{title}</p> : null}
       {children ? <div className={cn(title && 'mt-1')}>{children}</div> : null}
     </div>
@@ -57,12 +57,12 @@ export function Notice({
 export function Progress({ value, className }: { value: number; className?: string }) {
   const clamped = Math.max(0, Math.min(100, value))
   return (
-    <div className={cn('h-1.5 w-full overflow-hidden rounded-full bg-line', className)}>
-      <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${clamped}%` }} />
+    <div className={cn('h-1.5 w-full overflow-hidden bg-line', className)}>
+      <div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${clamped}%` }} />
     </div>
   )
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded-lg bg-canvas-alt', className)} />
+  return <div className={cn('animate-pulse bg-canvas-alt', className)} />
 }

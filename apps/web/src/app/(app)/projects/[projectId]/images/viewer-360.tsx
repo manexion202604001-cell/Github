@@ -46,7 +46,7 @@ export function Viewer360({ images }: { images: { url: string; angle: string | n
   return (
     <div className="select-none">
       <div
-        className="relative aspect-square w-full cursor-grab touch-pan-y overflow-hidden rounded-[18px] border border-line bg-white active:cursor-grabbing"
+        className="relative aspect-square w-full cursor-grab touch-pan-y overflow-hidden border border-line bg-white active:cursor-grabbing"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -64,7 +64,7 @@ export function Viewer360({ images }: { images: { url: string; angle: string | n
             style={{ opacity: imageIndex === index ? 1 : 0 }}
           />
         ))}
-        <span className="absolute right-3 bottom-3 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white">
+        <span className="absolute right-3 bottom-3 bg-ink/70 px-2.5 py-1 text-[11px] font-semibold text-white">
           {index + 1} / {count}
         </span>
       </div>
@@ -73,7 +73,7 @@ export function Viewer360({ images }: { images: { url: string; angle: string | n
         <button
           type="button"
           onClick={() => setAutoRotate((value) => !value)}
-          className="rounded-full border border-line px-3 py-1 text-[12px] font-semibold text-ink-muted hover:border-brand hover:text-brand"
+          className=" border border-line px-3 py-1 text-[12px] font-semibold text-ink-muted hover:border-brand hover:text-brand"
         >
           {autoRotate ? '自動回転を停止' : '自動回転'}
         </button>

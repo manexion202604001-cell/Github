@@ -38,7 +38,7 @@ export function ProjectNav({ projectId }: { projectId: string }) {
               <Link
                 href={href}
                 className={cn(
-                  'block rounded-lg px-3 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors',
+                  'block px-3 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors',
                   active ? 'bg-brand-wash text-brand' : 'text-ink-muted hover:bg-canvas-alt hover:text-ink',
                 )}
               >

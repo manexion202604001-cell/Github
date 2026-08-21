@@ -129,7 +129,7 @@ export function SampleWorkspace({ projectId, samples }: { projectId: string; sam
               {sample.aiFindings.length > 0 ? (
                 <ul className="space-y-2">
                   {sample.aiFindings.map((finding, index) => (
-                    <li key={index} className="rounded-xl border border-line bg-canvas p-4">
+                    <li key={index} className=" border border-line bg-canvas p-4">
                       <div className="flex items-center gap-2">
                         <p className="text-[13px] font-bold">{finding.area}</p>
                         <Badge tone={finding.severity === 'HIGH' ? 'critical' : finding.severity === 'MID' ? 'caution' : 'neutral'}>
@@ -137,7 +137,7 @@ export function SampleWorkspace({ projectId, samples }: { projectId: string; sam
                         </Badge>
                       </div>
                       <p className="mt-1 text-[13px] text-ink-muted">{finding.issue}</p>
-                      <p className="mt-1.5 rounded-lg bg-brand-wash/60 px-3 py-2 text-[12px] font-semibold text-ink">
+                      <p className="mt-1.5 bg-brand-wash/60 px-3 py-2 text-[12px] font-semibold text-ink">
                         OEMへの指示: {finding.action}
                       </p>
                     </li>
@@ -146,7 +146,7 @@ export function SampleWorkspace({ projectId, samples }: { projectId: string; sam
               ) : null}
               <div className="flex flex-wrap gap-2">
                 {SAMPLE_CRITERIA.map((criterion) => (
-                  <span key={criterion.key} className="rounded-full border border-line bg-canvas px-3 py-1 text-[12px] text-ink-muted">
+                  <span key={criterion.key} className=" border border-line bg-canvas px-3 py-1 text-[12px] text-ink-muted">
                     {criterion.label} {sample.scores[criterion.key] ?? '—'}
                   </span>
                 ))}

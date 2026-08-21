@@ -51,7 +51,7 @@ export default async function SpecPage({ params }: { params: Promise<{ projectId
                   ] as const
                 ).map(([label, value]) =>
                   value ? (
-                    <div key={label} className="rounded-xl border border-line bg-canvas px-4 py-3">
+                    <div key={label} className=" border border-line bg-canvas px-4 py-3">
                       <dt className="text-[12px] font-semibold text-ink-subtle">{label}</dt>
                       <dd className="mt-0.5 text-[13px] leading-relaxed font-semibold">{value}</dd>
                     </div>
@@ -65,7 +65,7 @@ export default async function SpecPage({ params }: { params: Promise<{ projectId
               <SpecList label="注意事項・法規" items={toStringArray(specification.cautions)} />
 
               {specification.rationale ? (
-                <div className="rounded-xl bg-brand-wash/60 px-4 py-3">
+                <div className=" bg-brand-wash/60 px-4 py-3">
                   <p className="text-[12px] font-bold text-brand">この仕様にした理由</p>
                   <p className="mt-1 text-[13px] leading-relaxed text-ink">{specification.rationale}</p>
                 </div>
@@ -112,7 +112,7 @@ function SpecList({ label, items }: { label: string; items: string[] }) {
       <p className="text-[13px] font-bold">{label}</p>
       <ul className="mt-1.5 space-y-1">
         {items.map((item) => (
-          <li key={item} className="rounded-lg border border-line bg-surface px-3.5 py-2 text-[13px] text-ink-muted">
+          <li key={item} className=" border border-line bg-surface px-3.5 py-2 text-[13px] text-ink-muted">
             {item}
           </li>
         ))}

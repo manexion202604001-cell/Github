@@ -170,7 +170,7 @@ function SupplierPanel({ suppliers, onCall }: { suppliers: SupplierView[]; onCal
       />
       <CardBody className="space-y-3">
         {open ? (
-          <form onSubmit={submit} className="grid gap-3 rounded-xl border border-line bg-canvas p-4 sm:grid-cols-2">
+          <form onSubmit={submit} className="grid gap-3 border border-line bg-canvas p-4 sm:grid-cols-2">
             <Field label="会社名" required className="sm:col-span-2">
               <Input name="name" required maxLength={160} />
             </Field>
@@ -206,7 +206,7 @@ function SupplierPanel({ suppliers, onCall }: { suppliers: SupplierView[]; onCal
         ) : (
           <ul className="space-y-2">
             {suppliers.map((supplier) => (
-              <li key={supplier.id} className="rounded-xl border border-line px-4 py-3">
+              <li key={supplier.id} className=" border border-line px-4 py-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[13px] font-bold">{supplier.name}</p>
                   {supplier.rating !== null ? <span className="text-[12px] text-caution">★{supplier.rating.toFixed(1)}</span> : null}
@@ -305,7 +305,7 @@ function QuotePanel({
         {quotes.length > 0 ? (
           <ul className="space-y-2 border-t border-line pt-4">
             {quotes.map((quote) => (
-              <li key={quote.id} className="flex items-center justify-between gap-3 rounded-xl border border-line px-4 py-2.5">
+              <li key={quote.id} className="flex items-center justify-between gap-3 border border-line px-4 py-2.5">
                 <div>
                   <p className="text-[13px] font-semibold">{quote.supplierName}</p>
                   <p className="text-[12px] text-ink-muted">

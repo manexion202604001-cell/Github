@@ -26,7 +26,7 @@ export function TaskList({ tasks: initial }: { tasks: Task[] }) {
         <li key={task.id}>
           <label
             className={cn(
-              'flex cursor-pointer items-start gap-3 rounded-xl border border-line px-4 py-3 transition-colors hover:border-line-strong',
+              'flex cursor-pointer items-start gap-3 border border-line px-4 py-3 transition-colors hover:border-line-strong',
               task.done && 'opacity-55',
             )}
           >

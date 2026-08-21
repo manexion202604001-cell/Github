@@ -51,7 +51,7 @@ export function SalesForm({ projectId }: { projectId: string }) {
         {open ? '閉じる' : '+ 実績を入力'}
       </Button>
       {open ? (
-        <form onSubmit={submit} className="grid gap-3 rounded-xl border border-line bg-canvas p-4 sm:grid-cols-3">
+        <form onSubmit={submit} className="grid gap-3 border border-line bg-canvas p-4 sm:grid-cols-3">
           <Field label="期間開始" required>
             <Input name="periodStart" type="date" required />
           </Field>

@@ -110,7 +110,7 @@ export function ImagesWorkspace({
                   <div
                     key={image.id}
                     className={cn(
-                      'overflow-hidden rounded-[18px] border bg-white',
+                      'overflow-hidden border bg-white',
                       image.isAnchor ? 'border-brand ring-2 ring-brand/30' : 'border-line',
                     )}
                   >
@@ -165,7 +165,7 @@ export function ImagesWorkspace({
               <Viewer360 images={angles.map((image) => ({ url: image.url, angle: image.angle }))} />
               <div className="grid grid-cols-4 gap-2 self-start">
                 {angles.map((image) => (
-                  <div key={image.id} className="overflow-hidden rounded-lg border border-line bg-white">
+                  <div key={image.id} className="overflow-hidden border border-line bg-white">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={image.url} alt={image.angle ?? ''} className="aspect-square w-full object-contain" />
                     <p className="border-t border-line px-1 py-0.5 text-center text-[10px] text-ink-subtle">{image.angle}</p>
@@ -223,7 +223,7 @@ function MarketingImages({
         {others.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {others.map((image) => (
-              <div key={image.id} className="overflow-hidden rounded-xl border border-line bg-white">
+              <div key={image.id} className="overflow-hidden border border-line bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image.url} alt={image.type} className="aspect-square w-full object-contain" />
                 <p className="border-t border-line px-2 py-1 text-center text-[11px] text-ink-subtle">{image.type}</p>

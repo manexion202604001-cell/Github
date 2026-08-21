@@ -15,7 +15,7 @@ export function Stat({
   className?: string
 }) {
   return (
-    <div className={cn('rounded-[18px] border border-line bg-surface px-5 py-4', className)}>
+    <div className={cn(' border border-line bg-surface px-5 py-4', className)}>
       <p className="text-[12px] font-semibold text-ink-subtle">{label}</p>
       <p className={cn('tabular mt-1.5 text-2xl font-bold', tone === 'brand' ? 'text-brand' : 'text-ink')}>{value}</p>
       {sub ? <p className="mt-1 text-[12px] text-ink-muted">{sub}</p> : null}
@@ -35,9 +35,9 @@ export function ScoreBar({ label, value, max }: { label: string; value: number; 
           <span className="text-ink-subtle"> / {max}</span>
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-line">
+      <div className="h-1.5 overflow-hidden bg-line">
         <div
-          className={cn('h-full rounded-full', ratio >= 0.7 ? 'bg-brand' : ratio >= 0.4 ? 'bg-brand-soft' : 'bg-line-strong')}
+          className={cn('h-full', ratio >= 0.7 ? 'bg-brand' : ratio >= 0.4 ? 'bg-brand-soft' : 'bg-line-strong')}
           style={{ width: `${ratio * 100}%` }}
         />
       </div>

@@ -136,7 +136,7 @@ export function ProductOverviewForm({ projectId, initial }: { projectId: string;
             <div className="space-y-3">
               <p className="text-[13px] font-bold text-ink">AIからの質問({form.openQuestions.length}件)</p>
               {form.openQuestions.map((question) => (
-                <div key={question.question} className="rounded-xl border border-line bg-canvas p-4">
+                <div key={question.question} className=" border border-line bg-canvas p-4">
                   <p className="text-[13px] font-semibold">{question.question}</p>
                   <p className="mt-1 text-[12px] text-ink-subtle">{question.why}</p>
                   <Input

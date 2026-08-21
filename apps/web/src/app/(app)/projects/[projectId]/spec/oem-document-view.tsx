@@ -40,8 +40,8 @@ export function OEMDocumentView({ documents }: { documents: DocumentView[] }) {
             onClick={() => setActiveId(document.id)}
             className={
               document.id === activeId
-                ? 'rounded-full bg-brand px-3.5 py-1 text-[12px] font-bold text-white'
-                : 'rounded-full border border-line px-3.5 py-1 text-[12px] font-semibold text-ink-muted hover:border-brand hover:text-brand'
+                ? ' bg-brand px-3.5 py-1 text-[12px] font-bold text-white'
+                : ' border border-line px-3.5 py-1 text-[12px] font-semibold text-ink-muted hover:border-brand hover:text-brand'
             }
           >
             {document.kind === 'REVISION_REQUEST' ? '修正依頼' : '仕様書'} v{document.version}
@@ -53,7 +53,7 @@ export function OEMDocumentView({ documents }: { documents: DocumentView[] }) {
         </Button>
       </div>
 
-      <article className="print-target rounded-[18px] border border-line bg-surface p-8">
+      <article className="print-target border border-line bg-surface p-8">
         <header className="border-b border-line pb-4">
           <h2 className="text-lg font-bold">{active.title}</h2>
           <p className="mt-1 text-[12px] text-ink-subtle">作成日: {formatDate(active.createdAt)}</p>
@@ -61,7 +61,7 @@ export function OEMDocumentView({ documents }: { documents: DocumentView[] }) {
 
         {content.productOverview ? <p className="mt-4 text-[13px] leading-7">{content.productOverview}</p> : null}
         {content.targetCostNote ? (
-          <p className="mt-3 rounded-lg bg-canvas px-4 py-2.5 text-[13px] font-semibold">{content.targetCostNote}</p>
+          <p className="mt-3 bg-canvas px-4 py-2.5 text-[13px] font-semibold">{content.targetCostNote}</p>
         ) : null}
         <div className="mt-3 flex gap-6 text-[13px]">
           {content.moq ? <p>MOQ: <strong>{content.moq.toLocaleString('ja-JP')}個</strong></p> : null}

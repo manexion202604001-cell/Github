@@ -52,7 +52,7 @@ export default async function MarketPage({ params }: { params: Promise<{ project
                   <p className="text-[13px] font-bold text-positive">機会</p>
                   <ul className="mt-2 space-y-1.5">
                     {toStringArray(research.opportunities).map((item) => (
-                      <li key={item} className="rounded-lg bg-positive-wash px-3 py-2 text-[13px] text-ink">
+                      <li key={item} className=" bg-positive-wash px-3 py-2 text-[13px] text-ink">
                         {item}
                       </li>
                     ))}
@@ -62,7 +62,7 @@ export default async function MarketPage({ params }: { params: Promise<{ project
                   <p className="text-[13px] font-bold text-critical">脅威</p>
                   <ul className="mt-2 space-y-1.5">
                     {toStringArray(research.threats).map((item) => (
-                      <li key={item} className="rounded-lg bg-critical-wash px-3 py-2 text-[13px] text-ink">
+                      <li key={item} className=" bg-critical-wash px-3 py-2 text-[13px] text-ink">
                         {item}
                       </li>
                     ))}
@@ -74,7 +74,7 @@ export default async function MarketPage({ params }: { params: Promise<{ project
                   <p className="text-[13px] font-bold">関連キーワード</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {toStringArray(research.keywords).map((keyword) => (
-                      <span key={keyword} className="rounded-full border border-line bg-canvas px-3 py-1 text-[12px] text-ink-muted">
+                      <span key={keyword} className=" border border-line bg-canvas px-3 py-1 text-[12px] text-ink-muted">
                         {keyword}
                       </span>
                     ))}

@@ -51,7 +51,7 @@ export function ImprovementList({ projectId, improvements }: { projectId: string
       <CardHeader title={`改善提案(${improvements.length}件)`} />
       <CardBody className="space-y-3">
         {improvements.map((improvement) => (
-          <div key={improvement.id} className="rounded-xl border border-line p-4">
+          <div key={improvement.id} className=" border border-line p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Badge tone="brand">{TARGET_LABEL[improvement.target] ?? improvement.target}</Badge>

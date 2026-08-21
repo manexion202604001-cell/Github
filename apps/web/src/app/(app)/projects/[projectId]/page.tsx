@@ -43,19 +43,19 @@ export default async function ProjectHomePage({ params }: { params: Promise<{ pr
                   href={`/projects/${projectId}/${step.href}`}
                   className={
                     step.state === 'current'
-                      ? 'flex items-center gap-2.5 rounded-xl border border-brand bg-brand-wash px-4 py-3 text-[13px] font-bold text-brand'
+                      ? 'flex items-center gap-2.5 border border-brand bg-brand-wash px-4 py-3 text-[13px] font-bold text-brand'
                       : step.state === 'done'
-                        ? 'flex items-center gap-2.5 rounded-xl border border-line bg-surface px-4 py-3 text-[13px] font-semibold text-ink'
-                        : 'flex items-center gap-2.5 rounded-xl border border-line bg-canvas-alt/50 px-4 py-3 text-[13px] font-semibold text-ink-subtle'
+                        ? 'flex items-center gap-2.5 border border-line bg-surface px-4 py-3 text-[13px] font-semibold text-ink'
+                        : 'flex items-center gap-2.5 border border-line bg-canvas-alt/50 px-4 py-3 text-[13px] font-semibold text-ink-subtle'
                   }
                 >
                   <span
                     className={
                       step.state === 'done'
-                        ? 'flex h-5 w-5 items-center justify-center rounded-full bg-positive text-[10px] text-white'
+                        ? 'flex h-5 w-5 items-center justify-center bg-positive text-[10px] text-white'
                         : step.state === 'current'
-                          ? 'flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] text-white'
-                          : 'flex h-5 w-5 items-center justify-center rounded-full border border-line-strong text-[10px] text-ink-subtle'
+                          ? 'flex h-5 w-5 items-center justify-center bg-brand text-[10px] text-white'
+                          : 'flex h-5 w-5 items-center justify-center border border-line-strong text-[10px] text-ink-subtle'
                     }
                   >
                     {step.state === 'done' ? '✓' : index + 1}

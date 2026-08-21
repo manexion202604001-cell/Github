@@ -33,9 +33,9 @@ export default async function CompetitorsPage({ params }: { params: Promise<{ pr
                 <div className="flex min-w-64 items-center gap-3">
                   {row.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={row.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg border border-line object-contain" />
+                    <img src={row.imageUrl} alt="" className="h-10 w-10 shrink-0 border border-line object-contain" />
                   ) : (
-                    <span className="h-10 w-10 shrink-0 rounded-lg border border-line bg-canvas-alt" />
+                    <span className="h-10 w-10 shrink-0 border border-line bg-canvas-alt" />
                   )}
                   <div className="min-w-0">
                     <p className="line-clamp-2 text-[13px] leading-snug font-semibold">

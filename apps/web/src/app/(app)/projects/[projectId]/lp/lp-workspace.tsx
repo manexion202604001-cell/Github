@@ -124,7 +124,7 @@ export function LPWorkspace({ projectId, page }: { projectId: string; page: Page
               {[...page.sections]
                 .sort((a, b) => a.order - b.order)
                 .map((section) => (
-                  <div key={section.id} className={cn('rounded-xl border px-3.5 py-2.5', section.visible ? 'border-line' : 'border-line bg-canvas-alt/60 opacity-60')}>
+                  <div key={section.id} className={cn(' border px-3.5 py-2.5', section.visible ? 'border-line' : 'border-line bg-canvas-alt/60 opacity-60')}>
                     <div className="flex items-center justify-between gap-2">
                       <button
                         type="button"
@@ -185,7 +185,7 @@ export function LPWorkspace({ projectId, page }: { projectId: string; page: Page
                       type="button"
                       onClick={() => setDevice(key)}
                       className={cn(
-                        'rounded-lg px-3 py-1 text-[12px] font-semibold',
+                        ' px-3 py-1 text-[12px] font-semibold',
                         device === key ? 'bg-brand text-white' : 'text-ink-muted hover:bg-canvas-alt',
                       )}
                     >
@@ -196,7 +196,7 @@ export function LPWorkspace({ projectId, page }: { projectId: string; page: Page
               }
             />
             <CardBody className="bg-canvas-alt/50">
-              <div className="mx-auto overflow-hidden rounded-xl border border-line bg-white shadow-sm" style={{ maxWidth: DEVICE_WIDTH[device] }}>
+              <div className="mx-auto overflow-hidden border border-line bg-white shadow-sm" style={{ maxWidth: DEVICE_WIDTH[device] }}>
                 <iframe
                   key={previewKey}
                   src={`/api/lp?projectId=${projectId}&format=html`}
@@ -219,7 +219,7 @@ function IconButton({ label, onClick, children }: { label: string; onClick: () =
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="flex h-7 w-7 items-center justify-center rounded-lg text-[12px] text-ink-muted hover:bg-canvas-alt hover:text-ink"
+      className="flex h-7 w-7 items-center justify-center text-[12px] text-ink-muted hover:bg-canvas-alt hover:text-ink"
     >
       {children}
     </button>
