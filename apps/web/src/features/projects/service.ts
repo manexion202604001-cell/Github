@@ -161,6 +161,14 @@ export async function getDashboard(organizationId?: string) {
     select: { id: true, kind: true, handler: true, status: true, createdAt: true, projectId: true, progress: true },
   })
 
+  // AIからの提案: 全プロジェクトの未対応改善提案から優先度順に(要件8)
+  const suggestions = await db.improvement.findMany({
+    where: { status: 'PROPOSED', project: { organizationId: context.organizationId, archivedAt: null } },
+    orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
+    take: 5,
+    include: { project: { select: { id: true, name: true } } },
+  })
+
   const openTasks = await db.projectTask.findMany({
     where: { done: false, project: { organizationId: context.organizationId, archivedAt: null } },
     orderBy: [{ createdAt: 'desc' }],
@@ -190,6 +198,14 @@ export async function getDashboard(organizationId?: string) {
       openTasks: projects.reduce((sum, project) => sum + project.openTasks, 0),
     },
     recentJobs,
+    suggestions: suggestions.map((suggestion) => ({
+      id: suggestion.id,
+      title: suggestion.title,
+      target: suggestion.target,
+      priority: suggestion.priority,
+      projectId: suggestion.project.id,
+      projectName: suggestion.project.name,
+    })),
     openTasks: openTasks.map((task) => ({
       id: task.id,
       title: task.title,

@@ -1,15 +1,20 @@
-import { listImprovements } from '@/features/improvements/service'
+import { getRelatedProductIdeas, listImprovements } from '@/features/improvements/service'
 import { listProductVersions } from '@/features/products/service'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/feedback'
 import { formatDateTime } from '@/lib/format'
 import { JobLauncher } from '@/components/job-launcher'
 import { ImprovementList } from './improvement-list'
+import { NextProductIdeas } from './next-product-ideas'
 
 /** STEP 5 / 13-14: 改善提案・商品Version・次回ロット(要件35, 72〜76)。 */
 export default async function ImprovementPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params
-  const [improvements, versions] = await Promise.all([listImprovements(projectId), listProductVersions(projectId)])
+  const [improvements, versions, ideas] = await Promise.all([
+    listImprovements(projectId),
+    listProductVersions(projectId),
+    getRelatedProductIdeas(projectId),
+  ])
 
   return (
     <div className="space-y-5">
@@ -50,6 +55,8 @@ export default async function ImprovementPage({ params }: { params: Promise<{ pr
           }))}
         />
       )}
+
+      <NextProductIdeas ideas={ideas} />
 
       <Card>
         <CardHeader title="商品Version履歴" description="仕様の世代管理(要件74)。改善のたびに新Versionが積まれます。" />

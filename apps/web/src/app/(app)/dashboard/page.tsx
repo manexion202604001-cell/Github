@@ -14,7 +14,7 @@ const DECISION_TONE = { GO: 'positive', IMPROVE_GO: 'caution', NO_GO: 'critical'
 
 export default async function DashboardPage() {
   const dashboard = await getDashboard()
-  const { stats, projects, openTasks, recentJobs } = dashboard
+  const { stats, projects, openTasks, recentJobs, suggestions } = dashboard
 
   return (
     <div className="space-y-6">
@@ -97,6 +97,30 @@ export default async function DashboardPage() {
         </Card>
 
         <div className="space-y-5">
+          <Card>
+            <CardHeader title="AIからの提案" />
+            <CardBody className="p-0">
+              {suggestions.length === 0 ? (
+                <p className="px-6 py-8 text-center text-[13px] text-ink-muted">
+                  改善提案はまだありません。プロジェクトの「改善」ページで生成できます。
+                </p>
+              ) : (
+                <ul className="divide-y divide-line/70">
+                  {suggestions.map((suggestion) => (
+                    <li key={suggestion.id} className="px-6 py-3">
+                      <Link href={`/projects/${suggestion.projectId}/improvement`} className="block">
+                        <p className="text-[13px] leading-relaxed font-semibold">{suggestion.title}</p>
+                        <p className="mt-0.5 text-[12px] text-ink-subtle">
+                          {suggestion.projectName} / {suggestion.target} / 優先度{suggestion.priority}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardBody>
+          </Card>
+
           <Card>
             <CardHeader title="未完了タスク" />
             <CardBody className="p-0">
