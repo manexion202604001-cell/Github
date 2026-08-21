@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>稟議システム | 多段階承認・差し戻し</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="./config.js"></script>
+<style>
+:root {
+  --ink: #1a2333;
+  --sub: #66707f;
+  --line: #dfe4ec;
+  --paper: #f7f8fa;
+  --white: #ffffff;
+  --accent: #2563eb;
+  --accent-soft: #e8effc;
+  --danger: #b91c1c;
+  --danger-soft: #fdecec;
+  --ok: #15803d;
+  --ok-soft: #e7f6ec;
+  --warn: #b45309;
+  --warn-soft: #fdf3e3;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+button { font-family: inherit; }
+input, select, textarea {
+  font-family: inherit; font-size: 14px; color: var(--ink);
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 0;
+  background: var(--white);
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+textarea { resize: vertical; }
+
+/* ─── topbar ─── */
+.topbar {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 12px 24px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 5;
+}
+.brand { display: flex; flex-direction: column; cursor: pointer; }
+.brand-mark {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 20px; font-weight: 600; letter-spacing: 0.14em;
+}
+.brand-sub { font-size: 11px; color: var(--sub); letter-spacing: 0.08em; }
+.tabs { display: flex; gap: 4px; }
+.tab {
+  border: none; background: transparent; padding: 8px 14px;
+  font-size: 13px; color: var(--sub); cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tab .count {
+  display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px;
+  background: var(--danger); color: #fff; font-size: 11px; text-align: center;
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.sync-badge { font-size: 11px; color: var(--ok); }
+.sync-badge.off { color: var(--sub); }
+.user-switch { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sub); }
+.user-switch select { padding: 5px 8px; font-size: 13px; }
+
+/* ─── layout ─── */
+.container { max-width: 1080px; margin: 0 auto; padding: 24px; }
+.page-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.page-title {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 20px; font-weight: 600; letter-spacing: 0.06em; margin: 0;
+}
+.spacer { flex: 1; }
+
+/* ─── buttons ─── */
+.btn {
+  padding: 8px 14px; border-radius: 0; border: 1px solid var(--line);
+  background: var(--white); cursor: pointer; font-size: 13px; white-space: nowrap;
+  color: var(--ink);
+}
+.btn:hover { border-color: var(--sub); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: #1d4fc4; }
+.btn.danger { background: var(--white); border-color: var(--danger); color: var(--danger); }
+.btn.danger:hover { background: var(--danger-soft); }
+.btn.ok { background: var(--ok); border-color: var(--ok); color: #fff; font-weight: 600; }
+.btn.warn { background: var(--white); border-color: var(--warn); color: var(--warn); }
+.btn.warn:hover { background: var(--warn-soft); }
+.btn.ghost { border-style: dashed; color: var(--accent); }
+.btn.sm { padding: 4px 9px; font-size: 12px; }
+
+/* ─── card ─── */
+.card { background: var(--white); border: 1px solid var(--line); margin-bottom: 16px; }
+.card-head {
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-body { padding: 16px; }
+
+/* ─── filters / list ─── */
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.chip {
+  border: 1px solid var(--line); background: var(--white); padding: 5px 12px;
+  font-size: 12px; cursor: pointer; color: var(--sub);
+}
+.chip.active { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 600; }
+.chip .count { font-weight: 600; margin-left: 3px; }
+.search-input { width: 220px; }
+
+table.list { width: 100%; border-collapse: collapse; background: var(--white); border: 1px solid var(--line); }
+table.list th {
+  text-align: left; font-size: 11px; color: var(--sub); font-weight: 600;
+  padding: 8px 12px; border-bottom: 1px solid var(--line); background: #fbfcfe;
+  letter-spacing: 0.06em; white-space: nowrap;
+}
+table.list td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.list tr.rowlink { cursor: pointer; }
+table.list tr.rowlink:hover { background: var(--accent-soft); }
+.doc-title { font-weight: 600; }
+.doc-no { font-size: 11px; color: var(--sub); }
+.muted { color: var(--sub); font-size: 12px; }
+.amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.empty-note { padding: 32px; text-align: center; color: var(--sub); background: var(--white); border: 1px solid var(--line); }
+
+/* ─── status badge ─── */
+.badge {
+  display: inline-block; padding: 2px 10px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; border: 1px solid transparent; white-space: nowrap;
+}
+.st-draft     { background: #eef0f4; color: var(--sub); border-color: var(--line); }
+.st-pending   { background: var(--accent-soft); color: var(--accent); border-color: #c4d5f7; }
+.st-returned  { background: var(--warn-soft); color: var(--warn); border-color: #f3ddb5; }
+.st-approved  { background: var(--ok-soft); color: var(--ok); border-color: #bfe5cc; }
+.st-rejected  { background: var(--danger-soft); color: var(--danger); border-color: #f2c5c5; }
+.st-withdrawn { background: #eef0f4; color: var(--sub); border-color: var(--line); }
+
+/* ─── detail ─── */
+.detail-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.detail-title {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 22px; font-weight: 600; margin: 0; line-height: 1.4;
+}
+.meta-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line);
+}
+.meta-cell { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 8px 12px; }
+.meta-label { font-size: 11px; color: var(--sub); letter-spacing: 0.06em; }
+.meta-value { font-size: 14px; }
+.body-text { white-space: pre-wrap; }
+
+/* ─── stepper ─── */
+.stepper { display: flex; flex-wrap: wrap; gap: 0; align-items: stretch; }
+.step-box {
+  border: 1px solid var(--line); background: var(--white);
+  padding: 10px 14px; min-width: 180px; flex: 1; position: relative;
+}
+.step-box + .step-box { margin-left: -1px; }
+.step-box.current { border-color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); z-index: 1; }
+.step-box.done { background: var(--ok-soft); }
+.step-box.blocked { background: var(--danger-soft); }
+.step-no { font-size: 11px; color: var(--sub); letter-spacing: 0.06em; }
+.step-name { font-weight: 600; font-size: 13px; }
+.step-mode { font-size: 11px; color: var(--sub); }
+.approver-line { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 4px; }
+.mark { font-size: 12px; width: 16px; text-align: center; flex: none; }
+.mark.ok { color: var(--ok); font-weight: 700; }
+.mark.ng { color: var(--danger); font-weight: 700; }
+.mark.rem { color: var(--warn); font-weight: 700; }
+.mark.wait { color: var(--sub); }
+
+/* ─── action panel ─── */
+.action-panel { border: 1px solid var(--accent); background: var(--accent-soft); padding: 16px; margin-bottom: 16px; }
+.action-panel h3 { margin: 0 0 8px; font-size: 14px; }
+.action-panel textarea { width: 100%; }
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+.remand-select { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+
+/* ─── history / comments ─── */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { padding: 8px 0 8px 16px; border-left: 2px solid var(--line); position: relative; }
+.timeline li::before {
+  content: ""; position: absolute; left: -5px; top: 14px;
+  width: 8px; height: 8px; background: var(--sub);
+}
+.timeline li.act-approve::before { background: var(--ok); }
+.timeline li.act-reject::before { background: var(--danger); }
+.timeline li.act-remand::before { background: var(--warn); }
+.timeline li.act-submit::before, .timeline li.act-resubmit::before { background: var(--accent); }
+.tl-head { font-size: 12px; color: var(--sub); }
+.tl-action { font-weight: 600; color: var(--ink); }
+.tl-comment { background: #fbfcfe; border: 1px solid var(--line); padding: 6px 10px; margin-top: 4px; font-size: 13px; white-space: pre-wrap; }
+.comment-form { display: flex; gap: 8px; margin-top: 10px; }
+.comment-form textarea { flex: 1; }
+
+/* ─── forms ─── */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.wide { grid-column: 1 / -1; }
+.field label { font-size: 12px; color: var(--sub); letter-spacing: 0.04em; }
+.field input, .field select, .field textarea { width: 100%; }
+.req::after { content: " *"; color: var(--danger); }
+
+/* ─── route editor ─── */
+.step-edit { border: 1px solid var(--line); padding: 12px; margin-bottom: 8px; background: #fbfcfe; }
+.step-edit-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.step-edit-head .step-no { font-weight: 700; color: var(--ink); }
+.approver-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.approver-checks label { display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer; }
+.route-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+
+/* ─── settings ─── */
+.settings-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+table.plain { width: 100%; border-collapse: collapse; }
+table.plain th { text-align: left; font-size: 11px; color: var(--sub); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.plain td { padding: 6px 8px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.inline-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-top: 10px; }
+.inline-form .field { min-width: 140px; }
+
+/* ─── gate screens ─── */
+.gate {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.gate-card { background: var(--white); border: 1px solid var(--line); padding: 32px; max-width: 440px; width: 100%; }
+.gate-card h1 {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 22px; letter-spacing: 0.12em; margin: 0 0 4px;
+}
+.gate-card .sub { color: var(--sub); font-size: 12px; margin-bottom: 20px; }
+.gate-card .field { margin-bottom: 12px; }
+.user-pick { display: flex; flex-direction: column; gap: 6px; }
+.user-pick button {
+  text-align: left; padding: 10px 14px; border: 1px solid var(--line); background: var(--white);
+  cursor: pointer; font-size: 14px;
+}
+.user-pick button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.flash {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: 10px 20px; font-size: 13px; z-index: 20;
+}
+
+@media print {
+  .topbar, .action-panel, .no-print, .flash { display: none !important; }
+  body { background: #fff; }
+  .container { max-width: none; padding: 0; }
+  .card { border-color: #999; break-inside: avoid; }
+}
+@media (max-width: 640px) {
+  .container { padding: 12px; }
+  .search-input { width: 100%; }
+  .stepper { flex-direction: column; }
+  .step-box + .step-box { margin-left: 0; margin-top: -1px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+
+/* ═══════════════════════ 基盤 ═══════════════════════ */
+
+const CONFIG = window.RINGI_CONFIG || {};
+const LS_KEY  = "ringi.v1";
+const LS_USER = "ringi.currentUser";
+const SS_PASS = "ringi.passOk";
+
+const CATEGORIES = ["購買", "経費", "契約", "人事", "システム", "その他"];
+const STATUS = {
+  draft:     { label: "下書き",   cls: "st-draft" },
+  pending:   { label: "承認待ち", cls: "st-pending" },
+  returned:  { label: "差し戻し", cls: "st-returned" },
+  approved:  { label: "承認済",   cls: "st-approved" },
+  rejected:  { label: "却下",     cls: "st-rejected" },
+  withdrawn: { label: "取り下げ", cls: "st-withdrawn" },
+};
+const ACTION_LABEL = {
+  create: "作成", submit: "申請", resubmit: "再申請", approve: "承認",
+  reject: "却下", remand: "差し戻し", withdraw: "取り下げ", edit: "編集",
+};
+
+let state = { members: [], templates: [], docs: [], seq: {} };
+let ui = {
+  view: "list",          // list | detail | edit | settings
+  docId: null,
+  editDraft: null,       // 編集中の稟議書(作業コピー)
+  tplDraft: null,        // 編集中のテンプレート(作業コピー)
+  filter: "inbox",
+  q: "", cat: "",
+  passOk: !CONFIG.APP_PASSCODE || sessionStorage.getItem(SS_PASS) === "1",
+};
+let currentUserId = localStorage.getItem(LS_USER) || null;
+let sb = null;
+let syncOn = false;
+let flashTimer = null;
+
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const now = () => new Date().toISOString();
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const fmtMoney = (n) => (n == null || n === "" || isNaN(n)) ? "—" : "¥" + Number(n).toLocaleString("ja-JP");
+const fmtDate = (iso) => { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? "—" : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`; };
+const fmtDateTime = (iso) => { if (!iso) return "—"; const d = new Date(iso); return isNaN(d) ? "—" : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+
+function memberById(id) { return state.members.find((m) => m.id === id) || null; }
+function memberName(id) { const m = memberById(id); return m ? m.name : "(不明)"; }
+function curUser() { return memberById(currentUserId); }
+function isAdmin() {
+  const hasAdmin = state.members.some((m) => m.role === "admin" && m.active !== false);
+  if (!hasAdmin) return true; // 管理者未設定の間は全員が管理操作可
+  const me = curUser();
+  return !!me && me.role === "admin";
+}
+function docById(id) { return state.docs.find((d) => d.id === id) || null; }
+
+/* ─── 永続化(localStorage + Supabase 任意) ─── */
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) state = Object.assign({ members: [], templates: [], docs: [], seq: {} }, JSON.parse(raw));
+  } catch (e) { /* 破損時は初期状態 */ }
+}
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+
+async function push(id, data) {
+  if (!sb) return;
+  try {
+    const { error } = await sb.from("ringi_records").upsert({ id, data, updated_at: now() });
+    if (error) throw error;
+    if (!syncOn) { syncOn = true; render(); }
+  } catch (e) { if (syncOn) { syncOn = false; render(); } }
+}
+async function pushDelete(id) {
+  if (!sb) return;
+  try { await sb.from("ringi_records").delete().eq("id", id); } catch (e) {}
+}
+function pushAll() {
+  state.members.forEach((m) => push("member:" + m.id, m));
+  state.templates.forEach((t) => push("template:" + t.id, t));
+  state.docs.forEach((d) => push("doc:" + d.id, d));
+  push("meta:seq", state.seq);
+}
+function applyRemoteRows(rows) {
+  const members = [], templates = [], docs = [];
+  let seq = {};
+  for (const r of rows) {
+    if (!r || !r.id || !r.data) continue;
+    if (r.id.startsWith("member:")) members.push(r.data);
+    else if (r.id.startsWith("template:")) templates.push(r.data);
+    else if (r.id.startsWith("doc:")) docs.push(r.data);
+    else if (r.id === "meta:seq") seq = r.data || {};
+  }
+  state = { members, templates, docs, seq };
+  saveLocal();
+}
+function upsertRemoteRecord(id, data) {
+  const put = (arr, item) => {
+    const i = arr.findIndex((x) => x.id === item.id);
+    if (i >= 0) arr[i] = item; else arr.push(item);
+  };
+  if (id.startsWith("member:")) put(state.members, data);
+  else if (id.startsWith("template:")) put(state.templates, data);
+  else if (id.startsWith("doc:")) put(state.docs, data);
+  else if (id === "meta:seq") state.seq = data || {};
+}
+function removeRemoteRecord(id) {
+  if (id.startsWith("member:")) state.members = state.members.filter((m) => "member:" + m.id !== id);
+  else if (id.startsWith("template:")) state.templates = state.templates.filter((t) => "template:" + t.id !== id);
+  else if (id.startsWith("doc:")) state.docs = state.docs.filter((d) => "doc:" + d.id !== id);
+}
+async function sbInit() {
+  if (!CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY || !window.supabase) return;
+  try {
+    sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    const { data, error } = await sb.from("ringi_records").select("*");
+    if (error) throw error;
+    if ((!data || data.length === 0) && (state.docs.length || state.members.length)) {
+      pushAll(); // 初回:ローカルの既存データをサーバーへ
+    } else {
+      applyRemoteRows(data || []);
+    }
+    syncOn = true;
+    sb.channel("ringi-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ringi_records" }, (payload) => {
+        if (payload.eventType === "DELETE" && payload.old && payload.old.id) removeRemoteRecord(payload.old.id);
+        else if (payload.new && payload.new.id) upsertRemoteRecord(payload.new.id, payload.new.data);
+        saveLocal(); render();
+      })
+      .subscribe();
+  } catch (e) { syncOn = false; }
+  render();
+}
+
+/* ─── 保存ヘルパー ─── */
+
+function saveMember(m) {
+  const i = state.members.findIndex((x) => x.id === m.id);
+  if (i >= 0) state.members[i] = m; else state.members.push(m);
+  saveLocal(); push("member:" + m.id, m);
+}
+function saveTemplate(t) {
+  const i = state.templates.findIndex((x) => x.id === t.id);
+  if (i >= 0) state.templates[i] = t; else state.templates.push(t);
+  saveLocal(); push("template:" + t.id, t);
+}
+function deleteTemplate(id) {
+  state.templates = state.templates.filter((t) => t.id !== id);
+  saveLocal(); pushDelete("template:" + id);
+}
+function saveDoc(d) {
+  d.updatedAt = now();
+  const i = state.docs.findIndex((x) => x.id === d.id);
+  if (i >= 0) state.docs[i] = d; else state.docs.push(d);
+  saveLocal(); push("doc:" + d.id, d);
+}
+function deleteDoc(id) {
+  state.docs = state.docs.filter((d) => d.id !== id);
+  saveLocal(); pushDelete("doc:" + id);
+}
+function saveSeq() { saveLocal(); push("meta:seq", state.seq); }
+
+/* ═══════════════════════ 業務ロジック ═══════════════════════ */
+
+function newStep() { return { id: uid(), name: "", mode: "all", approverIds: [], decisions: {} }; }
+function newDoc() {
+  return {
+    id: uid(), no: null, title: "", category: CATEGORIES[0], amount: null,
+    desiredDate: "", body: "", applicantId: currentUserId,
+    status: "draft", currentStep: 0, version: 1,
+    steps: [newStep()], history: [], comments: [],
+    createdAt: now(), updatedAt: now(), submittedAt: null, decidedAt: null,
+  };
+}
+function log(d, action, comment, detail) {
+  d.history.push({ at: now(), userId: currentUserId, action, comment: comment || "", detail: detail || "" });
+}
+function assignNo(d) {
+  if (d.no) return;
+  const y = String(new Date().getFullYear());
+  state.seq[y] = (state.seq[y] || 0) + 1;
+  d.no = "R-" + y + "-" + String(state.seq[y]).padStart(4, "0");
+  saveSeq();
+}
+function stepSatisfied(step) {
+  const ok = step.approverIds.filter((id) => step.decisions[id] && step.decisions[id].action === "approve");
+  return step.mode === "any" ? ok.length >= 1 : ok.length >= step.approverIds.length;
+}
+function validateForSubmit(d) {
+  const errs = [];
+  if (!d.title.trim()) errs.push("件名を入力してください");
+  if (!d.body.trim()) errs.push("内容を入力してください");
+  if (!d.steps.length) errs.push("承認ルートに最低1段階のステップが必要です");
+  d.steps.forEach((s, i) => {
+    if (!s.approverIds.length) errs.push(`ステップ${i + 1}に承認者を1名以上指定してください`);
+  });
+  return errs;
+}
+function doSubmit(d, isResubmit) {
+  d.steps.forEach((s) => { s.decisions = {}; });
+  d.status = "pending";
+  d.currentStep = 0;
+  d.submittedAt = now();
+  d.decidedAt = null;
+  assignNo(d);
+  if (isResubmit) { d.version += 1; log(d, "resubmit", "", `第${d.version}版として再申請`); }
+  else log(d, "submit");
+  saveDoc(d);
+}
+function doApprove(d, comment) {
+  const s = d.steps[d.currentStep];
+  s.decisions[currentUserId] = { action: "approve", at: now(), comment: comment || "" };
+  log(d, "approve", comment, `ステップ${d.currentStep + 1}「${s.name || "無題"}」`);
+  if (stepSatisfied(s)) {
+    if (d.currentStep >= d.steps.length - 1) {
+      d.status = "approved"; d.decidedAt = now();
+    } else {
+      d.currentStep += 1;
+    }
+  }
+  saveDoc(d);
+}
+function doReject(d, comment) {
+  const s = d.steps[d.currentStep];
+  s.decisions[currentUserId] = { action: "reject", at: now(), comment };
+  d.status = "rejected"; d.decidedAt = now();
+  log(d, "reject", comment, `ステップ${d.currentStep + 1}「${s.name || "無題"}」`);
+  saveDoc(d);
+}
+function doRemand(d, target, comment) {
+  const s = d.steps[d.currentStep];
+  s.decisions[currentUserId] = { action: "remand", at: now(), comment };
+  if (target === "applicant") {
+    d.status = "returned";
+    log(d, "remand", comment, "申請者へ差し戻し(修正・再申請が必要)");
+  } else {
+    const idx = Number(target);
+    log(d, "remand", comment, `ステップ${idx + 1}「${d.steps[idx].name || "無題"}」へ差し戻し`);
+    for (let i = idx; i < d.steps.length; i++) d.steps[i].decisions = {};
+    d.currentStep = idx;
+  }
+  saveDoc(d);
+}
+function doWithdraw(d) {
+  d.status = "withdrawn"; d.decidedAt = now();
+  log(d, "withdraw");
+  saveDoc(d);
+}
+function needsMyApproval(d) {
+  if (d.status !== "pending" || !currentUserId) return false;
+  const s = d.steps[d.currentStep];
+  if (!s || !s.approverIds.includes(currentUserId)) return false;
+  const dec = s.decisions[currentUserId];
+  return !(dec && dec.action === "approve");
+}
+function inboxDocs() { return state.docs.filter(needsMyApproval); }
+function suggestTemplate(amount) {
+  const a = Number(amount) || 0;
+  const hit = state.templates
+    .filter((t) => (t.minAmount == null || a >= t.minAmount) && (t.maxAmount == null || a <= t.maxAmount))
+    .sort((x, y) => (y.minAmount || 0) - (x.minAmount || 0));
+  return hit[0] || null;
+}
+function applyTemplateToDraft(tpl) {
+  ui.editDraft.steps = tpl.steps.map((s) => ({
+    id: uid(), name: s.name, mode: s.mode,
+    approverIds: s.approverIds.filter((id) => memberById(id)),
+    decisions: {},
+  }));
+}
+
+/* ═══════════════════════ 描画 ═══════════════════════ */
+
+const app = document.getElementById("app");
+
+function flash(msg) {
+  const el = document.createElement("div");
+  el.className = "flash"; el.textContent = msg;
+  document.querySelectorAll(".flash").forEach((n) => n.remove());
+  document.body.appendChild(el);
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.remove(), 2500);
+}
+
+function nav(view, docId) {
+  ui.view = view;
+  ui.docId = docId || null;
+  if (view !== "edit") ui.editDraft = null;
+  window.scrollTo(0, 0);
+  const hash = view === "detail" && docId ? "#doc=" + docId : view === "list" ? "#list" : "#" + view;
+  history.replaceState(null, "", hash);
+  render();
+}
+
+function badge(status) {
+  const s = STATUS[status] || { label: status, cls: "" };
+  return `<span class="badge ${s.cls}">${esc(s.label)}</span>`;
+}
+
+function render() {
+  if (!ui.passOk) { app.innerHTML = viewPasscode(); return; }
+  if (!state.members.length) { app.innerHTML = viewFirstRun(); return; }
+  if (!curUser() || curUser().active === false) { app.innerHTML = viewUserPick(); return; }
+  let body = "";
+  if (ui.view === "detail") body = viewDetail();
+  else if (ui.view === "edit") body = viewEdit();
+  else if (ui.view === "settings") body = viewSettings();
+  else body = viewList();
+  app.innerHTML = viewTopbar() + `<div class="container">${body}</div>`;
+}
+
+/* ─── ゲート画面 ─── */
+
+function viewPasscode() {
+  return `
+  <div class="gate"><div class="gate-card">
+    <h1>稟議システム</h1>
+    <div class="sub">パスコードを入力してください</div>
+    <div class="field"><input type="password" id="pass-input" placeholder="パスコード" autofocus /></div>
+    <button class="btn primary" data-action="pass-submit" style="width:100%">開く</button>
+  </div></div>`;
+}
+function viewFirstRun() {
+  return `
+  <div class="gate"><div class="gate-card">
+    <h1>稟議システム</h1>
+    <div class="sub">はじめに、メンバー(申請者・承認者)を登録してください。<br/>あとから設定画面で追加・変更できます。</div>
+    <div class="field"><label>氏名</label><input id="fr-name" placeholder="例: 山田 太郎" /></div>
+    <div class="field"><label>部署</label><input id="fr-dept" placeholder="例: 営業部" /></div>
+    <div class="field"><label>役職</label><input id="fr-title" placeholder="例: 課長" /></div>
+    <div class="field"><label>権限</label>
+      <select id="fr-role"><option value="member">一般</option><option value="admin">管理者</option></select>
+    </div>
+    <button class="btn primary" data-action="firstrun-add" style="width:100%">この内容で最初のメンバーを登録</button>
+    <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+      <button class="btn ghost" data-action="load-demo" style="width:100%">サンプルデータで試す(メンバー4名+承認ルート+稟議書)</button>
+    </div>
+  </div></div>`;
+}
+function viewUserPick() {
+  const rows = state.members.filter((m) => m.active !== false).map((m) =>
+    `<button data-action="pick-user" data-id="${esc(m.id)}">
+      ${esc(m.name)} <span class="muted">${esc([m.dept, m.title].filter(Boolean).join(" / "))}${m.role === "admin" ? " ・管理者" : ""}</span>
+    </button>`).join("");
+  return `
+  <div class="gate"><div class="gate-card">
+    <h1>稟議システム</h1>
+    <div class="sub">あなたは誰ですか?(この端末に記憶されます)</div>
+    <div class="user-pick">${rows}</div>
+  </div></div>`;
+}
+
+/* ─── トップバー ─── */
+
+function viewTopbar() {
+  const inboxCount = inboxDocs().length;
+  const me = curUser();
+  const userOpts = state.members.filter((m) => m.active !== false)
+    .map((m) => `<option value="${esc(m.id)}" ${m.id === currentUserId ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+  return `
+  <div class="topbar">
+    <div class="brand" data-action="nav-list">
+      <span class="brand-mark">稟 議</span>
+      <span class="brand-sub">RINGI — 多段階承認ワークフロー</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab ${ui.view === "list" || ui.view === "detail" || ui.view === "edit" ? "active" : ""}" data-action="nav-list">
+        稟議一覧${inboxCount ? `<span class="count">${inboxCount}</span>` : ""}
+      </button>
+      <button class="tab ${ui.view === "settings" ? "active" : ""}" data-action="nav-settings">設定</button>
+    </nav>
+    <div class="topbar-right">
+      <span class="sync-badge ${syncOn ? "" : "off"}">${syncOn ? "● 同期オン" : "○ このブラウザのみ"}</span>
+      <div class="user-switch">
+        <span>操作中:</span>
+        <select data-action-change="switch-user">${userOpts}</select>
+        <span class="muted">${me && me.role === "admin" ? "管理者" : ""}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ─── 一覧 ─── */
+
+function filteredDocs() {
+  let docs = state.docs.slice();
+  if (ui.filter === "inbox") docs = docs.filter(needsMyApproval);
+  else if (ui.filter === "mine") docs = docs.filter((d) => d.applicantId === currentUserId);
+  else if (ui.filter === "active") docs = docs.filter((d) => d.status === "pending" || d.status === "returned");
+  else if (ui.filter === "done") docs = docs.filter((d) => ["approved", "rejected", "withdrawn"].includes(d.status));
+  if (ui.cat) docs = docs.filter((d) => d.category === ui.cat);
+  if (ui.q.trim()) {
+    const q = ui.q.trim().toLowerCase();
+    docs = docs.filter((d) =>
+      (d.title || "").toLowerCase().includes(q) ||
+      (d.no || "").toLowerCase().includes(q) ||
+      (d.body || "").toLowerCase().includes(q) ||
+      memberName(d.applicantId).toLowerCase().includes(q));
+  }
+  docs.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  return docs;
+}
+function routeSummary(d) {
+  if (d.status === "pending") {
+    const s = d.steps[d.currentStep];
+    return `第${d.currentStep + 1}/${d.steps.length}段階 — ${esc(s && s.name || "承認")}(${(s ? s.approverIds : []).map(memberName).map(esc).join("、")})`;
+  }
+  if (d.status === "returned") return "申請者の修正待ち";
+  return `全${d.steps.length}段階`;
+}
+function viewList() {
+  const chips = [
+    ["inbox", `あなたの承認待ち<span class="count">${inboxDocs().length}</span>`],
+    ["mine", "自分の申請"],
+    ["active", "進行中"],
+    ["done", "完了"],
+    ["all", "すべて"],
+  ].map(([k, label]) =>
+    `<button class="chip ${ui.filter === k ? "active" : ""}" data-action="set-filter" data-id="${k}">${label}</button>`).join("");
+  const catOpts = ["", ...CATEGORIES].map((c) =>
+    `<option value="${esc(c)}" ${ui.cat === c ? "selected" : ""}>${c ? esc(c) : "全分類"}</option>`).join("");
+  const docs = filteredDocs();
+  const rows = docs.map((d) => `
+    <tr class="rowlink" data-action="open-doc" data-id="${esc(d.id)}">
+      <td><div class="doc-no">${esc(d.no || "(下書き)")}</div><div class="doc-title">${esc(d.title || "(無題)")}</div></td>
+      <td>${esc(d.category)}</td>
+      <td class="amount">${fmtMoney(d.amount)}</td>
+      <td>${esc(memberName(d.applicantId))}</td>
+      <td>${badge(d.status)}<div class="muted">${routeSummary(d)}</div></td>
+      <td class="muted">${fmtDateTime(d.updatedAt)}</td>
+    </tr>`).join("");
+  const table = docs.length
+    ? `<table class="list">
+        <thead><tr><th>件名</th><th>分類</th><th>金額</th><th>申請者</th><th>状態 / 承認ルート</th><th>更新</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`
+    : `<div class="empty-note">該当する稟議書がありません。</div>`;
+  return `
+  <div class="page-head">
+    <h1 class="page-title">稟議一覧</h1>
+    <div class="spacer"></div>
+    <button class="btn primary" data-action="new-doc">+ 新規稟議書</button>
+  </div>
+  <div class="filter-row">
+    ${chips}
+    <div class="spacer"></div>
+    <select data-action-change="set-cat">${catOpts}</select>
+    <input class="search-input" type="search" placeholder="件名・番号・申請者で検索" value="${esc(ui.q)}" data-action-input="set-q" />
+  </div>
+  ${table}`;
+}
+
+/* ─── 詳細 ─── */
+
+function decisionMark(step, mid) {
+  const dec = step.decisions[mid];
+  if (!dec) return `<span class="mark wait">─</span>`;
+  if (dec.action === "approve") return `<span class="mark ok" title="承認 ${fmtDateTime(dec.at)}">✓</span>`;
+  if (dec.action === "reject") return `<span class="mark ng" title="却下 ${fmtDateTime(dec.at)}">✕</span>`;
+  return `<span class="mark rem" title="差し戻し ${fmtDateTime(dec.at)}">↩</span>`;
+}
+function viewStepper(d) {
+  return `<div class="stepper">${d.steps.map((s, i) => {
+    let cls = "";
+    if (d.status === "pending" && i === d.currentStep) cls = "current";
+    else if (i < d.currentStep || d.status === "approved") cls = "done";
+    else if ((d.status === "rejected" || d.status === "returned") && i === d.currentStep) cls = "blocked";
+    const approvers = s.approverIds.map((mid) =>
+      `<div class="approver-line">${decisionMark(s, mid)}<span>${esc(memberName(mid))}</span></div>`).join("");
+    return `<div class="step-box ${cls}">
+      <div class="step-no">STEP ${i + 1}</div>
+      <div class="step-name">${esc(s.name || "承認")}</div>
+      <div class="step-mode">${s.mode === "any" ? "誰か1名の承認" : "全員の承認"}が必要</div>
+      ${approvers}
+    </div>`;
+  }).join("")}</div>`;
+}
+function viewActionPanel(d) {
+  if (!needsMyApproval(d)) return "";
+  const s = d.steps[d.currentStep];
+  const remandOpts = [`<option value="applicant">申請者(修正・再申請してもらう)</option>`]
+    .concat(d.steps.slice(0, d.currentStep).map((st, i) =>
+      `<option value="${i}">ステップ${i + 1}「${esc(st.name || "承認")}」からやり直す</option>`)).join("");
+  return `
+  <div class="action-panel no-print">
+    <h3>あなたの承認が必要です — ステップ${d.currentStep + 1}「${esc(s.name || "承認")}」</h3>
+    <textarea id="decision-comment" rows="2" placeholder="コメント(差し戻し・却下の場合は必須)"></textarea>
+    <div class="action-row">
+      <button class="btn ok" data-action="approve">承認する</button>
+      <span class="remand-select">
+        <select id="remand-target">${remandOpts}</select>
+        <button class="btn warn" data-action="remand">差し戻す</button>
+      </span>
+      <button class="btn danger" data-action="reject">却下する</button>
+    </div>
+  </div>`;
+}
+function viewDetail() {
+  const d = docById(ui.docId);
+  if (!d) return `<div class="empty-note">稟議書が見つかりません。</div>`;
+  const isApplicant = d.applicantId === currentUserId;
+  const btns = [];
+  if (d.status === "draft" && isApplicant) {
+    btns.push(`<button class="btn primary" data-action="submit-doc">申請する</button>`);
+    btns.push(`<button class="btn" data-action="edit-doc">編集</button>`);
+  }
+  if (d.status === "returned" && isApplicant) {
+    btns.push(`<button class="btn primary" data-action="edit-doc">修正して再申請へ</button>`);
+  }
+  if ((d.status === "pending" || d.status === "returned") && isApplicant) {
+    btns.push(`<button class="btn" data-action="withdraw-doc">取り下げ</button>`);
+  }
+  btns.push(`<button class="btn" data-action="dup-doc">複製して新規作成</button>`);
+  btns.push(`<button class="btn" onclick="window.print()">印刷</button>`);
+  if (isAdmin() || (d.status === "draft" && isApplicant)) {
+    btns.push(`<button class="btn danger" data-action="delete-doc">削除</button>`);
+  }
+  const returnedNote = d.status === "returned" && isApplicant
+    ? `<div class="action-panel no-print" style="border-color:var(--warn);background:var(--warn-soft)">
+        <h3>差し戻されています</h3>
+        <div class="muted">履歴のコメントを確認し、「修正して再申請へ」から内容を修正のうえ再申請してください。再申請すると版数が上がり、承認は最初のステップからやり直しになります。</div>
+      </div>` : "";
+  const history = d.history.slice().reverse().map((h) => `
+    <li class="act-${esc(h.action)}">
+      <div class="tl-head"><span class="tl-action">${esc(ACTION_LABEL[h.action] || h.action)}</span>
+        — ${esc(memberName(h.userId))} ・ ${fmtDateTime(h.at)}
+        ${h.detail ? `<span class="muted">(${esc(h.detail)})</span>` : ""}</div>
+      ${h.comment ? `<div class="tl-comment">${esc(h.comment)}</div>` : ""}
+    </li>`).join("");
+  const comments = d.comments.map((c) => `
+    <li>
+      <div class="tl-head"><span class="tl-action">${esc(memberName(c.userId))}</span> ・ ${fmtDateTime(c.at)}</div>
+      <div class="tl-comment">${esc(c.text)}</div>
+    </li>`).join("");
+  return `
+  <div class="no-print" style="margin-bottom:12px"><button class="btn sm" data-action="nav-list">← 一覧へ戻る</button></div>
+  <div class="detail-head">
+    <div>
+      <div class="doc-no">${esc(d.no || "(未採番・下書き)")} ・ 第${d.version}版</div>
+      <h1 class="detail-title">${esc(d.title || "(無題)")}</h1>
+    </div>
+    <div>${badge(d.status)}</div>
+    <div class="spacer"></div>
+    <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap">${btns.join("")}</div>
+  </div>
+  ${returnedNote}
+  ${viewActionPanel(d)}
+  <div class="card">
+    <div class="card-head">申請内容</div>
+    <div class="meta-grid">
+      <div class="meta-cell"><div class="meta-label">申請者</div><div class="meta-value">${esc(memberName(d.applicantId))}</div></div>
+      <div class="meta-cell"><div class="meta-label">分類</div><div class="meta-value">${esc(d.category)}</div></div>
+      <div class="meta-cell"><div class="meta-label">金額</div><div class="meta-value amount">${fmtMoney(d.amount)}</div></div>
+      <div class="meta-cell"><div class="meta-label">希望期日</div><div class="meta-value">${fmtDate(d.desiredDate)}</div></div>
+      <div class="meta-cell"><div class="meta-label">申請日時</div><div class="meta-value">${fmtDateTime(d.submittedAt)}</div></div>
+      <div class="meta-cell"><div class="meta-label">最終決裁日時</div><div class="meta-value">${fmtDateTime(d.decidedAt)}</div></div>
+    </div>
+    <div class="card-body body-text">${esc(d.body) || '<span class="muted">(内容未記入)</span>'}</div>
+  </div>
+  <div class="card">
+    <div class="card-head">承認ルート</div>
+    <div class="card-body">${viewStepper(d)}</div>
+  </div>
+  <div class="card">
+    <div class="card-head">履歴</div>
+    <div class="card-body">
+      ${history ? `<ul class="timeline">${history}</ul>` : `<div class="muted">まだ履歴がありません。</div>`}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">コメント</div>
+    <div class="card-body">
+      ${comments ? `<ul class="timeline">${comments}</ul>` : `<div class="muted">まだコメントがありません。</div>`}
+      <div class="comment-form no-print">
+        <textarea id="new-comment" rows="2" placeholder="コメントを書く(承認可否には影響しません)"></textarea>
+        <button class="btn" data-action="add-comment">投稿</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ─── 編集フォーム ─── */
+
+function renderStepsEditor(steps, allowEmptyNote) {
+  const memberChecks = (step, si) => state.members.filter((m) => m.active !== false).map((m) => `
+    <label><input type="checkbox" data-action-change="step-approver" data-si="${si}" data-id="${esc(m.id)}"
+      ${step.approverIds.includes(m.id) ? "checked" : ""} />
+      ${esc(m.name)}<span class="muted">${m.title ? " " + esc(m.title) : ""}</span></label>`).join("");
+  return steps.map((s, si) => `
+    <div class="step-edit">
+      <div class="step-edit-head">
+        <span class="step-no">STEP ${si + 1}</span>
+        <input placeholder="ステップ名(例: 課長承認)" value="${esc(s.name)}" data-action-input="step-name" data-si="${si}" style="flex:1;min-width:160px" />
+        <select data-action-change="step-mode" data-si="${si}">
+          <option value="all" ${s.mode === "all" ? "selected" : ""}>全員の承認が必要</option>
+          <option value="any" ${s.mode === "any" ? "selected" : ""}>誰か1名の承認でOK</option>
+        </select>
+        <button class="btn sm" data-action="step-up" data-si="${si}" ${si === 0 ? "disabled" : ""}>↑</button>
+        <button class="btn sm" data-action="step-down" data-si="${si}" ${si === steps.length - 1 ? "disabled" : ""}>↓</button>
+        <button class="btn sm danger" data-action="step-remove" data-si="${si}">削除</button>
+      </div>
+      <div class="approver-checks">${memberChecks(s, si) || '<span class="muted">メンバーが未登録です</span>'}</div>
+    </div>`).join("") +
+    (steps.length === 0 && allowEmptyNote ? `<div class="muted" style="margin-bottom:8px">ステップがありません。追加してください。</div>` : "");
+}
+function viewEdit() {
+  const d = ui.editDraft;
+  if (!d) return `<div class="empty-note">編集対象がありません。</div>`;
+  const isNew = !docById(d.id);
+  const catOpts = CATEGORIES.map((c) => `<option ${d.category === c ? "selected" : ""}>${esc(c)}</option>`).join("");
+  const tplOpts = [`<option value="">テンプレートを選択…</option>`]
+    .concat(state.templates.map((t) => `<option value="${esc(t.id)}">${esc(t.name)}</option>`)).join("");
+  const suggested = suggestTemplate(d.amount);
+  return `
+  <div class="no-print" style="margin-bottom:12px"><button class="btn sm" data-action="cancel-edit">← 保存せずに戻る</button></div>
+  <div class="page-head">
+    <h1 class="page-title">${isNew ? "新規稟議書" : d.status === "returned" ? "稟議書の修正(差し戻し対応)" : "稟議書の編集"}</h1>
+  </div>
+  <div class="card">
+    <div class="card-head">申請内容</div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field wide"><label class="req">件名</label>
+          <input value="${esc(d.title)}" data-action-input="doc-field" data-field="title" placeholder="例: ノートPC 3台の購入" /></div>
+        <div class="field"><label>分類</label>
+          <select data-action-change="doc-field" data-field="category">${catOpts}</select></div>
+        <div class="field"><label>金額(円)</label>
+          <input type="number" min="0" value="${d.amount == null ? "" : esc(d.amount)}" data-action-input="doc-amount" placeholder="例: 450000" /></div>
+        <div class="field"><label>希望期日</label>
+          <input type="date" value="${esc(d.desiredDate)}" data-action-input="doc-field" data-field="desiredDate" /></div>
+        <div class="field wide"><label class="req">内容・理由</label>
+          <textarea rows="6" data-action-input="doc-field" data-field="body"
+            placeholder="目的・背景、金額の内訳、比較検討の結果などを記載してください。">${esc(d.body)}</textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">承認ルート(多段階)</div>
+    <div class="card-body">
+      <div class="route-tools">
+        <select id="tpl-select">${tplOpts}</select>
+        <button class="btn" data-action="apply-template">適用</button>
+        <button class="btn ghost" data-action="auto-route" ${suggested ? "" : "disabled"}
+          title="${suggested ? esc(suggested.name) + " が適用されます" : "金額に合致するテンプレートがありません"}">
+          金額から自動選択${suggested ? `(→ ${esc(suggested.name)})` : ""}</button>
+        <div class="spacer"></div>
+        <button class="btn" data-action="step-add">+ ステップ追加</button>
+      </div>
+      ${renderStepsEditor(d.steps, true)}
+      <div class="muted">承認は STEP 1 から順番に進みます。差し戻し時は申請者、または任意の前ステップまで戻せます。</div>
+    </div>
+  </div>
+  <div class="action-row no-print" style="margin-bottom:24px">
+    ${d.status === "returned"
+      ? `<button class="btn primary" data-action="save-and-resubmit">保存して再申請(第${d.version + 1}版)</button>
+         <button class="btn" data-action="save-draft">保存のみ(差し戻し状態のまま)</button>`
+      : `<button class="btn primary" data-action="save-and-submit">保存して申請</button>
+         <button class="btn" data-action="save-draft">下書き保存</button>`}
+    <button class="btn" data-action="cancel-edit">キャンセル</button>
+  </div>`;
+}
+
+/* ─── 設定 ─── */
+
+function viewSettings() {
+  const admin = isAdmin();
+  const memberRows = state.members.map((m) => `
+    <tr>
+      <td>${esc(m.name)}${m.active === false ? ' <span class="badge st-withdrawn">無効</span>' : ""}</td>
+      <td>${esc(m.dept || "")}</td>
+      <td>${esc(m.title || "")}</td>
+      <td>${m.role === "admin" ? "管理者" : "一般"}</td>
+      <td class="no-print" style="white-space:nowrap">
+        ${admin ? `
+        <button class="btn sm" data-action="member-toggle" data-id="${esc(m.id)}">${m.active === false ? "有効化" : "無効化"}</button>
+        <button class="btn sm" data-action="member-role" data-id="${esc(m.id)}">${m.role === "admin" ? "一般にする" : "管理者にする"}</button>
+        ` : ""}
+      </td>
+    </tr>`).join("");
+  const addMemberForm = admin ? `
+    <div class="inline-form">
+      <div class="field"><label>氏名</label><input id="nm-name" placeholder="氏名" /></div>
+      <div class="field"><label>部署</label><input id="nm-dept" placeholder="部署" /></div>
+      <div class="field"><label>役職</label><input id="nm-title" placeholder="役職" /></div>
+      <div class="field"><label>権限</label>
+        <select id="nm-role"><option value="member">一般</option><option value="admin">管理者</option></select></div>
+      <button class="btn primary" data-action="member-add">追加</button>
+    </div>` : `<div class="muted">メンバーの追加・変更は管理者のみ行えます。</div>`;
+
+  const tplRows = state.templates.map((t) => `
+    <tr>
+      <td><strong>${esc(t.name)}</strong></td>
+      <td>${t.steps.map((s, i) => `${i + 1}. ${esc(s.name || "承認")}(${s.approverIds.map(memberName).map(esc).join("、") || "未設定"})`).join(" → ")}</td>
+      <td class="amount">${t.minAmount != null ? fmtMoney(t.minAmount) : "下限なし"} 〜 ${t.maxAmount != null ? fmtMoney(t.maxAmount) : "上限なし"}</td>
+      <td style="white-space:nowrap">
+        ${admin ? `
+        <button class="btn sm" data-action="tpl-edit" data-id="${esc(t.id)}">編集</button>
+        <button class="btn sm danger" data-action="tpl-delete" data-id="${esc(t.id)}">削除</button>
+        ` : ""}
+      </td>
+    </tr>`).join("");
+
+  const t = ui.tplDraft;
+  const tplEditor = t ? `
+    <div class="card" style="margin-top:12px;border-color:var(--accent)">
+      <div class="card-head">${state.templates.some((x) => x.id === t.id) ? "テンプレートの編集" : "新規テンプレート"}</div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="field"><label class="req">テンプレート名</label>
+            <input value="${esc(t.name)}" data-action-input="tpl-field" data-field="name" placeholder="例: 高額稟議(50万円以上)" /></div>
+          <div class="field"><label>適用金額 下限(円)</label>
+            <input type="number" min="0" value="${t.minAmount == null ? "" : esc(t.minAmount)}" data-action-input="tpl-amount" data-field="minAmount" placeholder="なし" /></div>
+          <div class="field"><label>適用金額 上限(円)</label>
+            <input type="number" min="0" value="${t.maxAmount == null ? "" : esc(t.maxAmount)}" data-action-input="tpl-amount" data-field="maxAmount" placeholder="なし" /></div>
+        </div>
+        <div style="margin:12px 0 8px;display:flex;align-items:center">
+          <strong style="font-size:13px">承認ステップ</strong>
+          <div class="spacer"></div>
+          <button class="btn sm" data-action="tpl-step-add">+ ステップ追加</button>
+        </div>
+        ${renderStepsEditor(t.steps, true).replaceAll('data-action-input="step-name"', 'data-action-input="tpl-step-name"')
+          .replaceAll('data-action-change="step-mode"', 'data-action-change="tpl-step-mode"')
+          .replaceAll('data-action-change="step-approver"', 'data-action-change="tpl-step-approver"')
+          .replaceAll('data-action="step-up"', 'data-action="tpl-step-up"')
+          .replaceAll('data-action="step-down"', 'data-action="tpl-step-down"')
+          .replaceAll('data-action="step-remove"', 'data-action="tpl-step-remove"')}
+        <div class="action-row">
+          <button class="btn primary" data-action="tpl-save">テンプレートを保存</button>
+          <button class="btn" data-action="tpl-cancel">キャンセル</button>
+        </div>
+      </div>
+    </div>` : "";
+
+  return `
+  <div class="page-head"><h1 class="page-title">設定</h1></div>
+  <div class="settings-grid">
+    <div class="card">
+      <div class="card-head">メンバー</div>
+      <div class="card-body">
+        <table class="plain">
+          <thead><tr><th>氏名</th><th>部署</th><th>役職</th><th>権限</th><th></th></tr></thead>
+          <tbody>${memberRows}</tbody>
+        </table>
+        ${addMemberForm}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">承認ルートテンプレート
+        <div class="spacer"></div>
+        ${admin ? `<button class="btn sm" data-action="tpl-new">+ 新規テンプレート</button>` : ""}
+      </div>
+      <div class="card-body">
+        ${state.templates.length
+          ? `<table class="plain"><thead><tr><th>名前</th><th>ステップ</th><th>適用金額</th><th></th></tr></thead><tbody>${tplRows}</tbody></table>`
+          : `<div class="muted">テンプレートがありません。金額帯ごとの承認ルート(例: 10万円未満は課長のみ、50万円以上は社長まで)を登録しておくと、稟議書作成時に自動適用できます。</div>`}
+        ${tplEditor}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">データ</div>
+      <div class="card-body">
+        <div class="muted" style="margin-bottom:8px">
+          保存先: ${syncOn ? "Supabase(全員で共有・リアルタイム同期)" : "このブラウザの localStorage のみ。ringi/config.js に Supabase の接続情報を設定すると全員で共有できます(ringi/README.md 参照)。"}
+        </div>
+        <div class="action-row">
+          <button class="btn" data-action="export-json">JSONエクスポート</button>
+          <label class="btn" style="display:inline-block">JSONインポート<input type="file" accept="application/json" data-action-change="import-json" style="display:none" /></label>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════ サンプルデータ ═══════════════════════ */
+
+function loadDemoData() {
+  const mk = (name, dept, title, role) => ({ id: uid(), name, dept, title, role, active: true, createdAt: now() });
+  const tanaka = mk("田中 一郎", "営業部", "主任", "member");
+  const sato   = mk("佐藤 花子", "営業部", "課長", "member");
+  const suzuki = mk("鈴木 次郎", "管理部", "部長", "member");
+  const yamamoto = mk("山本 三郎", "経営", "社長", "admin");
+  state.members = [tanaka, sato, suzuki, yamamoto];
+
+  const step = (name, ids, mode) => ({ id: uid(), name, mode: mode || "all", approverIds: ids, decisions: {} });
+  state.templates = [
+    { id: uid(), name: "少額稟議(10万円未満)", minAmount: null, maxAmount: 99999,
+      steps: [step("課長承認", [sato.id])] },
+    { id: uid(), name: "通常稟議(10万〜50万円)", minAmount: 100000, maxAmount: 499999,
+      steps: [step("課長承認", [sato.id]), step("部長承認", [suzuki.id])] },
+    { id: uid(), name: "高額稟議(50万円以上)", minAmount: 500000, maxAmount: null,
+      steps: [step("課長承認", [sato.id]), step("部長承認", [suzuki.id]), step("社長決裁", [yamamoto.id])] },
+  ];
+
+  const d1 = newDoc();
+  Object.assign(d1, {
+    title: "ノートPC 3台の購入", category: "購買", amount: 450000,
+    body: "営業部の増員に伴い、ノートPC 3台(1台あたり15万円)を購入したく申請します。\n\n・用途: 新入社員用\n・比較: A社 16万円/台、B社 15万円/台(採用)\n・納期: 来月第1週",
+    applicantId: tanaka.id,
+    steps: [step("課長承認", [sato.id]), step("部長承認", [suzuki.id])],
+  });
+  d1.history.push({ at: now(), userId: tanaka.id, action: "create", comment: "", detail: "" });
+  const y = String(new Date().getFullYear());
+  state.seq[y] = (state.seq[y] || 0) + 1;
+  d1.no = "R-" + y + "-" + String(state.seq[y]).padStart(4, "0");
+  d1.status = "pending"; d1.submittedAt = now();
+  d1.history.push({ at: now(), userId: tanaka.id, action: "submit", comment: "", detail: "" });
+
+  const d2 = newDoc();
+  Object.assign(d2, {
+    title: "展示会出展費用", category: "経費", amount: 800000,
+    body: "秋の産業展示会への出展費用を申請します(小間料・装飾・什器レンタル一式)。",
+    applicantId: tanaka.id,
+    steps: [step("課長承認", [sato.id]), step("部長承認", [suzuki.id]), step("社長決裁", [yamamoto.id])],
+  });
+  d2.history.push({ at: now(), userId: tanaka.id, action: "create", comment: "", detail: "" });
+  state.docs = [d1, d2];
+
+  currentUserId = sato.id;
+  localStorage.setItem(LS_USER, currentUserId);
+  saveLocal(); pushAll();
+}
+
+/* ═══════════════════════ イベント処理 ═══════════════════════ */
+
+function startEdit(doc) {
+  ui.editDraft = JSON.parse(JSON.stringify(doc));
+  ui.view = "edit";
+  window.scrollTo(0, 0);
+  render();
+}
+function persistDraft() {
+  const d = ui.editDraft;
+  const existing = docById(d.id);
+  if (!existing) log(d, "create");
+  else log(d, "edit");
+  saveDoc(JSON.parse(JSON.stringify(d)));
+  return docById(d.id);
+}
+
+function handleAction(action, el) {
+  const id = el.dataset.id;
+  const si = el.dataset.si != null ? Number(el.dataset.si) : null;
+  const d = ui.docId ? docById(ui.docId) : null;
+
+  switch (action) {
+    /* ゲート */
+    case "pass-submit": {
+      const v = document.getElementById("pass-input").value;
+      if (v === CONFIG.APP_PASSCODE) { ui.passOk = true; sessionStorage.setItem(SS_PASS, "1"); render(); }
+      else flash("パスコードが違います");
+      break;
+    }
+    case "firstrun-add": {
+      const name = document.getElementById("fr-name").value.trim();
+      if (!name) { flash("氏名を入力してください"); break; }
+      const m = {
+        id: uid(), name,
+        dept: document.getElementById("fr-dept").value.trim(),
+        title: document.getElementById("fr-title").value.trim(),
+        role: document.getElementById("fr-role").value,
+        active: true, createdAt: now(),
+      };
+      saveMember(m);
+      currentUserId = m.id; localStorage.setItem(LS_USER, m.id);
+      render();
+      break;
+    }
+    case "load-demo": loadDemoData(); render(); flash("サンプルデータを投入しました(操作中: 佐藤 花子)"); break;
+    case "pick-user": currentUserId = id; localStorage.setItem(LS_USER, id); render(); break;
+
+    /* ナビゲーション */
+    case "nav-list": nav("list"); break;
+    case "nav-settings": ui.tplDraft = null; nav("settings"); break;
+    case "set-filter": ui.filter = id; render(); break;
+    case "open-doc": nav("detail", id); break;
+    case "new-doc": ui.docId = null; startEdit(newDoc()); break;
+
+    /* 稟議書 詳細アクション */
+    case "edit-doc": if (d) startEdit(d); break;
+    case "dup-doc": {
+      if (!d) break;
+      const c = newDoc();
+      Object.assign(c, {
+        title: d.title, category: d.category, amount: d.amount, desiredDate: d.desiredDate, body: d.body,
+        steps: d.steps.map((s) => ({ id: uid(), name: s.name, mode: s.mode, approverIds: s.approverIds.slice(), decisions: {} })),
+      });
+      ui.docId = null;
+      startEdit(c);
+      break;
+    }
+    case "delete-doc": {
+      if (!d) break;
+      if (!confirm(`「${d.title || "(無題)"}」を削除します。よろしいですか?`)) break;
+      deleteDoc(d.id); nav("list"); flash("削除しました");
+      break;
+    }
+    case "withdraw-doc": {
+      if (!d) break;
+      if (!confirm("この稟議を取り下げます。よろしいですか?")) break;
+      doWithdraw(d); render(); flash("取り下げました");
+      break;
+    }
+    case "submit-doc": {
+      if (!d) break;
+      const errs = validateForSubmit(d);
+      if (errs.length) { alert(errs.join("\n")); break; }
+      doSubmit(d, false); render(); flash("申請しました");
+      break;
+    }
+
+    /* 承認・却下・差し戻し */
+    case "approve": {
+      if (!d) break;
+      const comment = document.getElementById("decision-comment").value.trim();
+      doApprove(d, comment); render();
+      flash(d.status === "approved" ? "最終承認されました" : "承認しました(次のステップへ)");
+      break;
+    }
+    case "reject": {
+      if (!d) break;
+      const comment = document.getElementById("decision-comment").value.trim();
+      if (!comment) { alert("却下にはコメント(理由)が必須です"); break; }
+      if (!confirm("この稟議を却下します。よろしいですか?")) break;
+      doReject(d, comment); render(); flash("却下しました");
+      break;
+    }
+    case "remand": {
+      if (!d) break;
+      const comment = document.getElementById("decision-comment").value.trim();
+      if (!comment) { alert("差し戻しにはコメント(理由・修正依頼)が必須です"); break; }
+      const target = document.getElementById("remand-target").value;
+      doRemand(d, target, comment); render(); flash("差し戻しました");
+      break;
+    }
+    case "add-comment": {
+      if (!d) break;
+      const ta = document.getElementById("new-comment");
+      const text = ta.value.trim();
+      if (!text) break;
+      d.comments.push({ id: uid(), at: now(), userId: currentUserId, text });
+      saveDoc(d); render();
+      break;
+    }
+
+    /* 編集フォーム */
+    case "cancel-edit": ui.editDraft = null; nav(ui.docId ? "detail" : "list", ui.docId); break;
+    case "save-draft": {
+      const saved = persistDraft();
+      ui.editDraft = null; nav("detail", saved.id); flash("保存しました");
+      break;
+    }
+    case "save-and-submit": {
+      const errs = validateForSubmit(ui.editDraft);
+      if (errs.length) { alert(errs.join("\n")); break; }
+      const saved = persistDraft();
+      doSubmit(saved, false);
+      ui.editDraft = null; nav("detail", saved.id); flash("申請しました");
+      break;
+    }
+    case "save-and-resubmit": {
+      const errs = validateForSubmit(ui.editDraft);
+      if (errs.length) { alert(errs.join("\n")); break; }
+      const saved = persistDraft();
+      doSubmit(saved, true);
+      ui.editDraft = null; nav("detail", saved.id); flash("再申請しました");
+      break;
+    }
+    case "apply-template": {
+      const tid = document.getElementById("tpl-select").value;
+      const tpl = state.templates.find((t) => t.id === tid);
+      if (!tpl) { flash("テンプレートを選択してください"); break; }
+      applyTemplateToDraft(tpl); render();
+      break;
+    }
+    case "auto-route": {
+      const tpl = suggestTemplate(ui.editDraft.amount);
+      if (!tpl) break;
+      applyTemplateToDraft(tpl); render(); flash(`「${tpl.name}」を適用しました`);
+      break;
+    }
+    case "step-add": ui.editDraft.steps.push(newStep()); render(); break;
+    case "step-remove": ui.editDraft.steps.splice(si, 1); render(); break;
+    case "step-up": {
+      const st = ui.editDraft.steps;
+      [st[si - 1], st[si]] = [st[si], st[si - 1]]; render();
+      break;
+    }
+    case "step-down": {
+      const st = ui.editDraft.steps;
+      [st[si + 1], st[si]] = [st[si], st[si + 1]]; render();
+      break;
+    }
+
+    /* 設定: メンバー */
+    case "member-add": {
+      const name = document.getElementById("nm-name").value.trim();
+      if (!name) { flash("氏名を入力してください"); break; }
+      saveMember({
+        id: uid(), name,
+        dept: document.getElementById("nm-dept").value.trim(),
+        title: document.getElementById("nm-title").value.trim(),
+        role: document.getElementById("nm-role").value,
+        active: true, createdAt: now(),
+      });
+      render();
+      break;
+    }
+    case "member-toggle": {
+      const m = memberById(id);
+      if (!m) break;
+      m.active = m.active === false;
+      saveMember(m); render();
+      break;
+    }
+    case "member-role": {
+      const m = memberById(id);
+      if (!m) break;
+      m.role = m.role === "admin" ? "member" : "admin";
+      saveMember(m); render();
+      break;
+    }
+
+    /* 設定: テンプレート */
+    case "tpl-new": ui.tplDraft = { id: uid(), name: "", minAmount: null, maxAmount: null, steps: [newStep()] }; render(); break;
+    case "tpl-edit": {
+      const t = state.templates.find((x) => x.id === id);
+      if (t) { ui.tplDraft = JSON.parse(JSON.stringify(t)); render(); }
+      break;
+    }
+    case "tpl-delete": {
+      const t = state.templates.find((x) => x.id === id);
+      if (!t) break;
+      if (!confirm(`テンプレート「${t.name}」を削除します。よろしいですか?`)) break;
+      deleteTemplate(id); render();
+      break;
+    }
+    case "tpl-cancel": ui.tplDraft = null; render(); break;
+    case "tpl-save": {
+      const t = ui.tplDraft;
+      if (!t.name.trim()) { flash("テンプレート名を入力してください"); break; }
+      if (!t.steps.length || t.steps.some((s) => !s.approverIds.length)) { alert("各ステップに承認者を1名以上指定してください"); break; }
+      saveTemplate(JSON.parse(JSON.stringify(t)));
+      ui.tplDraft = null; render(); flash("テンプレートを保存しました");
+      break;
+    }
+    case "tpl-step-add": ui.tplDraft.steps.push(newStep()); render(); break;
+    case "tpl-step-remove": ui.tplDraft.steps.splice(si, 1); render(); break;
+    case "tpl-step-up": {
+      const st = ui.tplDraft.steps;
+      [st[si - 1], st[si]] = [st[si], st[si - 1]]; render();
+      break;
+    }
+    case "tpl-step-down": {
+      const st = ui.tplDraft.steps;
+      [st[si + 1], st[si]] = [st[si], st[si + 1]]; render();
+      break;
+    }
+
+    /* データ */
+    case "export-json": {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "ringi-export-" + new Date().toISOString().slice(0, 10) + ".json";
+      a.click(); URL.revokeObjectURL(a.href);
+      break;
+    }
+  }
+}
+
+function handleChange(el) {
+  const action = el.dataset.actionChange;
+  const si = el.dataset.si != null ? Number(el.dataset.si) : null;
+  switch (action) {
+    case "switch-user": currentUserId = el.value; localStorage.setItem(LS_USER, el.value); render(); break;
+    case "set-cat": ui.cat = el.value; render(); break;
+    case "doc-field": ui.editDraft[el.dataset.field] = el.value; break;
+    case "step-mode": ui.editDraft.steps[si].mode = el.value; break;
+    case "step-approver": {
+      const s = ui.editDraft.steps[si];
+      if (el.checked) { if (!s.approverIds.includes(el.dataset.id)) s.approverIds.push(el.dataset.id); }
+      else s.approverIds = s.approverIds.filter((x) => x !== el.dataset.id);
+      break;
+    }
+    case "tpl-step-mode": ui.tplDraft.steps[si].mode = el.value; break;
+    case "tpl-step-approver": {
+      const s = ui.tplDraft.steps[si];
+      if (el.checked) { if (!s.approverIds.includes(el.dataset.id)) s.approverIds.push(el.dataset.id); }
+      else s.approverIds = s.approverIds.filter((x) => x !== el.dataset.id);
+      break;
+    }
+    case "import-json": {
+      const file = el.files && el.files[0];
+      if (!file) break;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || !Array.isArray(data.members) || !Array.isArray(data.docs)) throw new Error("bad");
+          if (!confirm("現在のデータをインポート内容で置き換えます。よろしいですか?")) return;
+          state = Object.assign({ members: [], templates: [], docs: [], seq: {} }, data);
+          saveLocal(); pushAll(); render(); flash("インポートしました");
+        } catch (e) { alert("読み込めないファイルです"); }
+      };
+      reader.readAsText(file);
+      break;
+    }
+  }
+}
+
+function handleInput(el) {
+  const action = el.dataset.actionInput;
+  const si = el.dataset.si != null ? Number(el.dataset.si) : null;
+  switch (action) {
+    case "set-q": ui.q = el.value; renderListOnly(); break;
+    case "doc-field": ui.editDraft[el.dataset.field] = el.value; break;
+    case "doc-amount": ui.editDraft.amount = el.value === "" ? null : Number(el.value); break;
+    case "step-name": ui.editDraft.steps[si].name = el.value; break;
+    case "tpl-field": ui.tplDraft[el.dataset.field] = el.value; break;
+    case "tpl-amount": ui.tplDraft[el.dataset.field] = el.value === "" ? null : Number(el.value); break;
+    case "tpl-step-name": ui.tplDraft.steps[si].name = el.value; break;
+  }
+}
+/* 検索入力だけはフォーカスを保ったまま一覧を再描画する */
+function renderListOnly() {
+  const input = document.activeElement;
+  const pos = input && input.selectionStart;
+  render();
+  const again = document.querySelector('[data-action-input="set-q"]');
+  if (again) { again.focus(); try { again.setSelectionRange(pos, pos); } catch (e) {} }
+}
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-action]");
+  if (el && !el.disabled) handleAction(el.dataset.action, el);
+});
+document.addEventListener("change", (e) => {
+  const el = e.target.closest("[data-action-change]");
+  if (el) handleChange(el);
+});
+document.addEventListener("input", (e) => {
+  const el = e.target.closest("[data-action-input]");
+  if (el) handleInput(el);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.id === "pass-input") handleAction("pass-submit", e.target);
+});
+
+/* ═══════════════════════ 起動 ═══════════════════════ */
+
+loadLocal();
+(function initFromHash() {
+  const h = location.hash;
+  const m = h.match(/^#doc=(.+)$/);
+  if (m && docById(m[1])) { ui.view = "detail"; ui.docId = m[1]; }
+  else if (h === "#settings") ui.view = "settings";
+})();
+render();
+sbInit();
+</script>
+</body>
+</html>
