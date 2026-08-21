@@ -141,12 +141,22 @@ jobs:
           # 既存の環境変数を確認し、AUTH_SECRET / ENCRYPTION_KEY は無ければ生成(再実行しても既存セッションを壊さない)
           curl -sS --fail "https://api.vercel.com/v9/projects/${PROJECT_ID}/env" \
             -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/env.json
-          has() { jq -e --arg k "$1" '[.envs[]?|select(.key==$k)]|length > 0' /tmp/env.json >/dev/null; }
+          # 「存在するか」ではなく「実際の値が入っているか」を検査する。
+          # (過去に空値で登録された事故があり、存在チェックだけでは修復されないため)
+          current_value() {
+            local id
+            id=$(jq -r --arg k "$1" '[.envs[]?|select(.key==$k)][0].id // empty' /tmp/env.json)
+            [ -z "$id" ] && return 0
+            curl -sS "https://api.vercel.com/v1/projects/${PROJECT_ID}/env/${id}?decrypt=true" \
+              -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.value // empty'
+          }
+          has_value() { [ "$(current_value "$1" | wc -c)" -gt 10 ]; }
 
           AUTH_SECRET=""; ENCRYPTION_KEY=""; CRON_SECRET=""
-          has AUTH_SECRET || AUTH_SECRET=$(openssl rand -base64 32)
-          has ENCRYPTION_KEY || ENCRYPTION_KEY=$(openssl rand -base64 32)
-          has CRON_SECRET || CRON_SECRET=$(openssl rand -hex 24)
+          has_value AUTH_SECRET || AUTH_SECRET=$(openssl rand -base64 32)
+          has_value ENCRYPTION_KEY || ENCRYPTION_KEY=$(openssl rand -base64 32)
+          has_value CRON_SECRET || CRON_SECRET=$(openssl rand -hex 24)
+          echo "再生成対象: AUTH_SECRET=$([ -n "$AUTH_SECRET" ] && echo yes || echo keep) ENCRYPTION_KEY=$([ -n "$ENCRYPTION_KEY" ] && echo yes || echo keep) CRON_SECRET=$([ -n "$CRON_SECRET" ] && echo yes || echo keep)"
           [ -n "$AUTH_SECRET" ] && echo "::add-mask::$AUTH_SECRET"
           [ -n "$ENCRYPTION_KEY" ] && echo "::add-mask::$ENCRYPTION_KEY"
           [ -n "$CRON_SECRET" ] && echo "::add-mask::$CRON_SECRET"
