@@ -22,7 +22,6 @@ class ConsoleMailProvider implements MailProvider {
     logger.info('mail.send', { to: message.to, subject: message.subject })
     if (!env.isProduction) {
       // 開発中はリンクをそのまま確認できるようにする。
-      // eslint-disable-next-line no-console
       console.log(`\n--- MAIL (${message.to}) ---\n${message.subject}\n\n${message.text}\n---\n`)
     }
   }

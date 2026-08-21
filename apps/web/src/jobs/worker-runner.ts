@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { claimNextJob, executeJob, requeueStaleJobs } from './queue'
 import { ensureJobHandlersRegistered } from './register'
 import { registeredHandlerNames } from './handlers'
