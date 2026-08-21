@@ -42,10 +42,46 @@ export function ProductOverviewForm({ projectId, initial }: { projectId: string;
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null)
 
+  /**
+   * ヒアリング完了後にDBの最新値をフォームへ反映する。
+   * router.refresh() はサーバーコンポーネントを再描画するだけで
+   * マウント済みのuseStateには届かないため、明示的に取得して流し込む。
+   * ユーザーが未保存で入力済みの値は上書きしない(サーバー側のマージと同じ方針)。
+   */
+  const applyInterviewResult = async () => {
+    try {
+      const fresh = await api<ProductInitial>(`/api/products/${projectId}`)
+      setForm((previous) => ({
+        ...previous,
+        name: previous.name || fresh.name,
+        category: previous.category || fresh.category,
+        description: previous.description || fresh.description,
+        purpose: previous.purpose || fresh.purpose,
+        problem: previous.problem || fresh.problem,
+        target: previous.target || fresh.target,
+        price: previous.price ?? fresh.price,
+        country: previous.country || fresh.country,
+        channel: previous.channel || fresh.channel,
+        size: previous.size || fresh.size,
+        weight: previous.weight || fresh.weight,
+        material: previous.material || fresh.material,
+        color: previous.color || fresh.color,
+        designNote: previous.designNote || fresh.designNote,
+        features: previous.features.length > 0 ? previous.features : fresh.features,
+        usp: previous.usp.length > 0 ? previous.usp : fresh.usp,
+        completeness: fresh.completeness,
+        openQuestions: fresh.openQuestions,
+      }))
+      setMessage({ tone: 'success', text: 'AIヒアリングが完了しました。空欄だった項目にAIの提案を反映しました。下のフォームで内容を確認・修正できます。' })
+    } catch {
+      setMessage({ tone: 'success', text: 'AIヒアリングが完了しました。ページを再読み込みすると内容が表示されます。' })
+    }
+    router.refresh()
+  }
+
   const interview = useJob((job) => {
     if (job.status === 'COMPLETED') {
-      setMessage({ tone: 'success', text: 'AIヒアリングが完了しました。内容を反映します。' })
-      router.refresh()
+      void applyInterviewResult()
     } else if (job.status === 'FAILED') {
       setMessage({ tone: 'error', text: job.error ?? 'AIヒアリングに失敗しました' })
     }
