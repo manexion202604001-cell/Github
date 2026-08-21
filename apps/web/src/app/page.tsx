@@ -55,7 +55,7 @@ export default function MarketingPage() {
 
       <main>
         <section className="mx-auto max-w-6xl px-5 pt-14 pb-20 text-center sm:pt-24">
-          <p className="text-[13px] font-bold tracking-widest text-brand">AI PRODUCT DEVELOPMENT OS</p>
+          <p className="text-[13px] font-bold tracking-widest text-brand">UCCHAU — AI PRODUCT DEVELOPMENT OS</p>
           <h1 className="mx-auto mt-4 max-w-3xl text-4xl leading-tight font-bold sm:text-5xl">
             売れる商品を探すのではなく、
             <br className="hidden sm:block" />

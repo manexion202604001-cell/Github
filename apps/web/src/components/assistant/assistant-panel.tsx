@@ -59,7 +59,7 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          'fixed right-5 bottom-5 z-40 flex h-13 items-center gap-2 px-5 font-bold text-white shadow-lg transition-colors',
+          'fixed right-5 bottom-5 z-40 flex h-13 items-center gap-2 rounded-md px-5 font-bold text-white shadow-lg transition-colors',
           open ? 'bg-ink' : 'bg-brand hover:bg-brand-soft',
         )}
         style={{ height: 52 }}

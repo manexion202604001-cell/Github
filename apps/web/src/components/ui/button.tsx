@@ -11,10 +11,11 @@ const VARIANTS: Record<Variant, string> = {
   danger: 'bg-critical-wash text-critical border border-critical/20 hover:bg-critical hover:text-white',
 }
 
+// ボタンのみ、rectangularテーマの中でわずかに丸みを残す
 const SIZES: Record<Size, string> = {
-  sm: 'h-8 px-3 text-[13px] gap-1.5',
-  md: 'h-10 px-4 text-sm gap-2',
-  lg: 'h-12 px-6 text-[15px] gap-2',
+  sm: 'h-8 px-3 text-[13px] gap-1.5 rounded-md',
+  md: 'h-10 px-4 text-sm gap-2 rounded-md',
+  lg: 'h-12 px-6 text-[15px] gap-2 rounded-md',
 }
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
