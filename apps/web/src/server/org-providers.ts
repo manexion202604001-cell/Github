@@ -12,6 +12,7 @@ import { GoogleImageProvider } from '@/providers/image/adapters/google'
 import { OpenAIImageProvider } from '@/providers/image/adapters/openai'
 import { marketDataProviders, type MarketDataProvider } from '@/providers/market-data'
 import { RakutenMarketDataProvider } from '@/providers/market-data/adapters/rakuten'
+import { RainforestMarketDataProvider } from '@/providers/market-data/adapters/rainforest'
 
 /**
  * Organization単位のBYOK(Bring Your Own Key)解決。
@@ -98,11 +99,13 @@ export async function marketDataChainFor(organizationId: string): Promise<Market
   const secret = secretOf(row)
   if (!secret) return base
 
-  if (row.provider === 'rakuten') {
-    const override = new RakutenMarketDataProvider(secret)
-    if (override.isConfigured()) {
-      return [override, ...base.filter((provider) => provider.id !== override.id)]
-    }
+  let override: MarketDataProvider | null = null
+  if (row.provider === 'rakuten') override = new RakutenMarketDataProvider(secret)
+  else if (row.provider === 'rainforest') override = new RainforestMarketDataProvider(secret)
+
+  if (override?.isConfigured()) {
+    const id = override.id
+    return [override, ...base.filter((provider) => provider.id !== id)]
   }
   return base
 }

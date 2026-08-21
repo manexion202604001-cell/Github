@@ -72,9 +72,10 @@ export const INTEGRATION_OPTIONS = [
   {
     kind: 'MARKET_DATA',
     label: '市場データ',
-    description: '市場調査・競合分析の実データ取得に使用します。',
+    description: '市場調査・競合分析の実データ取得に使用します。AmazonデータはRainforest API、楽天市場データは楽天ウェブサービスを選択してください(切替可能)。Amazonの場合はレビュー本文も取得され、不満クラスタリングが実レビューで動作します。',
     providers: [
-      { id: 'rakuten', label: '楽天ウェブサービス', secretLabel: 'アプリID(無料発行)', models: [] },
+      { id: 'rakuten', label: '楽天ウェブサービス(楽天市場)', secretLabel: 'アプリID(無料発行)', models: [] },
+      { id: 'rainforest', label: 'Rainforest API(Amazon)', secretLabel: 'APIキー', models: [] },
     ],
     hasModel: false,
   },
