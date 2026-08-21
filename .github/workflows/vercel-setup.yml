@@ -1,0 +1,221 @@
+# AI商品開発OS — Vercelデプロイの自動セットアップ
+#
+# この環境(Claude Codeサンドボックス)からは Vercel/Supabase へ直接接続できないため、
+# GitHub Actions のランナー上で以下を代行する:
+#   1. Supabase の DBホスト(リージョン)を自動検出し、接続を検証
+#   2. Supabase Storage にバケット product-os を作成(Public)
+#   3. Vercel プロジェクトへ環境変数を一括設定(既存の AUTH_SECRET 等は保持)
+#   4. Production の再デプロイを実行し、完了まで監視
+#
+# 必要な Repository secrets(Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN              — Vercelのアクセストークン
+#   SUPABASE_DB_PASSWORD      — SupabaseのDBパスワード(生の値。エンコード不要)
+#   SUPABASE_SERVICE_ROLE_KEY — sb_secret_ で始まるキー
+#
+# 手動実行専用。push では起動しない。
+name: Vercel Setup
+
+on:
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: vercel-setup
+  cancel-in-progress: false
+
+env:
+  SUPABASE_REF: lhyydbnvrhhyflvyfkdv
+  SUPABASE_URL: https://lhyydbnvrhhyflvyfkdv.supabase.co
+  BUCKET: product-os
+  REPO_ID: "1216588499"
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$DB_PASSWORD" ] && missing="$missing SUPABASE_DB_PASSWORD"
+          [ -z "$SERVICE_KEY" ] && missing="$missing SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Repository secrets が未設定です:$missing"
+            echo "Settings → Secrets and variables → Actions → New repository secret で追加してください。"
+            exit 1
+          fi
+          echo "✓ secrets OK"
+
+      - name: Detect Supabase DB host and verify connection
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          USER="postgres.${SUPABASE_REF}"
+          found=""
+          for region in ap-northeast-1 ap-northeast-2 us-east-1 us-east-2 us-west-1 us-west-2 \
+                        eu-central-1 eu-west-1 eu-west-2 eu-west-3 eu-north-1 \
+                        ap-southeast-1 ap-southeast-2 ap-south-1 sa-east-1 ca-central-1; do
+            for prefix in aws-1 aws-0; do
+              host="${prefix}-${region}.pooler.supabase.com"
+              if PGPASSWORD="$DB_PASSWORD" PGCONNECT_TIMEOUT=6 \
+                 psql -h "$host" -p 5432 -U "$USER" -d postgres -tAc "select 1" >/dev/null 2>&1; then
+                found="$host"
+                break 2
+              fi
+            done
+          done
+          if [ -z "$found" ]; then
+            echo "::error::どのリージョンでもDB接続に失敗しました。SUPABASE_DB_PASSWORD が正しいか確認してください。"
+            exit 1
+          fi
+          echo "✓ DB接続成功: $found"
+          encoded=$(jq -rn --arg p "$DB_PASSWORD" '$p|@uri')
+          echo "::add-mask::$encoded"
+          echo "DB_HOST=$found" >> "$GITHUB_ENV"
+          echo "DATABASE_URL=postgresql://${USER}:${encoded}@${found}:5432/postgres" >> "$GITHUB_ENV"
+
+      - name: Create storage bucket (public)
+        env:
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /tmp/bucket.json -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/storage/v1/bucket" \
+            -H "Authorization: Bearer ${SERVICE_KEY}" \
+            -H "apikey: ${SERVICE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "{\"id\":\"${BUCKET}\",\"name\":\"${BUCKET}\",\"public\":true}")
+          if [ "$status" = "200" ] || [ "$status" = "201" ]; then
+            echo "✓ バケット ${BUCKET} を作成しました"
+          elif grep -qiE 'already exists|duplicate' /tmp/bucket.json; then
+            echo "✓ バケット ${BUCKET} は既に存在します"
+          else
+            echo "::error::バケット作成に失敗 (HTTP $status): $(cat /tmp/bucket.json)"
+            echo "SUPABASE_SERVICE_ROLE_KEY が sb_secret_ で始まる正しいキーか確認してください。"
+            exit 1
+          fi
+
+      - name: Resolve Vercel project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -sS --fail "https://api.vercel.com/v9/projects?limit=100" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/projects.json
+          # このリポジトリにリンクされたプロジェクトを探す
+          PROJECT=$(jq -r --arg repoId "$REPO_ID" \
+            '[.projects[] | select((.link.repoId|tostring) == $repoId)][0] // empty' /tmp/projects.json)
+          if [ -z "$PROJECT" ]; then
+            echo "::error::このリポジトリにリンクされたVercelプロジェクトが見つかりません。"
+            jq -r '.projects[] | "- \(.name) (repo: \(.link.repo // "none"))"' /tmp/projects.json
+            exit 1
+          fi
+          echo "$PROJECT" > /tmp/project.json
+          PROJECT_ID=$(jq -r '.id' /tmp/project.json)
+          PROJECT_NAME=$(jq -r '.name' /tmp/project.json)
+          echo "✓ プロジェクト: $PROJECT_NAME ($PROJECT_ID)"
+          echo "PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+          echo "PROJECT_NAME=$PROJECT_NAME" >> "$GITHUB_ENV"
+          echo "APP_URL=https://${PROJECT_NAME}.vercel.app" >> "$GITHUB_ENV"
+
+      - name: Set Vercel environment variables
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          # 既存の環境変数を確認し、AUTH_SECRET / ENCRYPTION_KEY は無ければ生成(再実行しても既存セッションを壊さない)
+          curl -sS --fail "https://api.vercel.com/v9/projects/${PROJECT_ID}/env" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/env.json
+          has() { jq -e --arg k "$1" '[.envs[]?|select(.key==$k)]|length > 0' /tmp/env.json >/dev/null; }
+
+          AUTH_SECRET=""; ENCRYPTION_KEY=""
+          has AUTH_SECRET || AUTH_SECRET=$(openssl rand -base64 32)
+          has ENCRYPTION_KEY || ENCRYPTION_KEY=$(openssl rand -base64 32)
+          [ -n "$AUTH_SECRET" ] && echo "::add-mask::$AUTH_SECRET"
+          [ -n "$ENCRYPTION_KEY" ] && echo "::add-mask::$ENCRYPTION_KEY"
+
+          jq -n \
+            --arg database_url "$DATABASE_URL" \
+            --arg auth_secret "$AUTH_SECRET" \
+            --arg encryption_key "$ENCRYPTION_KEY" \
+            --arg supabase_url "$SUPABASE_URL" \
+            --arg service_key "$SERVICE_KEY" \
+            --arg bucket "$BUCKET" \
+            --arg app_url "$APP_URL" \
+            '[
+              {key:"DATABASE_URL", value:$database_url},
+              {key:"STORAGE_PROVIDER", value:"supabase"},
+              {key:"SUPABASE_URL", value:$supabase_url},
+              {key:"SUPABASE_SERVICE_ROLE_KEY", value:$service_key},
+              {key:"SUPABASE_STORAGE_BUCKET", value:$bucket},
+              {key:"JOBS_INLINE", value:"true"},
+              {key:"APP_URL", value:$app_url},
+              (if $auth_secret != "" then {key:"AUTH_SECRET", value:$auth_secret} else empty end),
+              (if $encryption_key != "" then {key:"ENCRYPTION_KEY", value:$encryption_key} else empty end)
+            ] | map(. + {type:"encrypted", target:["production","preview"]})' > /tmp/upsert.json
+
+          status=$(curl -sS -o /tmp/upsert-result.json -w "%{http_code}" \
+            -X POST "https://api.vercel.com/v10/projects/${PROJECT_ID}/env?upsert=true" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/upsert.json)
+          if [ "$status" != "200" ] && [ "$status" != "201" ]; then
+            echo "::error::環境変数の設定に失敗 (HTTP $status)"
+            jq -r '.error.message // .' /tmp/upsert-result.json || cat /tmp/upsert-result.json
+            exit 1
+          fi
+          echo "✓ 環境変数を設定しました($(jq length /tmp/upsert.json)件)"
+
+      - name: Trigger production deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          jq -n --arg name "$PROJECT_NAME" --arg project "$PROJECT_ID" --arg repoId "$REPO_ID" \
+            '{name:$name, project:$project, target:"production",
+              gitSource:{type:"github", repoId:($repoId|tonumber), ref:"main"}}' > /tmp/deploy.json
+          status=$(curl -sS -o /tmp/deploy-result.json -w "%{http_code}" \
+            -X POST "https://api.vercel.com/v13/deployments" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/deploy.json)
+          if [ "$status" != "200" ] && [ "$status" != "201" ]; then
+            echo "::error::デプロイの開始に失敗 (HTTP $status)"
+            jq -r '.error.message // .' /tmp/deploy-result.json || cat /tmp/deploy-result.json
+            exit 1
+          fi
+          DEPLOY_ID=$(jq -r '.id' /tmp/deploy-result.json)
+          echo "✓ デプロイ開始: $DEPLOY_ID"
+          echo "DEPLOY_ID=$DEPLOY_ID" >> "$GITHUB_ENV"
+
+      - name: Wait for deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            sleep 10
+            state=$(curl -sS "https://api.vercel.com/v13/deployments/${DEPLOY_ID}" \
+              -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.readyState // .status // "UNKNOWN"')
+            echo "[$i] $state"
+            case "$state" in
+              READY)
+                echo ""
+                echo "🎉 デプロイ完了: ${APP_URL}"
+                exit 0 ;;
+              ERROR|CANCELED)
+                echo "::error::デプロイが $state で終了しました。Vercelのビルドログを確認してください。"
+                exit 1 ;;
+            esac
+          done
+          echo "::error::10分以内に完了しませんでした。Vercelダッシュボードで状況を確認してください。"
+          exit 1
