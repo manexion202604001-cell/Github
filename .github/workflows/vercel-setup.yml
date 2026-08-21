@@ -134,6 +134,8 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_KEY: ${{ secrets.RESEND_API_KEY }}
+          MAIL_FROM_IN: ${{ secrets.MAIL_FROM }}
         run: |
           set -euo pipefail
           # 既存の環境変数を確認し、AUTH_SECRET / ENCRYPTION_KEY は無ければ生成(再実行しても既存セッションを壊さない)
@@ -155,6 +157,8 @@ jobs:
             --arg service_key "$SERVICE_KEY" \
             --arg bucket "$BUCKET" \
             --arg app_url "$APP_URL" \
+            --arg resend_key "${RESEND_KEY:-}" \
+            --arg mail_from "${MAIL_FROM_IN:-}" \
             '[
               {key:"DATABASE_URL", value:$database_url},
               {key:"STORAGE_PROVIDER", value:"supabase"},
@@ -164,7 +168,9 @@ jobs:
               {key:"JOBS_INLINE", value:"true"},
               {key:"APP_URL", value:$app_url},
               (if $auth_secret != "" then {key:"AUTH_SECRET", value:$auth_secret} else empty end),
-              (if $encryption_key != "" then {key:"ENCRYPTION_KEY", value:$encryption_key} else empty end)
+              (if $encryption_key != "" then {key:"ENCRYPTION_KEY", value:$encryption_key} else empty end),
+              (if $resend_key != "" then {key:"MAIL_PROVIDER", value:"resend"}, {key:"RESEND_API_KEY", value:$resend_key} else empty end),
+              (if $resend_key != "" and $mail_from != "" then {key:"MAIL_FROM", value:$mail_from} else empty end)
             ] | map(. + {type:"encrypted", target:["production","preview"]})' > /tmp/upsert.json
 
           status=$(curl -sS -o /tmp/upsert-result.json -w "%{http_code}" \

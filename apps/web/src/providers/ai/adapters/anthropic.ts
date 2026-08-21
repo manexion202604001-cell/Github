@@ -6,7 +6,7 @@ import type { CompleteOptions, CompletionResult } from '../types'
 import { postJson } from './http'
 
 const API_URL = 'https://api.anthropic.com/v1/messages'
-const DEFAULT_MODEL = 'claude-sonnet-4-5'
+const DEFAULT_MODEL = 'claude-opus-5'
 
 type AnthropicResponse = {
   content?: { type: string; text?: string }[]
