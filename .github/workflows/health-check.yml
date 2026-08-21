@@ -35,11 +35,11 @@ jobs:
             -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/deploys.json
           jq -r '.deployments[] | "\(.state)\t\(.readyState // "-")\t\(.meta.githubCommitSha[0:7] // "-")\t\(.createdAt/1000|todate)\t\(.meta.githubCommitMessage[0:40] // "-")"' /tmp/deploys.json
 
-          echo "=== NEWEST NON-READY DEPLOYMENT BUILD LOG (if any) ==="
-          BAD_ID=$(jq -r '[.deployments[] | select(.state != "READY")][0].uid // empty' /tmp/deploys.json)
+          echo "=== NEWEST ERROR DEPLOYMENT BUILD LOG ==="
+          BAD_ID=$(jq -r '[.deployments[] | select(.state == "ERROR")][0].uid // empty' /tmp/deploys.json)
           if [ -n "$BAD_ID" ]; then
             curl -sS "https://api.vercel.com/v3/deployments/${BAD_ID}/events?builds=1&limit=120" \
-              -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.[] | select(.type=="stderr" or .type=="stdout" or .type=="error") | .payload.text // .text // empty' | tail -60
+              -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.[] | .payload.text // .text // empty' | tail -80
           else
             echo "(全デプロイREADY)"
           fi
