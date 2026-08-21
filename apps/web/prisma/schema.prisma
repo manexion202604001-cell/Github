@@ -1,0 +1,1108 @@
+// AI商品開発OS — Prisma schema
+// 設計方針:
+//  - 金額は Int(最小通貨単位。JPYなら円)。浮動小数の丸め誤差を避ける。
+//  - 率・スコアは Float。
+//  - AI生成の生データは Json (`rawData` / `payload`) に必ず保存する(要件112)。
+//  - 生成物は上書きせず世代を積む(ProductVersion / ImageSet / version 列)。
+//  - すべての業務データは organizationId か projectId 経由でテナント分離される(要件110)。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Auth / Tenancy ─────────────────────────────
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  passwordHash    String?
+  image           String?
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  memberships     OrganizationMember[]
+  accounts        OAuthAccount[]
+  sessions        Session[]
+  tokens          VerificationToken[]
+  createdProjects Project[]            @relation("ProjectCreatedBy")
+  auditLogs       AuditLog[]
+  conversations   AIConversation[]
+}
+
+/// 外部IDP(Google等)との紐付け。
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum VerificationTokenKind {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  ORGANIZATION_INVITE
+}
+
+model VerificationToken {
+  id        String                @id @default(cuid())
+  userId    String?
+  email     String
+  kind      VerificationTokenKind
+  tokenHash String                @unique
+  payload   Json?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime              @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, kind])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      OrganizationMember[]
+  projects     Project[]
+  suppliers    OEMSupplier[]
+  integrations Integration[]
+  auditLogs    AuditLog[]
+  usageRecords UsageRecord[]
+  jobs         Job[]
+}
+
+model OrganizationMember {
+  id             String     @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole @default(EDITOR)
+  invitedAt      DateTime   @default(now())
+  joinedAt       DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+// ───────────────────────────── Project / Product ─────────────────────────────
+
+enum ProjectStage {
+  IDEA
+  IMAGE
+  MARKET_RESEARCH
+  EVALUATION
+  COST_SIMULATION
+  PRODUCT_DESIGN
+  OEM
+  SAMPLE
+  LP
+  VIDEO
+  LAUNCH
+  SELLING
+  IMPROVEMENT
+  COMPLETED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  ARCHIVED
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  status         ProjectStatus @default(ACTIVE)
+  stage          ProjectStage  @default(IDEA)
+  createdBy      String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  archivedAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User         @relation("ProjectCreatedBy", fields: [createdBy], references: [id])
+
+  product         Product?
+  marketResearch  MarketResearch[]
+  competitors     Competitor[]
+  scores          ProductScore[]
+  costSimulations CostSimulation[]
+  specifications  ProductSpecification[]
+  quotes          OEMQuote[]
+  samples         SampleEvaluation[]
+  landingPages    LandingPage[]
+  videoProjects   VideoProject[]
+  salesData       SalesData[]
+  improvements    Improvement[]
+  conversations   AIConversation[]
+  jobs            Job[]
+  tasks           ProjectTask[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, updatedAt])
+}
+
+/// プロジェクト画面のチェックリスト / 未完了タスク(要件8, 69)。
+model ProjectTask {
+  id        String       @id @default(cuid())
+  projectId String
+  stage     ProjectStage
+  title     String
+  detail    String?
+  done      Boolean      @default(false)
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, done])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  projectId     String   @unique
+  name          String
+  category      String?
+  description   String?
+  purpose       String?
+  problem       String?
+  target        String?
+  price         Int?
+  currency      String   @default("JPY")
+  country       String?
+  channel       String?
+  size          String?
+  weight        String?
+  material      String?
+  color         String?
+  designNote    String?
+  features      Json     @default("[]")
+  usp           Json     @default("[]")
+  references    Json     @default("[]")
+  notes         String?
+  /// AIヒアリングの未回答項目(要件13)。
+  openQuestions Json     @default("[]")
+  /// 自由入力の原文。構造化前の一次情報として保持する。
+  rawInput      String?
+  completeness  Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versions  ProductVersion[]
+  imageSets ProductImageSet[]
+  images    ProductImage[]
+}
+
+model ProductVersion {
+  id             String   @id @default(cuid())
+  productId      String
+  version        Int
+  specification  Json
+  changeReason   String?
+  changedFields  Json     @default("[]")
+  expectedEffect String?
+  isCurrent      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, version])
+  @@index([productId, isCurrent])
+}
+
+// ───────────────────────────── Images ─────────────────────────────
+
+enum ImageAngle {
+  FRONT
+  FRONT_RIGHT
+  RIGHT
+  BACK_RIGHT
+  BACK
+  BACK_LEFT
+  LEFT
+  FRONT_LEFT
+}
+
+enum ImageKind {
+  CONCEPT
+  ANCHOR
+  ANGLE
+  PRODUCT_ONLY
+  WHITE_BG
+  TRANSPARENT
+  LIFESTYLE
+  LUXURY
+  AMAZON_MAIN
+  AMAZON_SUB
+  SNS
+  LP
+  EDIT
+}
+
+enum ImageSetKind {
+  CONCEPT
+  MULTI_ANGLE
+  VARIATION
+  MARKETING
+}
+
+/// 生成の1バッチ = 1 ImageSet。再生成しても過去のSetは残す(要件112)。
+model ProductImageSet {
+  id        String       @id @default(cuid())
+  productId String
+  kind      ImageSetKind
+  label     String?
+  prompt    String?
+  provider  String?
+  model     String?
+  metadata  Json         @default("{}")
+  isCurrent Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images  ProductImage[]
+
+  @@index([productId, kind, isCurrent])
+}
+
+model ProductImage {
+  id           String      @id @default(cuid())
+  productId    String
+  imageSetId   String?
+  type         ImageKind
+  angle        ImageAngle?
+  /// A/B/C コンセプト案の識別子(要件15)。
+  variant      String?
+  url          String
+  thumbnailUrl String?
+  provider     String
+  model        String?
+  prompt       String?
+  /// アンカー画像として選択されたか(要件16)。
+  isAnchor     Boolean     @default(false)
+  seed         String?
+  width        Int?
+  height       Int?
+  metadata     Json        @default("{}")
+  createdAt    DateTime    @default(now())
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  imageSet ProductImageSet? @relation(fields: [imageSetId], references: [id], onDelete: SetNull)
+
+  @@index([productId, type])
+  @@index([imageSetId])
+}
+
+// ───────────────────────────── Market / Competitor / Review ─────────────────────────────
+
+enum ResearchStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model MarketResearch {
+  id               String         @id @default(cuid())
+  projectId        String
+  status           ResearchStatus @default(PENDING)
+  source           String         @default("mock")
+  keyword          String?
+  marketplace      String         @default("amazon.co.jp")
+  marketSize       Int?
+  growthRate       Float?
+  competitionScore Float?
+  averagePrice     Int?
+  priceRange       Json?
+  demandTrend      Json           @default("[]")
+  keywords         Json           @default("[]")
+  summary          String?
+  opportunities    Json           @default("[]")
+  threats          Json           @default("[]")
+  snsInsights      Json           @default("[]")
+  rawData          Json?
+  error            String?
+  createdAt        DateTime       @default(now())
+  completedAt      DateTime?
+
+  project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  competitors CompetitorProduct[]
+  reviews     ReviewInsight[]
+
+  @@index([projectId, createdAt])
+}
+
+/// 競合「企業/ブランド」単位。
+model Competitor {
+  id        String   @id @default(cuid())
+  projectId String
+  brand     String
+  note      String?
+  strength  String?
+  weakness  String?
+  createdAt DateTime @default(now())
+
+  project  Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  products CompetitorProduct[]
+
+  @@unique([projectId, brand])
+}
+
+/// 競合「商品」単位(要件25)。
+model CompetitorProduct {
+  id               String   @id @default(cuid())
+  marketResearchId String
+  competitorId     String?
+  title            String
+  asin             String?
+  url              String?
+  imageUrl         String?
+  brand            String?
+  price            Int?
+  currency         String   @default("JPY")
+  rating           Float?
+  reviewCount      Int?
+  rank             Int?
+  category         String?
+  size             String?
+  weight           String?
+  seller           String?
+  features         Json     @default("[]")
+  usp              String?
+  salesTrend       Json?
+  rawData          Json?
+  createdAt        DateTime @default(now())
+
+  marketResearch MarketResearch  @relation(fields: [marketResearchId], references: [id], onDelete: Cascade)
+  competitor     Competitor?     @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+  reviews        ReviewInsight[]
+
+  @@index([marketResearchId])
+}
+
+enum ReviewSentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+  IMPROVEMENT_REQUEST
+  RETURN_REASON
+  PURCHASE_REASON
+}
+
+/// レビュー解析結果と不満クラスタ(要件26, 27)。
+model ReviewInsight {
+  id                  String          @id @default(cuid())
+  marketResearchId    String
+  competitorProductId String?
+  sentiment           ReviewSentiment
+  /// クラスタ名。例「掃除しづらい」
+  cluster             String
+  summary             String
+  /// クラスタの出現割合 0..1
+  share               Float           @default(0)
+  count               Int             @default(0)
+  keywords            Json            @default("[]")
+  examples            Json            @default("[]")
+  createdAt           DateTime        @default(now())
+
+  marketResearch    MarketResearch     @relation(fields: [marketResearchId], references: [id], onDelete: Cascade)
+  competitorProduct CompetitorProduct? @relation(fields: [competitorProductId], references: [id], onDelete: SetNull)
+
+  @@index([marketResearchId, sentiment])
+}
+
+// ───────────────────────────── Scoring ─────────────────────────────
+
+enum ScoreDecision {
+  GO
+  IMPROVE_GO
+  NO_GO
+}
+
+model ProductScore {
+  id                String        @id @default(cuid())
+  projectId         String
+  marketDemand      Int
+  competition       Int
+  differentiation   Int
+  profitability     Int
+  logistics         Int
+  advertising       Int
+  reviewOpportunity Int
+  expandability     Int
+  risk              Int
+  total             Int
+  decision          ScoreDecision
+  reason            String
+  strengths         Json          @default("[]")
+  weaknesses        Json          @default("[]")
+  improvements      Json          @default("[]")
+  alternativeIdeas  Json          @default("[]")
+  rawData           Json?
+  createdAt         DateTime      @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+}
+
+// ───────────────────────────── Cost / Spec ─────────────────────────────
+
+model CostSimulation {
+  id                   String   @id @default(cuid())
+  projectId            String
+  label                String   @default("default")
+  currency             String   @default("JPY")
+  sellingPrice         Int
+  manufacturingCost    Int
+  shipping             Int      @default(0)
+  importCost           Int      @default(0)
+  tax                  Int      @default(0)
+  packaging            Int      @default(0)
+  amazonFeeRate        Float    @default(0.15)
+  fbaFee               Int      @default(0)
+  advertisingRate      Float    @default(0.1)
+  returnRate           Float    @default(0.03)
+  otherCost            Int      @default(0)
+  monthlyUnits         Int      @default(0)
+  fixedCost            Int      @default(0)
+  // ── 計算結果(要件39)。再計算可能だが履歴として保存する。
+  grossProfit          Int
+  grossProfitRate      Float
+  operatingProfit      Int
+  operatingProfitRate  Float
+  profitPerUnit        Int
+  breakEvenUnits       Int
+  allowableAdCost      Int
+  maxManufacturingCost Int
+  /// 逆算モードの入力(目標利益率など)
+  reverseInput         Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+}
+
+model ProductSpecification {
+  id               String   @id @default(cuid())
+  projectId        String
+  version          Int      @default(1)
+  size             String?
+  weight           String?
+  material         String?
+  color            String?
+  features         Json     @default("[]")
+  structure        String?
+  power            String?
+  accessories      Json     @default("[]")
+  packaging        String?
+  cautions         Json     @default("[]")
+  qualityStandards Json     @default("[]")
+  rationale        String?
+  isCurrent        Boolean  @default(false)
+  rawData          Json?
+  createdAt        DateTime @default(now())
+
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  documents OEMDocument[]
+
+  @@unique([projectId, version])
+  @@index([projectId, isCurrent])
+}
+
+// ───────────────────────────── OEM ─────────────────────────────
+
+model OEMSupplier {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  country        String?
+  region         String?
+  contactName    String?
+  email          String?
+  phone          String?
+  website        String?
+  categories     Json     @default("[]")
+  priceLevel     String?
+  moq            Int?
+  leadTimeDays   Int?
+  rating         Float?
+  note           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  quotes       OEMQuote[]
+
+  @@index([organizationId])
+}
+
+enum QuoteStatus {
+  DRAFT
+  REQUESTED
+  RECEIVED
+  ACCEPTED
+  REJECTED
+}
+
+model OEMQuote {
+  id           String      @id @default(cuid())
+  projectId    String
+  supplierId   String
+  status       QuoteStatus @default(DRAFT)
+  unitPrice    Int?
+  currency     String      @default("JPY")
+  moq          Int?
+  sampleCost   Int?
+  shippingCost Int?
+  toolingCost  Int?
+  leadTimeDays Int?
+  validUntil   DateTime?
+  note         String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  project  Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplier OEMSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, supplierId])
+  @@index([projectId, status])
+}
+
+enum OEMDocumentKind {
+  SPECIFICATION
+  REVISION_REQUEST
+}
+
+/// OEM仕様書 / 次回ロット修正依頼書(要件45, 75)。
+model OEMDocument {
+  id              String          @id @default(cuid())
+  specificationId String
+  kind            OEMDocumentKind @default(SPECIFICATION)
+  version         Int             @default(1)
+  title           String
+  content         Json
+  fileUrl         String?
+  createdAt       DateTime        @default(now())
+
+  specification ProductSpecification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+
+  @@index([specificationId])
+}
+
+// ───────────────────────────── Sample ─────────────────────────────
+
+enum SampleDecision {
+  READY_FOR_PRODUCTION
+  NEEDS_FIX
+  NEEDS_RESAMPLE
+  REJECTED
+}
+
+model SampleEvaluation {
+  id              String          @id @default(cuid())
+  projectId       String
+  round           Int             @default(1)
+  supplierName    String?
+  design          Int?
+  texture         Int?
+  weight          Int?
+  size            Int?
+  durability      Int?
+  usability       Int?
+  cleanability    Int?
+  packaging       Int?
+  competitiveness Int?
+  total           Int?
+  decision        SampleDecision?
+  comment         String?
+  aiSummary       String?
+  aiFindings      Json            @default("[]")
+  mediaUrls       Json            @default("[]")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, round])
+}
+
+// ───────────────────────────── Landing Page ─────────────────────────────
+
+enum LandingPageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model LandingPage {
+  id          String            @id @default(cuid())
+  projectId   String
+  version     Int               @default(1)
+  title       String
+  status      LandingPageStatus @default(DRAFT)
+  headline    String?
+  subheadline String?
+  theme       Json              @default("{}")
+  isCurrent   Boolean           @default(false)
+  publicSlug  String?           @unique
+  rawData     Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  project  Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sections LandingPageSection[]
+
+  @@unique([projectId, version])
+  @@index([projectId, isCurrent])
+}
+
+enum LandingSectionKind {
+  HERO
+  PROBLEM
+  PRODUCT
+  FEATURES
+  BENEFITS
+  HOW_TO_USE
+  COMPARISON
+  REVIEWS
+  FAQ
+  CTA
+  CUSTOM
+}
+
+model LandingPageSection {
+  id            String             @id @default(cuid())
+  landingPageId String
+  kind          LandingSectionKind
+  order         Int
+  title         String?
+  subtitle      String?
+  body          String?
+  items         Json               @default("[]")
+  imageUrl      String?
+  imageId       String?
+  ctaLabel      String?
+  ctaHref       String?
+  visible       Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  landingPage LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+
+  @@index([landingPageId, order])
+}
+
+// ───────────────────────────── Video ─────────────────────────────
+
+enum VideoPurpose {
+  AMAZON
+  TIKTOK
+  INSTAGRAM_REELS
+  YOUTUBE_SHORTS
+  YOUTUBE
+  ADS
+}
+
+enum VideoType {
+  PRODUCT_INTRO
+  UGC
+  PROBLEM_SOLVING
+  COMPARISON
+  LUXURY_BRAND
+  DEMONSTRATION
+  SNS_AD
+}
+
+enum AspectRatio {
+  RATIO_9_16
+  RATIO_16_9
+  RATIO_1_1
+}
+
+model VideoProject {
+  id          String       @id @default(cuid())
+  projectId   String
+  title       String
+  purpose     VideoPurpose @default(AMAZON)
+  videoType   VideoType    @default(PRODUCT_INTRO)
+  durationSec Int          @default(15)
+  aspectRatio AspectRatio  @default(RATIO_9_16)
+  strategy    String?
+  concept     String?
+  script      String?
+  rawData     Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scenes  VideoScene[]
+  jobs    VideoJob[]
+
+  @@index([projectId])
+}
+
+model VideoScene {
+  id             String   @id @default(cuid())
+  videoProjectId String
+  order          Int
+  startSec       Float
+  endSec         Float
+  role           String
+  description    String
+  narration      String?
+  caption        String?
+  cameraNote     String?
+  prompt         String?
+  imageUrls      Json     @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  videoProject VideoProject @relation(fields: [videoProjectId], references: [id], onDelete: Cascade)
+  jobs         VideoJob[]
+
+  @@unique([videoProjectId, order])
+}
+
+enum VideoJobStatus {
+  DRAFT
+  QUEUED
+  GENERATING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model VideoJob {
+  id             String         @id @default(cuid())
+  videoProjectId String
+  sceneId        String?
+  jobId          String?        @unique
+  provider       String
+  providerJobId  String?
+  status         VideoJobStatus @default(DRAFT)
+  prompt         String
+  images         Json           @default("[]")
+  durationSec    Int
+  aspectRatio    AspectRatio
+  resolution     String?
+  costMicro      Int?
+  videoUrl       String?
+  thumbnailUrl   String?
+  error          String?
+  createdAt      DateTime       @default(now())
+  completedAt    DateTime?
+
+  videoProject VideoProject @relation(fields: [videoProjectId], references: [id], onDelete: Cascade)
+  scene        VideoScene?  @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  job          Job?         @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([videoProjectId, status])
+}
+
+// ───────────────────────────── Sales / Improvement ─────────────────────────────
+
+model SalesData {
+  id          String   @id @default(cuid())
+  projectId   String
+  periodStart DateTime
+  periodEnd   DateTime
+  channel     String   @default("amazon.co.jp")
+  revenue     Int      @default(0)
+  units       Int      @default(0)
+  sessions    Int      @default(0)
+  cvr         Float?
+  ctr         Float?
+  adSpend     Int      @default(0)
+  adSales     Int      @default(0)
+  acos        Float?
+  tacos       Float?
+  searchRank  Int?
+  reviewCount Int?
+  rating      Float?
+  returns     Int      @default(0)
+  returnRate  Float?
+  profit      Int?
+  inventory   Int?
+  rawData     Json?
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, channel, periodStart])
+  @@index([projectId, periodStart])
+}
+
+enum ImprovementTarget {
+  PRICE
+  IMAGE
+  LP
+  VIDEO
+  SEO
+  ADVERTISING
+  SPECIFICATION
+  PACKAGING
+  SIZE
+  NEXT_LOT
+}
+
+enum ImprovementStatus {
+  PROPOSED
+  ACCEPTED
+  IN_PROGRESS
+  DONE
+  REJECTED
+}
+
+model Improvement {
+  id             String            @id @default(cuid())
+  projectId      String
+  target         ImprovementTarget
+  status         ImprovementStatus @default(PROPOSED)
+  title          String
+  currentState   String?
+  proposal       String
+  reason         String
+  expectedEffect String?
+  priority       Int               @default(3)
+  evidence       Json              @default("[]")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+}
+
+// ───────────────────────────── AI / Jobs / Ops ─────────────────────────────
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  title     String?
+  scope     String   @default("project")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([projectId, updatedAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model AIMessage {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  /// Contextとして注入したデータの参照(監査用。本文は保存しない)。
+  contextRefs    Json        @default("[]")
+  provider       String?
+  model          String?
+  inputTokens    Int?
+  outputTokens   Int?
+  createdAt      DateTime    @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+enum JobKind {
+  AI
+  IMAGE
+  MARKET_RESEARCH
+  VIDEO
+  DOCUMENT
+}
+
+enum JobStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+/// 全非同期処理の共通キュー行(要件93, 94)。
+model Job {
+  id             String    @id @default(cuid())
+  organizationId String
+  projectId      String?
+  kind           JobKind
+  /// ハンドラ識別子。例 "images.generateConcepts"
+  handler        String
+  status         JobStatus @default(PENDING)
+  payload        Json
+  result         Json?
+  error          String?
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(3)
+  progress       Int       @default(0)
+  runAfter       DateTime  @default(now())
+  lockedAt       DateTime?
+  lockedBy       String?
+  createdBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  aiJobs       AIJob[]
+  videoJobs    VideoJob[]
+
+  @@index([status, runAfter])
+  @@index([projectId, kind, createdAt])
+}
+
+/// AI Provider 1呼び出しの記録(要件96, 116)。
+model AIJob {
+  id                 String    @id @default(cuid())
+  jobId              String?
+  organizationId     String
+  projectId          String?
+  purpose            String
+  provider           String
+  model              String
+  status             JobStatus @default(COMPLETED)
+  inputTokens        Int       @default(0)
+  outputTokens       Int       @default(0)
+  imageCount         Int       @default(0)
+  videoSeconds       Int       @default(0)
+  estimatedCostMicro Int       @default(0)
+  latencyMs          Int?
+  error              String?
+  createdAt          DateTime  @default(now())
+
+  job Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+/// Organization単位の利用量集計(要件117)。
+model UsageRecord {
+  id                   String   @id @default(cuid())
+  organizationId       String
+  /// 集計期間。月次なら "2026-08"
+  period               String
+  imageGenerationCount Int      @default(0)
+  marketResearchCount  Int      @default(0)
+  videoGenerationCount Int      @default(0)
+  llmInputTokens       Int      @default(0)
+  llmOutputTokens      Int      @default(0)
+  storageBytes         BigInt   @default(0)
+  estimatedCostMicro   Int      @default(0)
+  updatedAt            DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, period])
+}
+
+enum IntegrationKind {
+  AI_PROVIDER
+  IMAGE_PROVIDER
+  VIDEO_PROVIDER
+  MARKET_DATA
+  STORAGE
+  ECOMMERCE
+}
+
+/// 外部連携設定。資格情報は暗号化して保存し、フロントへは返さない(要件110)。
+model Integration {
+  id              String          @id @default(cuid())
+  organizationId  String
+  kind            IntegrationKind
+  provider        String
+  label           String?
+  enabled         Boolean         @default(true)
+  config          Json            @default("{}")
+  encryptedSecret String?
+  lastCheckedAt   DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, kind, provider])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  summary        String?
+  diff           Json?
+  ip             String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
