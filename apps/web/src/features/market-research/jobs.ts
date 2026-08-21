@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { db } from '@/server/db'
 import { AppError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
-import type { MarketProduct, MarketReview } from '@/providers/market-data'
+import { estimateCompetitionScore, summarizePrices, type MarketDataProvider, type MarketProduct, type MarketReview, type MarketSummary } from '@/providers/market-data'
 import { marketDataChainFor } from '@/server/org-providers'
 import { runWithFallback } from '@/providers/registry'
 import { runAITask } from '@/server/ai-task'
@@ -21,44 +21,107 @@ const researchPayload = z.object({
   marketplace: z.string(),
 })
 
-/** STEP 3: 市場データ取得 → AI分析 → 競合保存(要件21〜25)。 */
+/**
+ * 複数ソースから商品を集めてマージする。
+ * ソース間で公平になるよう、各ソースの上位から交互に採用する。
+ */
+async function fetchFromAllSources(
+  providers: MarketDataProvider[],
+  keyword: string,
+  marketplace: string,
+  perSourceLimit: number,
+): Promise<{ products: MarketProduct[]; usedSources: MarketDataProvider[]; errors: string[] }> {
+  const results = await Promise.all(
+    providers.map(async (provider) => ({
+      provider,
+      outcome: await provider.searchProducts({ keyword, marketplace, limit: perSourceLimit }),
+    })),
+  )
+
+  const perSource: { provider: MarketDataProvider; products: MarketProduct[] }[] = []
+  const errors: string[] = []
+  for (const { provider, outcome } of results) {
+    if (outcome.ok) {
+      perSource.push({
+        provider,
+        products: outcome.data.map((product) => ({
+          ...product,
+          raw: { ...(typeof product.raw === 'object' && product.raw !== null ? product.raw : {}), _source: provider.id },
+        })),
+      })
+    } else {
+      errors.push(`${provider.sourceLabel}: ${outcome.error.message}`)
+    }
+  }
+
+  // 各ソースの上位から交互に採用(Amazon→楽天→Amazon→…)
+  const merged: MarketProduct[] = []
+  const maxLength = Math.max(0, ...perSource.map((entry) => entry.products.length))
+  for (let index = 0; index < maxLength; index += 1) {
+    for (const entry of perSource) {
+      const product = entry.products[index]
+      if (product) merged.push({ ...product, rank: merged.length + 1 })
+    }
+  }
+
+  return { products: merged, usedSources: perSource.map((entry) => entry.provider), errors }
+}
+
+/** STEP 3: 市場データ取得(複数ソース併用)→ AI分析 → 競合保存(要件21〜25)。 */
 const runResearch: JobHandler = async (context) => {
   const payload = researchPayload.parse(context.payload)
   const chain = await marketDataChainFor(context.organizationId)
-  const primary = chain[0]
+  // 実データProviderが1つでもあれば全部使う。無ければmock1本。
+  const realProviders = chain.filter((provider) => !provider.synthetic)
+  const fetchTargets = realProviders.length > 0 ? realProviders : chain.slice(0, 1)
+  const primary = fetchTargets[0]
   if (!primary) throw new Error('市場データProviderが利用できません')
 
   await db.marketResearch.update({
     where: { id: payload.researchId },
-    data: { status: 'RUNNING', source: primary.id },
+    data: { status: 'RUNNING', source: fetchTargets.map((provider) => provider.id).join('+') },
   })
 
   try {
     await context.setProgress(10)
 
-    const [productsOutcome, summaryOutcome] = await Promise.all([
-      runWithFallback(chain, (provider) =>
-        provider.searchProducts({ keyword: payload.keyword, marketplace: payload.marketplace, limit: 30 }),
-      ),
-      runWithFallback(chain, (provider) =>
-        provider.getMarket({ keyword: payload.keyword, marketplace: payload.marketplace }),
-      ),
-    ])
+    const { products, usedSources, errors } = await fetchFromAllSources(
+      fetchTargets,
+      payload.keyword,
+      payload.marketplace,
+      20,
+    )
 
     await recordUsage({
       organizationId: context.organizationId,
       projectId: payload.projectId,
       jobId: context.jobId,
       purpose: 'market-research.fetch',
-      usage: productsOutcome.usage,
+      usage: { provider: usedSources.map((provider) => provider.id).join('+') || 'none', model: 'search', inputTokens: 0, outputTokens: 0, imageCount: 0, videoSeconds: 0, estimatedCostMicro: 0 },
     })
 
-    if (!productsOutcome.ok) {
-      throw new AppError('PROVIDER_ERROR', `市場データの取得に失敗しました: ${productsOutcome.error.message}`)
+    if (products.length === 0) {
+      throw new AppError('PROVIDER_ERROR', `市場データの取得に失敗しました: ${errors.join(' / ') || '結果が空です'}`)
     }
 
-    const products = productsOutcome.data
-    const summary = summaryOutcome.ok ? summaryOutcome.data : null
+    // マージ結果から統計を再計算(単一ソースのgetMarketに依存しない)
+    const { averagePrice, priceRange } = summarizePrices(products)
+    const totalReviews = products.reduce((sum, product) => sum + (product.reviewCount ?? 0), 0)
+    const sourceLabels = usedSources.map((provider) => provider.sourceLabel).join(' + ')
+    const summary: MarketSummary = {
+      marketplace: sourceLabels,
+      keyword: payload.keyword,
+      marketSize: averagePrice ? totalReviews * averagePrice : null,
+      growthRate: null,
+      competitionScore: estimateCompetitionScore(products),
+      averagePrice,
+      priceRange,
+      demandTrend: [],
+      notes: [
+        `データ元: ${sourceLabels}(${products.length}件)`,
+        ...(errors.length > 0 ? [`一部ソースの取得に失敗: ${errors.join(' / ')}`] : []),
+      ],
+    }
     await context.setProgress(35)
 
     const product = await db.product.findUnique({ where: { projectId: payload.projectId } })
@@ -68,8 +131,8 @@ const runResearch: JobHandler = async (context) => {
       {
         keyword: payload.keyword,
         productName: product?.name ?? payload.keyword,
-        marketplace: payload.marketplace,
-        sourceLabel: primary.sourceLabel,
+        marketplace: summary.marketplace,
+        sourceLabel: summary.marketplace,
         summary,
         products,
       },
@@ -141,8 +204,8 @@ const runResearch: JobHandler = async (context) => {
           marketSize: research.data.marketSize === null ? null : Math.round(research.data.marketSize),
           growthRate: research.data.growthRate,
           competitionScore: research.data.competitionScore,
-          averagePrice: summary?.averagePrice ?? null,
-          priceRange: summary?.priceRange ?? undefined,
+          averagePrice: summary.averagePrice,
+          priceRange: summary.priceRange ?? undefined,
           demandTrend: research.data.demandTrend,
           keywords: research.data.keywords,
           summary: research.data.summary,
@@ -155,6 +218,8 @@ const runResearch: JobHandler = async (context) => {
             benchmarkPrice: competitorAnalysis.data.benchmarkPrice,
             synthetic: research.synthetic,
             providerSynthetic: primary.synthetic,
+            sources: usedSources.map((provider) => provider.id),
+            sourceErrors: errors,
           },
           completedAt: new Date(),
         },
@@ -164,7 +229,12 @@ const runResearch: JobHandler = async (context) => {
     await advanceStage(payload.projectId, 'MARKET_RESEARCH')
     await context.setProgress(100)
 
-    return { researchId: payload.researchId, competitors: products.length, synthetic: primary.synthetic }
+    return {
+      researchId: payload.researchId,
+      competitors: products.length,
+      sources: usedSources.map((provider) => provider.sourceLabel),
+      synthetic: primary.synthetic,
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     await db.marketResearch.update({
@@ -192,12 +262,20 @@ const runReviewAnalysis: JobHandler = async (context) => {
 
   for (const [index, competitor] of competitors.entries()) {
     if (!competitor.asin) continue
-    const outcome = await runWithFallback(chain, (provider) => provider.getReviews(competitor.asin ?? '', 30))
+    // 商品を取得したソースのProviderを優先し、そのIDが分かるならそこへだけ問い合わせる
+    const sourceId =
+      competitor.rawData && typeof competitor.rawData === 'object'
+        ? ((competitor.rawData as Record<string, unknown>)._source as string | undefined)
+        : undefined
+    const preferred = sourceId ? chain.filter((provider) => provider.id === sourceId) : []
+    const targets = preferred.length > 0 ? preferred : chain
+
+    const outcome = await runWithFallback(targets, (provider) => provider.getReviews(competitor.asin ?? '', 30))
     if (outcome.ok) {
       reviews.push(...outcome.data)
     } else {
-      // レビュー取得非対応のProviderがあり得るため、ここでは処理を止めない。
-      logger.warn('review.fetch_skipped', { asin: competitor.asin, reason: outcome.error.kind })
+      // レビュー取得非対応のProvider(楽天等)があり得るため、ここでは処理を止めない。
+      logger.warn('review.fetch_skipped', { asin: competitor.asin, source: sourceId, reason: outcome.error.kind })
     }
     await context.setProgress(((index + 1) / competitors.length) * 50)
   }

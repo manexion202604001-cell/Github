@@ -61,12 +61,19 @@ export async function upsertIntegration(input: UpsertIntegrationInput, organizat
     }
   }
 
-  const [, saved] = await db.$transaction([
-    // 同じ種別の他Providerは無効化し、常に1種別1つが有効になるようにする
-    db.integration.updateMany({
-      where: { organizationId: context.organizationId, kind: input.kind, provider: { not: input.provider } },
-      data: { enabled: false },
-    }),
+  // AI・画像は常に1つだけ有効。市場データは複数ソース併用のため他Providerを無効化しない。
+  const disableOthers =
+    input.kind === 'MARKET_DATA'
+      ? []
+      : [
+          db.integration.updateMany({
+            where: { organizationId: context.organizationId, kind: input.kind, provider: { not: input.provider } },
+            data: { enabled: false },
+          }),
+        ]
+
+  const results = await db.$transaction([
+    ...disableOthers,
     db.integration.upsert({
       where: {
         organizationId_kind_provider: {
@@ -91,6 +98,7 @@ export async function upsertIntegration(input: UpsertIntegrationInput, organizat
       },
     }),
   ])
+  const saved = results[results.length - 1] as { id: string }
 
   await recordAudit({
     organizationId: context.organizationId,

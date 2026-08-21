@@ -90,22 +90,25 @@ export async function imageChainFor(organizationId: string): Promise<ImageProvid
   return [override, ...base.filter((provider) => provider.id !== override.id)]
 }
 
+/**
+ * 市場データは複数ソース併用(要件22: Amazon中心+その他EC)。
+ * 有効なIntegrationをすべてチェーンに載せる。並び順はAmazon(rainforest)優先。
+ */
 export async function marketDataChainFor(organizationId: string): Promise<MarketDataProvider[]> {
   const base = marketDataProviders().chain()
   const rows = await enabledIntegrations(organizationId)
-  const row = rows.find((item) => item.kind === 'MARKET_DATA')
-  if (!row) return base
 
-  const secret = secretOf(row)
-  if (!secret) return base
-
-  let override: MarketDataProvider | null = null
-  if (row.provider === 'rakuten') override = new RakutenMarketDataProvider(secret)
-  else if (row.provider === 'rainforest') override = new RainforestMarketDataProvider(secret)
-
-  if (override?.isConfigured()) {
-    const id = override.id
-    return [override, ...base.filter((provider) => provider.id !== id)]
+  const overrides: MarketDataProvider[] = []
+  for (const row of rows.filter((item) => item.kind === 'MARKET_DATA')) {
+    const secret = secretOf(row)
+    if (!secret) continue
+    let override: MarketDataProvider | null = null
+    if (row.provider === 'rakuten') override = new RakutenMarketDataProvider(secret)
+    else if (row.provider === 'rainforest') override = new RainforestMarketDataProvider(secret)
+    if (override?.isConfigured()) overrides.push(override)
   }
-  return base
+
+  overrides.sort((a, b) => (a.id === 'rainforest' ? -1 : b.id === 'rainforest' ? 1 : 0))
+  const overrideIds = new Set(overrides.map((provider) => provider.id))
+  return [...overrides, ...base.filter((provider) => !overrideIds.has(provider.id))]
 }

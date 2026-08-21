@@ -20,7 +20,10 @@ export async function startMarketResearch(projectId: string, input: { keyword?: 
       status: 'PENDING',
       keyword,
       marketplace: input.marketplace ?? 'amazon.co.jp',
-      source: (await marketDataChainFor(context.organizationId))[0]?.id ?? 'mock',
+      source: (await marketDataChainFor(context.organizationId))
+        .filter((provider) => !provider.synthetic)
+        .map((provider) => provider.id)
+        .join('+') || 'mock',
     },
   })
 
@@ -100,10 +103,15 @@ export function providerInfo() {
   return { id: provider.id, label: provider.sourceLabel, synthetic: provider.synthetic }
 }
 
-/** 組織のBYOK設定を反映したProvider情報(画面表示用)。 */
+/** 組織のBYOK設定を反映したProvider情報(画面表示用)。複数ソース併用に対応。 */
 export async function providerInfoFor(projectId: string) {
   const context = await requireProjectAccess(projectId)
-  const provider = (await marketDataChainFor(context.organizationId))[0]
-  if (!provider) return providerInfo()
-  return { id: provider.id, label: provider.sourceLabel, synthetic: provider.synthetic }
+  const chain = await marketDataChainFor(context.organizationId)
+  const real = chain.filter((provider) => !provider.synthetic)
+  if (real.length === 0) return providerInfo()
+  return {
+    id: real.map((provider) => provider.id).join('+'),
+    label: real.map((provider) => provider.sourceLabel).join(' + '),
+    synthetic: false,
+  }
 }
