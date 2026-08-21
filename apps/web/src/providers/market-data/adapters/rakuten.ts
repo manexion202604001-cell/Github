@@ -55,7 +55,21 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
     if (input.category) params.set('genreId', input.category)
 
     const result = await getJson(this.id, `${SEARCH_URL}?${params.toString()}`)
-    if (!result.ok) return { ok: false, error: result.error, usage }
+    if (!result.ok) {
+      // アプリID不正はユーザーが自力で直せるよう具体的に案内する
+      if (result.error.message.includes('wrong_parameter') || result.error.message.includes('applicationId')) {
+        return {
+          ok: false,
+          error: providerError(
+            this.id,
+            'AUTH',
+            '楽天のアプリIDが正しくありません。設定画面で、楽天ウェブサービス(webservice.rakuten.co.jp/app/list)の「アプリID/デベロッパーID」(数字のみ)を貼り直してください。',
+          ),
+          usage,
+        }
+      }
+      return { ok: false, error: result.error, usage }
+    }
 
     const body = result.body as RakutenResponse
     const items = normalizeItems(body)

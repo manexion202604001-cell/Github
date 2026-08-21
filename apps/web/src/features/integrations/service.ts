@@ -40,6 +40,12 @@ export async function upsertIntegration(input: UpsertIntegrationInput, organizat
   if (!validProvider(input.kind, input.provider)) {
     throw AppError.validation('未対応のProviderです')
   }
+  // 楽天アプリIDは数字のみ(約20桁)。形式違いをここで弾いて実行時の400を防ぐ
+  if (input.provider === 'rakuten' && input.secret && !/^\d{10,25}$/.test(input.secret.trim())) {
+    throw AppError.validation(
+      '楽天のアプリIDは数字のみ(約20桁)です。楽天ウェブサービスの「アプリ情報」画面にある「アプリID/デベロッパーID」の数字をコピーしてください(affiliateIdやアプリシークレットではありません)。',
+    )
+  }
 
   const config = input.model ? { model: input.model } : {}
   const secret = input.secret?.trim()

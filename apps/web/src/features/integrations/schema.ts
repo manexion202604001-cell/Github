@@ -74,7 +74,7 @@ export const INTEGRATION_OPTIONS = [
     label: '市場データ',
     description: '市場調査・競合分析の実データ取得に使用します。楽天とAmazonの両方を登録すると、市場調査は両ソースから同時にデータを取得してマージします。Amazonはレビュー本文も取得され、不満クラスタリングが実レビューで動作します。',
     providers: [
-      { id: 'rakuten', label: '楽天ウェブサービス(楽天市場)', secretLabel: 'アプリID(無料発行)', models: [] },
+      { id: 'rakuten', label: '楽天ウェブサービス(楽天市場)', secretLabel: 'アプリID/デベロッパーID(数字のみ・約20桁)', models: [] },
       { id: 'rainforest', label: 'Rainforest API(Amazon)', secretLabel: 'APIキー', models: [] },
     ],
     hasModel: false,

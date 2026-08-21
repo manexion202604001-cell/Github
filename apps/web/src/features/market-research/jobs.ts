@@ -126,26 +126,28 @@ const runResearch: JobHandler = async (context) => {
 
     const product = await db.product.findUnique({ where: { projectId: payload.projectId } })
 
-    const research = await runAITask(
-      marketResearchTask,
-      {
-        keyword: payload.keyword,
-        productName: product?.name ?? payload.keyword,
-        marketplace: summary.marketplace,
-        sourceLabel: summary.marketplace,
-        summary,
-        products,
-      },
-      { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
-    )
-    await context.setProgress(60)
-
-    const competitorAnalysis = await runAITask(
-      competitorAnalysisTask,
-      { productName: product?.name ?? payload.keyword, targetPrice: product?.price ?? null, products },
-      { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
-    )
-    await context.setProgress(80)
+    // 2つのAI分析は互いに独立のため並列実行する(所要時間ほぼ半減)
+    await context.setProgress(45)
+    const [research, competitorAnalysis] = await Promise.all([
+      runAITask(
+        marketResearchTask,
+        {
+          keyword: payload.keyword,
+          productName: product?.name ?? payload.keyword,
+          marketplace: summary.marketplace,
+          sourceLabel: summary.marketplace,
+          summary,
+          products,
+        },
+        { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
+      ),
+      runAITask(
+        competitorAnalysisTask,
+        { productName: product?.name ?? payload.keyword, targetPrice: product?.price ?? null, products },
+        { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
+      ),
+    ])
+    await context.setProgress(85)
 
     const analysisById = new Map(competitorAnalysis.data.competitors.map((item) => [item.externalId, item]))
 
