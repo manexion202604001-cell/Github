@@ -17,6 +17,10 @@ name: Vercel Setup
 
 on:
   workflow_dispatch: {}
+  # dispatch API が使えない環境から起動できるよう、トリガーファイルの更新でも発火する
+  push:
+    branches: [main]
+    paths: ['.github/vercel-setup-trigger']
 
 permissions: {}
 
