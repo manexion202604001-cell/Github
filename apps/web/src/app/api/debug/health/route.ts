@@ -3,7 +3,7 @@ import { db } from '@/server/db'
 import { env } from '@/lib/env'
 import { buildComparison } from '@/features/oem/service'
 
-export const maxDuration = 60
+export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 
 type StepResult = { step: string; ok: boolean; ms: number; error?: string }

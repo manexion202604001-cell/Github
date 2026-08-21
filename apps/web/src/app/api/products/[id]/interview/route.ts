@@ -3,7 +3,7 @@ import { interviewAnswerSchema } from '@/features/products/schema'
 import { startInterview } from '@/features/products/service'
 
 /** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
-export const maxDuration = 60
+export const maxDuration = 300
 
 
 type Context = { params: Promise<{ id: string }> }

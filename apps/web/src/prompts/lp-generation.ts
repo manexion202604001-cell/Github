@@ -59,6 +59,7 @@ HERO → PROBLEM → PRODUCT → FEATURES → BENEFITS → HOW_TO_USE → COMPAR
 - 薬機法・景品表示法に抵触する効果効能の断定を避ける。
 - imageHint には、そのセクションに置くべき画像の内容を1文で書く。`,
   schema: lpGenerationSchema,
+  maxTokens: 12288,
   buildUser: (input) => `${formatProjectContext(input.context)}\n\n上記の商品のLPを作成してください。`,
   mock: (input) => {
     const name = input.context.product?.name ?? '新商品'

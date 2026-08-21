@@ -10,7 +10,7 @@ import {
 } from '@/features/improvements/service'
 
 /** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
-export const maxDuration = 60
+export const maxDuration = 300
 
 const generateSchema = z.object({
   projectId: z.string().min(1),

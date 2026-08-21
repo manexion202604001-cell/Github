@@ -61,6 +61,7 @@ export const productImprovementTask: AITask<ProductImprovementInput, ProductImpr
 - POST_SALE フェーズでは nextLotSummary に次回ロットでの変更点をまとめる。
 - relatedProductIdeas には 関連商品 / セット商品 / 消耗品 / 上位モデル / 廉価モデル のいずれかの type を付ける。`,
   schema: productImprovementSchema,
+  maxTokens: 8192,
   buildUser: (input) =>
     `${formatProjectContext(input.context)}\n\nフェーズ: ${
       input.phase === 'DESIGN' ? '開発前(仕様改善)' : '販売後(実績に基づく改善)'

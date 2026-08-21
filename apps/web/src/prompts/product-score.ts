@@ -53,6 +53,7 @@ export const productScoreTask: AITask<{ context: ProjectContextSnapshot }, Produ
 
 improvements は「現状 → AI推奨 → 理由」の形式で、レビュー分析の不満に紐づけて具体的な数値で提案すること。`,
   schema: productScoreSchema,
+  maxTokens: 6144,
   buildUser: (input) =>
     `${formatProjectContext(input.context)}\n\n上記データに基づいて商品を評価してください。データが不足している項目は保守的(低め)に採点し、reason で不足を明記してください。`,
   mock: (input) => {

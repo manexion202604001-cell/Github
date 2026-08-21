@@ -5,7 +5,7 @@ import { AppError } from '@/lib/errors'
 import { getLatestScore, startScoring } from '@/features/scoring/service'
 
 /** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
-export const maxDuration = 60
+export const maxDuration = 300
 
 
 const schema = z.object({ projectId: z.string().min(1) })

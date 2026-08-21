@@ -34,6 +34,7 @@ export const productSpecificationTask: AITask<{ context: ProjectContextSnapshot 
 - cautions には日本の法令上必要な表示・注意事項を含める。
 - rationale では、なぜこの仕様にしたかを市場データ・レビュー不満と紐づけて説明する。`,
   schema: productSpecificationSchema,
+  maxTokens: 6144,
   buildUser: (input) =>
     `${formatProjectContext(input.context)}\n\n上記を踏まえ、量産に渡せる商品仕様を作成してください。原価目標がある場合はそれを満たす仕様にしてください。`,
   mock: (input) => ({

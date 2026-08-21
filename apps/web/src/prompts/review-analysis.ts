@@ -49,6 +49,7 @@ export const reviewAnalysisTask: AITask<ReviewAnalysisInput, ReviewAnalysisOutpu
 - examples はレビュー本文の短い引用(30字以内)を最大2件。
 - productImplications は「この不満に対して自社商品はどう作るべきか」を具体的に3〜6個。`,
   schema: reviewAnalysisSchema,
+  maxTokens: 8192,
   buildUser: (input) =>
     `## 対象\n${input.productName} の競合レビュー ${input.reviews.length}件\n\nuntrusted_data ブロックのレビューを分析してください。`,
   untrusted: (input) => [

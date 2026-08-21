@@ -49,6 +49,7 @@ PR動画の構成を設計してください。動画そのものは外部サー
 - narration は音声ナレーション。不要なシーンは null。
 - 縦型(9:16)の場合は被写体を画面中央上寄りに置く指示を入れる。`,
   schema: videoStoryboardSchema,
+  maxTokens: 8192,
   buildUser: (input) =>
     `${formatProjectContext(input.context)}\n\n## 動画要件\n用途: ${input.purpose}\nタイプ: ${input.videoType}\n尺: ${input.durationSec}秒\nアスペクト比: ${input.aspectRatio}\n\nストーリーボードを作成してください。`,
   mock: (input) => {

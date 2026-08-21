@@ -61,6 +61,7 @@ export const productInterviewTask: AITask<ProductInterviewInput, ProductIntervie
 - completeness は「商品企画として必要な情報がどれだけ揃っているか」を 0〜1 で示す。
 - 質問は1文で、ユーザーが専門知識なしで答えられる平易な日本語にする。`,
   schema: productInterviewSchema,
+  maxTokens: 6144,
   buildUser: (input) => {
     const parts = [`## ユーザーの商品アイデア\n${input.rawInput}`]
     if (Object.keys(input.existing).length > 0) {

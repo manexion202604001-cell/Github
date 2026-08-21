@@ -50,6 +50,7 @@ export const marketResearchTask: AITask<MarketResearchInput, MarketResearchOutpu
 - opportunities は市場の空白地帯を具体的に3〜6個。
 - snsInsights はデータがない場合は空配列。`,
   schema: marketResearchSchema,
+  maxTokens: 8192,
   buildUser: (input) => {
     const stats = input.summary
       ? `平均価格: ${input.summary.averagePrice ?? '不明'} / 価格帯: ${

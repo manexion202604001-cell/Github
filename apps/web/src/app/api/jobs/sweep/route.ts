@@ -4,7 +4,7 @@ import { requeueStaleJobs, runJob } from '@/jobs/queue'
 import { db } from '@/server/db'
 import { logger } from '@/lib/logger'
 
-export const maxDuration = 60
+export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 
 /**

@@ -42,6 +42,7 @@ export const competitorAnalysisTask: AITask<CompetitorAnalysisInput, CompetitorA
 - weaknesses はタイトル・価格・レビュー数から合理的に推測できる範囲に留める。
 - whiteSpaces は「まだ誰も取っていない訴求」を3〜6個。`,
   schema: competitorAnalysisSchema,
+  maxTokens: 8192,
   buildUser: (input) =>
     `## 自社商品\n${input.productName}\n想定価格: ${input.targetPrice ?? '未定'}\n\n## 競合商品\nuntrusted_data ブロックの一覧を分析してください(${input.products.length}件)。`,
   untrusted: (input) => [

@@ -37,6 +37,7 @@ OEM工場へそのまま提出できる仕様書を作成してください。
 - REVISION_REQUEST の場合は、変更前後を対比した「変更点」セクションを先頭に置く。
 - questionsForSupplier には、こちらから工場へ確認すべき事項を5件程度。`,
   schema: oemDocumentSchema,
+  maxTokens: 8192,
   buildUser: (input) =>
     `${formatProjectContext(input.context)}\n\n文書種別: ${
       input.kind === 'SPECIFICATION' ? '新規OEM仕様書' : '次回ロット修正依頼書'

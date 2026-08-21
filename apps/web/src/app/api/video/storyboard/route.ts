@@ -3,7 +3,7 @@ import { apiHandler, jsonOk, parseBody } from '@/server/api'
 import { startStoryboard } from '@/features/video/service'
 
 /** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
-export const maxDuration = 60
+export const maxDuration = 300
 
 
 const schema = z.object({

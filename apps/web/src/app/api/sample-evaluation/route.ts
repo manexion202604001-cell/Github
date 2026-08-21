@@ -6,7 +6,7 @@ import { listSamples, saveSample, startSampleEvaluation } from '@/features/sampl
 import { optionalString } from '@/validators/common'
 
 /** Vercel: レスポンス後に実行されるJob(after)も含めた関数の実行上限。 */
-export const maxDuration = 60
+export const maxDuration = 300
 
 
 const score = z.number().int().min(0).max(10).nullable()
