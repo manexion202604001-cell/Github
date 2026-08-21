@@ -32,7 +32,13 @@ export function apiHandler<T = { params: Promise<Record<string, string>> }>(
   return async (request, context) => {
     try {
       if (options.rateLimit) {
-        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local'
+        // 左端のX-Forwarded-Forはクライアントが偽装可能。
+        // プロキシ(Vercel)が付与する x-real-ip を優先し、無ければXFF末尾(直近ホップ)を使う。
+        const xff = request.headers.get('x-forwarded-for') ?? ''
+        const ip =
+          request.headers.get('x-real-ip')?.trim() ||
+          xff.split(',').at(-1)?.trim() ||
+          'local'
         const key = `${options.rateLimit.key ?? new URL(request.url).pathname}:${ip}`
         const result = rateLimit(key, options.rateLimit.limit, options.rateLimit.windowMs)
         if (!result.allowed) {

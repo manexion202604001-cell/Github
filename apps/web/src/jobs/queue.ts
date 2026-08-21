@@ -75,7 +75,14 @@ export async function runJob(jobId: string): Promise<void> {
 
   const claimed = await db.job.updateMany({
     where: { id: jobId, status: { in: ['PENDING', 'QUEUED'] } },
-    data: { status: 'PROCESSING', startedAt: new Date(), attempts: { increment: 1 } },
+    data: {
+      status: 'PROCESSING',
+      startedAt: new Date(),
+      attempts: { increment: 1 },
+      // lockedAt が無いと requeueStaleJobs の対象にならず、実行中に落ちたJobが永久に残る
+      lockedAt: new Date(),
+      lockedBy: 'inline',
+    },
   })
   if (claimed.count === 0) return
 

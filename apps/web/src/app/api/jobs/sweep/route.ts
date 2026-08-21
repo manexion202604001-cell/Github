@@ -21,12 +21,15 @@ export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET ?? ''
   const workerToken = env.jobs.workerToken
 
-  const authorized =
-    (cronSecret && token === cronSecret) ||
-    (workerToken && token === workerToken) ||
-    // Vercel Cron はCRON_SECRET未設定時ヘッダなしで叩く。その場合はVercel署名ヘッダの存在で判定。
-    (!cronSecret && request.headers.get('x-vercel-cron') !== null)
-
+  // x-vercel-cron ヘッダはクライアントが偽装できるため認可判定には使わない。
+  // CRON_SECRET(Vercel Cronが自動でBearer送信)か JOB_WORKER_TOKEN の一致を必須とする。
+  if (!cronSecret && !workerToken) {
+    return NextResponse.json(
+      { error: { code: 'MISCONFIGURED', message: 'CRON_SECRET が未設定のため無効です' } },
+      { status: 503 },
+    )
+  }
+  const authorized = (cronSecret !== '' && token === cronSecret) || (workerToken !== '' && token === workerToken)
   if (!authorized) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED', message: 'unauthorized' } }, { status: 401 })
   }

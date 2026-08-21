@@ -77,13 +77,19 @@ export async function sendVerificationEmail(userId: string, email: string): Prom
 
 export async function verifyEmail(token: string): Promise<void> {
   const record = await db.verificationToken.findUnique({ where: { tokenHash: hashToken(token) } })
-  if (!record || record.kind !== 'EMAIL_VERIFICATION' || record.usedAt || record.expiresAt < new Date()) {
+  if (
+    !record ||
+    record.kind !== 'EMAIL_VERIFICATION' ||
+    record.usedAt ||
+    record.expiresAt < new Date() ||
+    !record.userId
+  ) {
     throw AppError.validation('リンクが無効か、有効期限が切れています')
   }
 
   await db.$transaction([
     db.verificationToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
-    db.user.update({ where: { id: record.userId ?? '' }, data: { emailVerifiedAt: new Date() } }),
+    db.user.update({ where: { id: record.userId }, data: { emailVerifiedAt: new Date() } }),
   ])
 }
 
@@ -209,11 +215,17 @@ export async function handleGoogleCallback(
 
   const existing = await db.user.findUnique({ where: { email } })
   if (existing) {
-    // 既存のメール登録ユーザーへGoogleを紐付ける。
+    // 既存アカウントへの自動リンクは、Google側でメール所有が確認済みの場合のみ許可する。
+    // (未確認メールでのリンクを許すと、同一メール名義のGoogle IDによる乗っ取りが可能になる)
+    if (!profile.email_verified) {
+      throw AppError.forbidden(
+        'このメールアドレスは既に登録されています。メールアドレスとパスワードでログインしてください。',
+      )
+    }
     await db.oAuthAccount.create({
       data: { userId: existing.id, provider: 'google', providerAccountId: profile.sub },
     })
-    if (!existing.emailVerifiedAt && profile.email_verified) {
+    if (!existing.emailVerifiedAt) {
       await db.user.update({ where: { id: existing.id }, data: { emailVerifiedAt: new Date() } })
     }
     await createSession(existing.id, meta)

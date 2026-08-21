@@ -91,6 +91,10 @@ export async function updateMemberRole(input: {
   const member = await db.organizationMember.findUnique({ where: { id: input.memberId } })
   if (!member || member.organizationId !== input.organizationId) throw AppError.notFound('メンバーが見つかりません')
 
+  // OWNERの変更(降格含む)はOWNERのみが行える。
+  if (member.role === 'OWNER' && context.role !== 'OWNER') {
+    throw AppError.forbidden('Ownerの権限変更はOwnerのみ可能です')
+  }
   // 最後のOWNERを降格させない。
   if (member.role === 'OWNER' && input.role !== 'OWNER') {
     const owners = await db.organizationMember.count({
@@ -189,15 +193,13 @@ export async function listPendingInvites(organizationId: string) {
       kind: 'ORGANIZATION_INVITE',
       usedAt: null,
       expiresAt: { gt: new Date() },
+      // 対象組織の招待のみをDB側で絞り込む(全組織の最新50件から漏れるのを防ぐ)
+      payload: { path: ['organizationId'], equals: organizationId },
     },
     orderBy: { createdAt: 'desc' },
     take: 50,
   })
   return tokens
-    .filter((row) => {
-      const payload = row.payload as { organizationId?: string } | null
-      return payload?.organizationId === organizationId
-    })
     .map((row) => ({
       email: row.email,
       role: ((row.payload as { role?: string } | null)?.role ?? 'EDITOR') as MemberRole,

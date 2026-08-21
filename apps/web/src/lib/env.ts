@@ -21,11 +21,24 @@ function readInt(key: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+/**
+ * 本番でのみ必須のシークレット。未設定のまま既定値で暗号化・署名される事故を防ぐため、
+ * production では fallback せずに例外を投げる(fail-fast)。
+ */
+function readSecret(key: string, developmentFallback: string): string {
+  const value = process.env[key]
+  if (value) return value
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(`環境変数 ${key} が未設定です。本番環境では必須です。`)
+  }
+  return developmentFallback
+}
+
 export const env = {
   databaseUrl: read('DATABASE_URL'),
   appUrl: read('APP_URL', 'http://localhost:3000'),
-  authSecret: read('AUTH_SECRET', 'insecure-development-secret-change-me'),
-  encryptionKey: read('ENCRYPTION_KEY', 'insecure-development-encryption-key'),
+  authSecret: readSecret('AUTH_SECRET', 'insecure-development-secret-change-me'),
+  encryptionKey: readSecret('ENCRYPTION_KEY', 'insecure-development-encryption-key'),
   isProduction: process.env.NODE_ENV === 'production',
 
   google: {

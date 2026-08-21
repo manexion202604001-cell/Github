@@ -143,16 +143,19 @@ jobs:
             -H "Authorization: Bearer ${VERCEL_TOKEN}" > /tmp/env.json
           has() { jq -e --arg k "$1" '[.envs[]?|select(.key==$k)]|length > 0' /tmp/env.json >/dev/null; }
 
-          AUTH_SECRET=""; ENCRYPTION_KEY=""
+          AUTH_SECRET=""; ENCRYPTION_KEY=""; CRON_SECRET=""
           has AUTH_SECRET || AUTH_SECRET=$(openssl rand -base64 32)
           has ENCRYPTION_KEY || ENCRYPTION_KEY=$(openssl rand -base64 32)
+          has CRON_SECRET || CRON_SECRET=$(openssl rand -hex 24)
           [ -n "$AUTH_SECRET" ] && echo "::add-mask::$AUTH_SECRET"
           [ -n "$ENCRYPTION_KEY" ] && echo "::add-mask::$ENCRYPTION_KEY"
+          [ -n "$CRON_SECRET" ] && echo "::add-mask::$CRON_SECRET"
 
           jq -n \
             --arg database_url "$DATABASE_URL" \
             --arg auth_secret "$AUTH_SECRET" \
             --arg encryption_key "$ENCRYPTION_KEY" \
+            --arg cron_secret "$CRON_SECRET" \
             --arg supabase_url "$SUPABASE_URL" \
             --arg service_key "$SERVICE_KEY" \
             --arg bucket "$BUCKET" \
@@ -169,6 +172,7 @@ jobs:
               {key:"APP_URL", value:$app_url},
               (if $auth_secret != "" then {key:"AUTH_SECRET", value:$auth_secret} else empty end),
               (if $encryption_key != "" then {key:"ENCRYPTION_KEY", value:$encryption_key} else empty end),
+              (if $cron_secret != "" then {key:"CRON_SECRET", value:$cron_secret} else empty end),
               (if $resend_key != "" then {key:"MAIL_PROVIDER", value:"resend"}, {key:"RESEND_API_KEY", value:$resend_key} else empty end),
               (if $resend_key != "" and $mail_from != "" then {key:"MAIL_FROM", value:$mail_from} else empty end)
             ] | map(. + {type:"encrypted", target:["production","preview"]})' > /tmp/upsert.json
