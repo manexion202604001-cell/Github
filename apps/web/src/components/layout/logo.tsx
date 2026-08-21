@@ -3,8 +3,9 @@ import { cn } from '@/lib/cn'
 
 /**
  * UCCHAU ブランドロゴ。
- * 実ロゴ画像(public/logo-full.png / logo-mark.png)を使用する。
- * 元データは public/logo-original.png に保持。
+ * ダークテーマではフルロックアップ画像(紺文字)が沈むため、
+ * アイコン画像 + テキストで構成し、文字色はテーマトークンに追従させる。
+ * 元データは public/logo-original.png、フル画像は public/logo-full.png に保持。
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -22,13 +23,9 @@ export function LogoMark({ className }: { className?: string }) {
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   if (compact) return <LogoMark className={className} />
   return (
-    <Image
-      src="/logo-full.png"
-      alt="UCCHAU"
-      width={1200}
-      height={276}
-      priority
-      className={cn('h-8 w-auto', className)}
-    />
+    <span className={cn('inline-flex items-center gap-2.5', className)}>
+      <LogoMark className="h-8" />
+      <span className="text-[18px] font-black tracking-tight text-ink">UCCHAU</span>
+    </span>
   )
 }

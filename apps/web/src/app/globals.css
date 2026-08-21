@@ -6,23 +6,24 @@
  * 過度なGradientとGlassmorphismは使わない。
  */
 @theme {
-  --color-canvas: #f6f3ff;
-  --color-canvas-alt: #f2eefa;
-  --color-surface: #ffffff;
-  --color-ink: #111111;
-  --color-ink-muted: #5b5b66;
-  --color-ink-subtle: #8a8a99;
-  --color-brand: #6d4aff;
-  --color-brand-soft: #8b72e8;
-  --color-brand-wash: #efeaff;
-  --color-line: #ddd6f3;
-  --color-line-strong: #c8bced;
-  --color-positive: #157a5b;
-  --color-positive-wash: #e6f4ef;
-  --color-caution: #9a6511;
-  --color-caution-wash: #fdf3e2;
-  --color-critical: #b02a37;
-  --color-critical-wash: #fbeaec;
+  /* Warm Dark × Orange(参考デザイン準拠)。旧Lavenderテーマはgit履歴に保存 */
+  --color-canvas: #26211e;
+  --color-canvas-alt: #2e2925;
+  --color-surface: #37312c;
+  --color-ink: #f3efea;
+  --color-ink-muted: #b6ada4;
+  --color-ink-subtle: #8a8078;
+  --color-brand: #f15a24;
+  --color-brand-soft: #f97e4e;
+  --color-brand-wash: rgba(241, 90, 36, 0.16);
+  --color-line: #48403a;
+  --color-line-strong: #5f554d;
+  --color-positive: #5bc489;
+  --color-positive-wash: rgba(91, 196, 137, 0.14);
+  --color-caution: #e5b04c;
+  --color-caution-wash: rgba(229, 176, 76, 0.14);
+  --color-critical: #ef6a5a;
+  --color-critical-wash: rgba(239, 106, 90, 0.16);
 
   --radius-card: 0px;
 
@@ -52,7 +53,7 @@
   }
 
   ::selection {
-    background: var(--color-brand-wash);
+    background: rgba(241, 90, 36, 0.35);
   }
 
   :focus-visible {
