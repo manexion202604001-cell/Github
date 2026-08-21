@@ -1,5 +1,8 @@
 # 顧客台帳(紹介者・報酬管理)
 
+> 🚀 **メインプロダクト: UCCHAU — AI商品開発OS** は [`apps/web/`](apps/web/) にあります。
+> 公開URL: https://github-ucchau.vercel.app / 設計書: [`docs/00-architecture.md`](docs/00-architecture.md) / デプロイ手順: [`docs/01-deploy-vercel.md`](docs/01-deploy-vercel.md)
+>
 > 📌 **別サイト:** 韓国→日本の商品開発支援プラットフォーム「K2J Bridge」のサイトは [`k2j-bridge/`](k2j-bridge/) フォルダにあります。
 >
 > 📌 **別サイト:** 特許×企業マッチングプラットフォーム「PatentBridge」のサイトは [`patent-match/`](patent-match/) フォルダにあります。
