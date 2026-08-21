@@ -24,6 +24,10 @@ function readInt(key: string, fallback: number): number {
 /**
  * 本番でのみ必須のシークレット。未設定のまま既定値で暗号化・署名される事故を防ぐため、
  * production では fallback せずに例外を投げる(fail-fast)。
+ *
+ * 重要: モジュール評価時ではなく「実際に値を使う瞬間」に検査する(getter経由)。
+ * Vercel の `next build`(page data collection)ではシークレットが注入されないため、
+ * import しただけで投げるとビルドが失敗する。ランタイムでの防御は維持される。
  */
 function readSecret(key: string, developmentFallback: string): string {
   const value = process.env[key]
@@ -37,8 +41,12 @@ function readSecret(key: string, developmentFallback: string): string {
 export const env = {
   databaseUrl: read('DATABASE_URL'),
   appUrl: read('APP_URL', 'http://localhost:3000'),
-  authSecret: readSecret('AUTH_SECRET', 'insecure-development-secret-change-me'),
-  encryptionKey: readSecret('ENCRYPTION_KEY', 'insecure-development-encryption-key'),
+  get authSecret(): string {
+    return readSecret('AUTH_SECRET', 'insecure-development-secret-change-me')
+  },
+  get encryptionKey(): string {
+    return readSecret('ENCRYPTION_KEY', 'insecure-development-encryption-key')
+  },
   isProduction: process.env.NODE_ENV === 'production',
 
   google: {
