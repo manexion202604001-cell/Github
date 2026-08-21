@@ -42,6 +42,13 @@ export class GoogleAIProvider extends BaseAIProvider {
         generationConfig: {
           temperature: options.temperature ?? 0.7,
           maxOutputTokens: options.maxTokens ?? 4096,
+          // 構造化出力はネイティブJSONモードでパース失敗(=修復リトライ)を減らす
+          ...(options.jsonMode ? { responseMimeType: 'application/json' } : {}),
+          // Gemini 2.5系は既定で思考にトークンと時間を使う。
+          // 定型的な構造化タスクでは思考を無効化して大幅に高速化する(flash系のみ対応)。
+          ...(options.jsonMode && model.includes('flash')
+            ? { thinkingConfig: { thinkingBudget: 0 } }
+            : {}),
         },
       },
     })

@@ -24,6 +24,7 @@ export abstract class BaseAIProvider implements AIProvider {
   ): Promise<ProviderOutcome<T>> {
     const withInstruction: CompleteOptions = {
       ...options,
+      jsonMode: true,
       system: [options.system, JSON_INSTRUCTION].filter(Boolean).join('\n\n'),
     }
 

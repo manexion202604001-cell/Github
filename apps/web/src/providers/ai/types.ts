@@ -12,6 +12,8 @@ export type CompleteOptions = {
   maxTokens?: number
   temperature?: number
   model?: string
+  /** 構造化出力用。対応Providerではネイティブの JSON モードを有効化する。 */
+  jsonMode?: boolean
   /**
    * 外部由来(レビュー本文・スクレイピング結果など)のテキスト。
    * Adapter が `<untrusted_data>` で明示的に隔離する(要件111)。

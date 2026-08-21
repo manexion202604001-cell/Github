@@ -73,19 +73,28 @@ const generateConcepts: JobHandler = async (context) => {
     })
   })
 
-  const created: string[] = []
-  for (const [index, direction] of CONCEPT_DIRECTIONS.entries()) {
-    const prompt = buildConceptPrompt(description, direction)
-    const outcome = await runWithFallback(chain, (provider) =>
-      provider.generate({
-        prompt,
-        count: 1,
-        aspectRatio: '1:1',
-        seed: `${product.id}:${direction.variant}`,
-        variantLabels: [direction.variant],
-      }),
-    )
+  // 3案は互いに独立のため並列生成する(所要時間 約1/3)
+  let completedCount = 0
+  const outcomes = await Promise.all(
+    CONCEPT_DIRECTIONS.map(async (direction) => {
+      const prompt = buildConceptPrompt(description, direction)
+      const outcome = await runWithFallback(chain, (provider) =>
+        provider.generate({
+          prompt,
+          count: 1,
+          aspectRatio: '1:1',
+          seed: `${product.id}:${direction.variant}`,
+          variantLabels: [direction.variant],
+        }),
+      )
+      completedCount += 1
+      await context.setProgress((completedCount / CONCEPT_DIRECTIONS.length) * 90)
+      return { direction, outcome }
+    }),
+  )
 
+  const created: string[] = []
+  for (const { direction, outcome } of outcomes) {
     await recordUsage({
       organizationId: context.organizationId,
       projectId,
@@ -93,7 +102,6 @@ const generateConcepts: JobHandler = async (context) => {
       purpose: 'image.concept',
       usage: outcome.ok ? outcome.usage : { ...outcome.usage, failed: true, error: outcome.error.message },
     })
-
     if (!outcome.ok) throw new AppError('PROVIDER_ERROR', `コンセプト画像の生成に失敗しました: ${outcome.error.message}`)
 
     const image = outcome.data[0]
@@ -109,9 +117,8 @@ const generateConcepts: JobHandler = async (context) => {
       })
       created.push(saved.id)
     }
-
-    await context.setProgress(((index + 1) / CONCEPT_DIRECTIONS.length) * 100)
   }
+  await context.setProgress(100)
 
   await advanceStage(projectId, 'IMAGE')
   return { imageSetId: set.id, imageIds: created }

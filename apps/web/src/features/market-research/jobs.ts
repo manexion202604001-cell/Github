@@ -262,25 +262,36 @@ const runReviewAnalysis: JobHandler = async (context) => {
   const chain = await marketDataChainFor(context.organizationId)
   const reviews: MarketReview[] = []
 
-  for (const [index, competitor] of competitors.entries()) {
-    if (!competitor.asin) continue
-    // 商品を取得したソースのProviderを優先し、そのIDが分かるならそこへだけ問い合わせる
-    const sourceId =
-      competitor.rawData && typeof competitor.rawData === 'object'
-        ? ((competitor.rawData as Record<string, unknown>)._source as string | undefined)
-        : undefined
-    const preferred = sourceId ? chain.filter((provider) => provider.id === sourceId) : []
-    const targets = preferred.length > 0 ? preferred : chain
+  // 競合ごとのレビュー取得は独立のため、同時4並列で実行する
+  const CONCURRENCY = 4
+  let cursor = 0
+  let done = 0
+  const fetchWorker = async () => {
+    while (cursor < competitors.length) {
+      const competitor = competitors[cursor]
+      cursor += 1
+      if (!competitor?.asin) continue
 
-    const outcome = await runWithFallback(targets, (provider) => provider.getReviews(competitor.asin ?? '', 30))
-    if (outcome.ok) {
-      reviews.push(...outcome.data)
-    } else {
-      // レビュー取得非対応のProvider(楽天等)があり得るため、ここでは処理を止めない。
-      logger.warn('review.fetch_skipped', { asin: competitor.asin, source: sourceId, reason: outcome.error.kind })
+      // 商品を取得したソースのProviderを優先し、そのIDが分かるならそこへだけ問い合わせる
+      const sourceId =
+        competitor.rawData && typeof competitor.rawData === 'object'
+          ? ((competitor.rawData as Record<string, unknown>)._source as string | undefined)
+          : undefined
+      const preferred = sourceId ? chain.filter((provider) => provider.id === sourceId) : []
+      const targets = preferred.length > 0 ? preferred : chain
+
+      const outcome = await runWithFallback(targets, (provider) => provider.getReviews(competitor.asin ?? '', 30))
+      if (outcome.ok) {
+        reviews.push(...outcome.data)
+      } else {
+        // レビュー取得非対応のProvider(楽天等)があり得るため、ここでは処理を止めない。
+        logger.warn('review.fetch_skipped', { asin: competitor.asin, source: sourceId, reason: outcome.error.kind })
+      }
+      done += 1
+      await context.setProgress((done / competitors.length) * 50)
     }
-    await context.setProgress(((index + 1) / competitors.length) * 50)
   }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, competitors.length) }, fetchWorker))
 
   if (reviews.length === 0) {
     throw new AppError(

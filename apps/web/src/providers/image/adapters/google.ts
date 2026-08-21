@@ -71,27 +71,56 @@ export class GoogleImageProvider implements ImageProvider {
 
   async multiAngle(request: MultiAngleRequest): Promise<ProviderOutcome<GeneratedImage[]>> {
     const angles = request.angles ?? IMAGE_ANGLES
-    const images: GeneratedImage[] = []
-    let cost = 0
 
-    for (const angle of angles) {
-      const prompt = [
-        '添付した参照画像とまったく同一の商品を、視点だけ変えて描画してください。',
-        `視点: ${ANGLE_LABEL[angle]}(参照画像を基準に水平方向へ回転させた角度)`,
-        '形状・比率・色・素材・ロゴ配置・ディテールは参照画像から一切変更しないこと。',
-        '背景は純白(#FFFFFF)、影は真下に自然に落とす。商品以外の要素は描かない。',
-        `商品説明: ${request.productDescription}`,
-      ].join('\n')
+    // 8方向を直列で回すと数分かかるため、同時3並列で生成する。
+    // レート制限(429)に当たった場合は少し待って1回だけ再試行する。
+    const CONCURRENCY = 3
+    const results: ({ image: GeneratedImage; cost: number } | { error: ProviderOutcome<GeneratedImage[]> })[] = []
+    let index = 0
 
-      const outcome = await this.callOnce(prompt, [request.anchor], request.model)
-      if (!outcome.ok) return outcome
-      cost += outcome.usage.estimatedCostMicro
-      images.push({ ...outcome.data, prompt, angle, seed: request.seed })
+    const worker = async () => {
+      while (index < angles.length) {
+        const angle = angles[index]
+        index += 1
+        if (!angle) break
+
+        const prompt = [
+          '添付した参照画像とまったく同一の商品を、視点だけ変えて描画してください。',
+          `視点: ${ANGLE_LABEL[angle]}(参照画像を基準に水平方向へ回転させた角度)`,
+          '形状・比率・色・素材・ロゴ配置・ディテールは参照画像から一切変更しないこと。',
+          '背景は純白(#FFFFFF)、影は真下に自然に落とす。商品以外の要素は描かない。',
+          `商品説明: ${request.productDescription}`,
+        ].join('\n')
+
+        let outcome = await this.callOnce(prompt, [request.anchor], request.model)
+        if (!outcome.ok && outcome.error.kind === 'RATE_LIMIT') {
+          await new Promise((resolve) => setTimeout(resolve, 15_000))
+          outcome = await this.callOnce(prompt, [request.anchor], request.model)
+        }
+        if (!outcome.ok) {
+          results.push({ error: { ok: false, error: outcome.error, usage: outcome.usage } })
+          return
+        }
+        results.push({
+          image: { ...outcome.data, prompt, angle, seed: request.seed },
+          cost: outcome.usage.estimatedCostMicro,
+        })
+      }
     }
+
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, angles.length) }, worker))
+
+    const failed = results.find((entry): entry is { error: ProviderOutcome<GeneratedImage[]> } => 'error' in entry)
+    if (failed) return failed.error
+
+    const images = results
+      .filter((entry): entry is { image: GeneratedImage; cost: number } => 'image' in entry)
+      .sort((a, b) => angles.indexOf(a.image.angle ?? 'FRONT') - angles.indexOf(b.image.angle ?? 'FRONT'))
+    const cost = images.reduce((sum, entry) => sum + entry.cost, 0)
 
     return {
       ok: true,
-      data: images,
+      data: images.map((entry) => entry.image),
       usage: { ...emptyUsage(this.id, request.model || this.model()), imageCount: images.length, estimatedCostMicro: cost },
     }
   }

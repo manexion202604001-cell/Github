@@ -38,6 +38,7 @@ export class OpenAIAIProvider extends BaseAIProvider {
         model,
         temperature: options.temperature ?? 0.7,
         max_tokens: options.maxTokens ?? 4096,
+        ...(options.jsonMode ? { response_format: { type: 'json_object' } } : {}),
         messages: [
           { role: 'system', content: buildSystemPrompt(options) },
           ...options.messages.map((message) => ({ role: message.role, content: message.content })),
