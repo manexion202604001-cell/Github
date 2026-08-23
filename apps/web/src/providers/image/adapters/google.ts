@@ -14,8 +14,11 @@ import {
 const DEFAULT_MODEL = 'gemini-2.5-flash-image'
 
 type InlineData = { mimeType?: string; data?: string }
-type GooglePart = { inlineData?: InlineData; inline_data?: InlineData }
-type GoogleImageResponse = { candidates?: { content?: { parts?: GooglePart[] } }[] }
+type GooglePart = { inlineData?: InlineData; inline_data?: InlineData; text?: string }
+type GoogleImageResponse = {
+  candidates?: { content?: { parts?: GooglePart[] }; finishReason?: string }[]
+  promptFeedback?: { blockReason?: string }
+}
 
 /**
  * Google の画像生成モデル(Nano Banana系)。
@@ -42,7 +45,7 @@ export class GoogleImageProvider implements ImageProvider {
     for (let index = 0; index < count; index += 1) {
       const variant = request.variantLabels?.[index]
       const prompt = variant ? `${request.prompt}\n\n[Variant ${variant}]` : request.prompt
-      const outcome = await this.callOnce(prompt, request.referenceImages ?? [], request.model)
+      const outcome = await this.callOnce(prompt, request.referenceImages ?? [], request.model, request.aspectRatio)
       if (!outcome.ok) return outcome
       cost += outcome.usage.estimatedCostMicro
       images.push({ ...outcome.data, prompt: request.prompt, variant, seed: request.seed })
@@ -133,6 +136,7 @@ export class GoogleImageProvider implements ImageProvider {
     prompt: string,
     references: { base64: string; mimeType: string }[],
     modelOverride?: string,
+    aspectRatio?: string,
   ): Promise<ProviderOutcome<GeneratedImage>> {
     const model = modelOverride || this.model()
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`
@@ -147,7 +151,15 @@ export class GoogleImageProvider implements ImageProvider {
 
     const result = await postJson(this.id, url, {
       headers: { 'x-goog-api-key': this.apiKey },
-      body: { contents: [{ role: 'user', parts }] },
+      body: {
+        contents: [{ role: 'user', parts }],
+        // 画像モデル(Nano Banana系)は responseModalities を指定しないと
+        // テキストのみ返すことがあるため必須で付ける。
+        generationConfig: {
+          responseModalities: ['TEXT', 'IMAGE'],
+          ...(aspectRatio ? { imageConfig: { aspectRatio } } : {}),
+        },
+      },
     })
 
     const usage = {
@@ -165,9 +177,24 @@ export class GoogleImageProvider implements ImageProvider {
       .find((data): data is InlineData => typeof data?.data === 'string')
 
     if (!found?.data) {
+      // 原因調査ができるよう、テキスト応答・終了理由・ブロック理由を添える
+      const textPart = (body.candidates?.[0]?.content?.parts ?? [])
+        .map((part) => part.text)
+        .find((text): text is string => typeof text === 'string' && text.trim() !== '')
+      const detail = [
+        body.promptFeedback?.blockReason ? `blockReason=${body.promptFeedback.blockReason}` : null,
+        body.candidates?.[0]?.finishReason ? `finishReason=${body.candidates[0].finishReason}` : null,
+        textPart ? `text="${textPart.slice(0, 200)}"` : null,
+      ]
+        .filter(Boolean)
+        .join(' / ')
       return {
         ok: false,
-        error: providerError(this.id, 'INVALID_RESPONSE', '画像データを含まない応答を受け取りました'),
+        error: providerError(
+          this.id,
+          'INVALID_RESPONSE',
+          `画像データを含まない応答を受け取りました${detail ? `(${detail})` : ''}`,
+        ),
         usage: { ...usage, imageCount: 0, estimatedCostMicro: 0 },
       }
     }

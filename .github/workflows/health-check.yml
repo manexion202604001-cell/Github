@@ -48,7 +48,7 @@ jobs:
           for i in $(seq 1 12); do
             status=$(curl -sS -o /tmp/health.json -w "%{http_code}" \
               -H "Authorization: Bearer ${SECRET}" \
-              "https://github-ucchau.vercel.app/api/debug/health" || echo 000)
+              "https://github-ucchau.vercel.app/api/debug/health?image=1" || echo 000)
             echo "[try $i] HTTP $status"
             if [ "$status" = "200" ]; then break; fi
             sleep 20

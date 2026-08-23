@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/server/db'
 import { env } from '@/lib/env'
 import { buildComparison } from '@/features/oem/service'
+import { debugTestImageProvider } from '@/server/org-providers'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -119,6 +120,12 @@ export async function GET(request: NextRequest) {
       }),
     ),
   )
+
+  // ?image=1 のときだけ、登録済み画像Providerを実際に1回呼んで結果を返す
+  // (画像1枚分のコストがかかるため明示オプトイン)
+  if (request.nextUrl.searchParams.get('image') === '1') {
+    results.push(await step('image.provider', () => debugTestImageProvider()))
+  }
 
   const failed = results.filter((result) => !result.ok)
   return NextResponse.json({ data: { healthy: failed.length === 0, results } }, { status: 200 })

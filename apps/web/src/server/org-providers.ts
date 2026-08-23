@@ -98,6 +98,58 @@ export async function imageChainFor(organizationId: string): Promise<ImageProvid
 }
 
 /**
+ * 診断用: 登録済み画像Providerを実際に1回呼び、結果(またはエラー詳細)を返す。
+ * /api/debug/health?image=1 からのみ使用する。キー本体は返さない。
+ */
+export async function debugTestImageProvider(): Promise<Record<string, unknown>> {
+  const imageRow =
+    (await db.integration.findFirst({ where: { enabled: true, kind: 'IMAGE_PROVIDER' } })) ??
+    (await db.integration.findFirst({
+      where: { enabled: true, kind: 'AI_PROVIDER', provider: { in: ['google', 'openai'] } },
+    }))
+  if (!imageRow) return { configured: false }
+
+  const secret = imageRow.encryptedSecret ? decryptSecret(imageRow.encryptedSecret) : null
+  if (!secret) return { configured: true, provider: imageRow.provider, decryptOk: false }
+
+  const model =
+    imageRow.kind === 'IMAGE_PROVIDER' &&
+    imageRow.config &&
+    typeof imageRow.config === 'object' &&
+    typeof (imageRow.config as Record<string, unknown>).model === 'string'
+      ? ((imageRow.config as Record<string, unknown>).model as string)
+      : ''
+  const provider =
+    imageRow.provider === 'google'
+      ? new GoogleImageProvider(secret, model)
+      : imageRow.provider === 'openai'
+        ? new OpenAIImageProvider(secret, model)
+        : null
+  if (!provider) return { provider: imageRow.provider, supported: false }
+
+  const outcome = await provider.generate({
+    prompt: 'A plain matte gray cube on a seamless white studio background, product photography.',
+    count: 1,
+    aspectRatio: '1:1',
+  })
+  return outcome.ok
+    ? {
+        ok: true,
+        provider: imageRow.provider,
+        kindUsed: imageRow.kind,
+        model: outcome.usage.model || model || '(default)',
+        imageBytes: outcome.data[0]?.base64.length ?? 0,
+      }
+    : {
+        ok: false,
+        provider: imageRow.provider,
+        kindUsed: imageRow.kind,
+        errorKind: outcome.error.kind,
+        message: outcome.error.message.slice(0, 500),
+      }
+}
+
+/**
  * 市場データは複数ソース併用(要件22: Amazon中心+その他EC)。
  * 有効なIntegrationをすべてチェーンに載せる。並び順はAmazon(rainforest)優先。
  */

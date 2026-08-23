@@ -35,11 +35,15 @@ export const CONCEPT_DIRECTIONS: ConceptDirection[] = [
 ]
 
 const BASE_RULES = [
-  'photorealistic product photography, studio lighting, soft shadow directly under the product',
-  'pure white background (#FFFFFF), no props unless specified',
-  'the product must be fully in frame, centered, no cropping',
+  'ultra high-end commercial product photography, the hero image of a flagship brand product page',
+  'shot on a full-frame camera with an 85mm lens, f/8, tack-sharp focus across the entire product',
+  'large softbox key light with soft gradient falloff, subtle fill, one soft natural shadow grounding the product',
+  'physically accurate materials: correct reflections, micro-texture, and edge highlights for each surface finish',
+  'seamless studio backdrop in white to warm off-white (#F6F3EE), gentle vertical gradient, no props unless specified',
+  'the product must be fully in frame, centered with generous negative space, no cropping',
   'no text, no logo, no watermark, no brand name anywhere in the image',
   'no human hands or faces unless explicitly requested',
+  '4K detail, high dynamic range, professional color grading, absolutely photorealistic — not an illustration or 3D render look',
 ].join('. ')
 
 function describeProduct(product: Pick<ContextProduct, 'name' | 'category' | 'description' | 'material' | 'color' | 'size' | 'features'>): string {

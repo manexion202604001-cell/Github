@@ -40,6 +40,16 @@ const ideaSchema = z
 
 const conceptsPayload = z.object({ projectId: z.string(), idea: ideaSchema })
 
+/**
+ * 生成に使うProvider群。実Providerが1つでも設定されている場合はmockを除外する。
+ * (実Providerの失敗が黙ってサンプル画像に置き換わると、原因が見えなくなるため)
+ */
+async function imageTargetsFor(organizationId: string) {
+  const chain = await imageChainFor(organizationId)
+  const real = chain.filter((provider) => !provider.synthetic)
+  return real.length > 0 ? real : chain
+}
+
 async function loadProduct(projectId: string) {
   const product = await db.product.findUnique({
     where: { projectId },
@@ -73,7 +83,7 @@ function describe(product: {
 const generateConcepts: JobHandler = async (context) => {
   const { projectId, idea } = conceptsPayload.parse(context.payload)
   const product = await loadProduct(projectId)
-  const chain = await imageChainFor(context.organizationId)
+  const chain = await imageTargetsFor(context.organizationId)
   const description = describe(product)
 
   // ラフ入力があればAIでブリーフ化し、3案の設計図(名前・要約・視覚方針)を作る。
@@ -191,7 +201,7 @@ const generateMultiAngle: JobHandler = async (context) => {
   const anchorBytes = await loadImageBytes(anchor.url)
   if (!anchorBytes) throw new Error('アンカー画像を読み込めませんでした')
 
-  const chain = await imageChainFor(context.organizationId)
+  const chain = await imageTargetsFor(context.organizationId)
   const description = describe(product)
   const productDescription = [description.name, description.category, description.material, description.color]
     .filter((value): value is string => Boolean(value))
@@ -278,7 +288,7 @@ const generateSingleAngle: JobHandler = async (context) => {
   const anchorBytes = await loadImageBytes(anchor.url)
   if (!anchorBytes) throw new Error('アンカー画像を読み込めませんでした')
 
-  const chain = await imageChainFor(context.organizationId)
+  const chain = await imageTargetsFor(context.organizationId)
   const description = describe(product)
   const productDescription = [description.name, description.category, description.material, description.color]
     .filter((value): value is string => Boolean(value))
@@ -344,7 +354,7 @@ const generatePreset: JobHandler = async (context) => {
   const anchor = product.images[0]
   const anchorBytes = anchor ? await loadImageBytes(anchor.url) : null
   const description = describe(product)
-  const chain = await imageChainFor(context.organizationId)
+  const chain = await imageTargetsFor(context.organizationId)
 
   const prompt = `${buildConceptPrompt(description, {
     variant: 'A',
@@ -403,7 +413,7 @@ const editImage: JobHandler = async (context) => {
   const bytes = await loadImageBytes(source.url)
   if (!bytes) throw new Error('元画像を読み込めませんでした')
 
-  const chain = await imageChainFor(context.organizationId)
+  const chain = await imageTargetsFor(context.organizationId)
   const instruction = buildEditPrompt(payload.presetId, payload.value)
 
   const outcome = await runWithFallback(chain, (provider) =>
