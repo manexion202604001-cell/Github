@@ -5,6 +5,11 @@ import { execSync } from 'node:child_process'
 
 const url = process.env.DATABASE_URL ?? ''
 
+// directUrl(スキーマ反映用)が未設定なら DATABASE_URL を流用する
+if (!process.env.DIRECT_URL && url.trim() !== '') {
+  process.env.DIRECT_URL = url
+}
+
 if (url.trim() === '') {
   console.warn('')
   console.warn('⚠️  DATABASE_URL が未設定のため、prisma db push をスキップしました。')
@@ -15,4 +20,15 @@ if (url.trim() === '') {
   process.exit(0)
 }
 
-execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'inherit' })
+// 接続枯渇などの一時的な失敗に備えてリトライする
+const MAX_ATTEMPTS = 6
+for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  try {
+    execSync('npx prisma db push --skip-generate --accept-data-loss', { stdio: 'inherit' })
+    break
+  } catch (error) {
+    if (attempt === MAX_ATTEMPTS) throw error
+    console.warn(`⚠️  prisma db push 失敗(${attempt}/${MAX_ATTEMPTS})。20秒後に再試行します…`)
+    execSync('sleep 20')
+  }
+}

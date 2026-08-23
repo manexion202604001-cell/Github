@@ -84,7 +84,10 @@ jobs:
           encoded=$(jq -rn --arg p "$DB_PASSWORD" '$p|@uri')
           echo "::add-mask::$encoded"
           echo "DB_HOST=$found" >> "$GITHUB_ENV"
-          echo "DATABASE_URL=postgresql://${USER}:${encoded}@${found}:5432/postgres" >> "$GITHUB_ENV"
+          # 実行時: transaction pooler(6543, pgbouncer)+ 接続1本/Lambda(接続枯渇対策)
+          echo "DATABASE_URL=postgresql://${USER}:${encoded}@${found}:6543/postgres?pgbouncer=true&connection_limit=1" >> "$GITHUB_ENV"
+          # スキーマ反映用: session mode 直結
+          echo "DIRECT_URL=postgresql://${USER}:${encoded}@${found}:5432/postgres" >> "$GITHUB_ENV"
 
       - name: Create storage bucket (public)
         env:
@@ -163,6 +166,7 @@ jobs:
 
           jq -n \
             --arg database_url "$DATABASE_URL" \
+            --arg direct_url "$DIRECT_URL" \
             --arg auth_secret "$AUTH_SECRET" \
             --arg encryption_key "$ENCRYPTION_KEY" \
             --arg cron_secret "$CRON_SECRET" \
@@ -174,6 +178,7 @@ jobs:
             --arg mail_from "${MAIL_FROM_IN:-}" \
             '[
               {key:"DATABASE_URL", value:$database_url},
+              {key:"DIRECT_URL", value:$direct_url},
               {key:"STORAGE_PROVIDER", value:"supabase"},
               {key:"SUPABASE_URL", value:$supabase_url},
               {key:"SUPABASE_SERVICE_ROLE_KEY", value:$service_key},
