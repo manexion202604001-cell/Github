@@ -9,6 +9,7 @@ import { Card, CardBody, CardFooter, CardHeader } from '@/components/ui/card'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { Notice, Progress } from '@/components/ui/feedback'
 import { formatPercent } from '@/lib/format'
+import { ComparePanel, type CompareResult } from './compare-panel'
 
 type Question = { field: string; question: string; why: string; examples: string[] }
 
@@ -86,6 +87,56 @@ export function ProductOverviewForm({ projectId, initial }: { projectId: string;
       setMessage({ tone: 'error', text: job.error ?? 'AIヒアリングに失敗しました' })
     }
   })
+
+  // AI比較評価: 右パネルに「あなたの入力 vs AI独自案」を表示する
+  const [compareOpen, setCompareOpen] = useState(false)
+  const [compareResult, setCompareResult] = useState<CompareResult | null>(null)
+  const [compareError, setCompareError] = useState<string | null>(null)
+  const compare = useJob((job) => {
+    if (job.status === 'COMPLETED') {
+      setCompareResult(job.result as CompareResult)
+    } else if (job.status === 'FAILED') {
+      setCompareError(job.error ?? '比較評価に失敗しました')
+    }
+  })
+
+  const startCompare = async () => {
+    setCompareOpen(true)
+    setCompareResult(null)
+    setCompareError(null)
+    try {
+      const result = await api<{ jobId: string }>(`/api/products/${projectId}/compare`, { method: 'POST' })
+      compare.track(result.jobId)
+    } catch (error) {
+      setCompareError(error instanceof Error ? error.message : '比較評価を開始できませんでした')
+    }
+  }
+
+  /** パネルの「AIの案を採用」→ フォームの該当項目へ反映する(保存はユーザー操作)。 */
+  const adoptProposal = (key: string, proposal: string) => {
+    if (key === 'price') {
+      const digits = proposal.replace(/[^0-9]/g, '')
+      set('price', digits === '' ? null : Number(digits))
+    } else if (key === 'features' || key === 'usp') {
+      set(
+        key,
+        proposal
+          .split(/[・\n]/)
+          .map((item) => item.trim())
+          .filter(Boolean),
+      )
+    } else if (
+      key === 'name' ||
+      key === 'category' ||
+      key === 'description' ||
+      key === 'purpose' ||
+      key === 'problem' ||
+      key === 'target' ||
+      key === 'channel'
+    ) {
+      set(key, proposal)
+    }
+  }
 
   const set = <K extends keyof ProductInitial>(key: K, value: ProductInitial[K]) =>
     setForm((previous) => ({ ...previous, [key]: value }))
@@ -197,6 +248,11 @@ export function ProductOverviewForm({ projectId, initial }: { projectId: string;
         <CardHeader
           title="商品概要"
           description={`入力充足度 ${formatPercent(form.completeness, 0)} — market調査に進む前に主要項目を埋めましょう。`}
+          action={
+            <Button variant="secondary" onClick={() => void startCompare()} loading={compare.running}>
+              AIの案と比較評価
+            </Button>
+          }
         />
         <CardBody className="grid gap-4 sm:grid-cols-2">
           <Field label="商品名" required className="sm:col-span-2">
@@ -272,6 +328,16 @@ export function ProductOverviewForm({ projectId, initial }: { projectId: string;
           </Button>
         </CardFooter>
       </Card>
+
+      <ComparePanel
+        open={compareOpen}
+        running={compare.running}
+        progress={compare.job?.progress ?? 0}
+        error={compareError}
+        result={compareResult}
+        onClose={() => setCompareOpen(false)}
+        onAdopt={adoptProposal}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { db } from '@/server/db'
 import { runAITask } from '@/server/ai-task'
 import { productInterviewTask } from '@/prompts/product-interview'
 import { productAnalysisTask } from '@/prompts/product-analysis'
+import { productCompareTask } from '@/prompts/product-compare'
 import { buildProjectContext } from '@/features/assistant/context'
 import { advanceStage } from '@/features/projects/service'
 import { calculateCompleteness } from './domain'
@@ -112,7 +113,43 @@ const runAnalysis: JobHandler = async (context) => {
   return { ...result.data, synthetic: result.synthetic }
 }
 
+const comparePayload = z.object({ projectId: z.string() })
+
+/** 商品概要の比較評価: ユーザー入力 vs AI独自案(結果はJob.resultで返す)。 */
+const runCompare: JobHandler = async (context) => {
+  const payload = comparePayload.parse(context.payload)
+  const product = await db.product.findUnique({ where: { projectId: payload.projectId } })
+  if (!product) throw new Error('商品情報が見つかりません')
+
+  await context.setProgress(20)
+
+  const result = await runAITask(
+    productCompareTask,
+    {
+      product: {
+        name: product.name,
+        rawInput: product.rawInput,
+        category: product.category,
+        description: product.description,
+        purpose: product.purpose,
+        problem: product.problem,
+        target: product.target,
+        price: product.price,
+        country: product.country,
+        channel: product.channel,
+        features: product.features,
+        usp: product.usp,
+      },
+    },
+    { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
+  )
+
+  await context.setProgress(90)
+  return { ...result.data, synthetic: result.synthetic }
+}
+
 export const productJobHandlers: Record<string, JobHandler> = {
   'products.interview': runInterview,
   'products.analysis': runAnalysis,
+  'products.compare': runCompare,
 }

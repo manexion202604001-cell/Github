@@ -100,6 +100,22 @@ export async function startInterview(projectId: string, input: InterviewAnswerIn
   })
 }
 
+/** 商品概要の比較評価: AI独自案との項目別比較をJobで実行する。 */
+export async function startCompare(projectId: string) {
+  const context = await requireProjectAccess(projectId, 'EDITOR')
+  const product = await db.product.findUnique({ where: { projectId } })
+  if (!product) throw AppError.notFound('商品情報が見つかりません')
+
+  return enqueueJob({
+    organizationId: context.organizationId,
+    projectId,
+    kind: 'AI',
+    handler: 'products.compare',
+    payload: { projectId },
+    createdBy: context.user.id,
+  })
+}
+
 /** 商品仕様のスナップショットを新しいVersionとして保存する(要件74, 112)。 */
 export async function createProductVersion(input: {
   productId: string

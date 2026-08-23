@@ -73,3 +73,13 @@
     scrollbar-color: var(--color-line-strong) transparent;
   }
 }
+
+/* 右スライドインパネル(AI比較評価など) */
+@keyframes mx-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
