@@ -130,7 +130,7 @@ export function SalesAnalysisButton({ projectId, disabled }: { projectId: string
       >
         AIで販売分析
       </Button>
-      {job.running && job.job ? <Progress value={job.job.progress} /> : null}
+      {job.running && job.job ? <Progress value={job.job.progress} showValue /> : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
       {analysis ? (
         <Card className="fixed inset-x-4 bottom-4 z-50 mx-auto max-h-[70dvh] max-w-2xl overflow-y-auto shadow-xl">

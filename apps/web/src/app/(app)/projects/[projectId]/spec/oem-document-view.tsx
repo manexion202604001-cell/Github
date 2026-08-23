@@ -25,8 +25,10 @@ type DocumentContent = {
 
 /** OEM仕様書の閲覧。window.print で印刷/PDF保存できる(要件45)。 */
 export function OEMDocumentView({ documents }: { documents: DocumentView[] }) {
-  const [activeId, setActiveId] = useState(documents[0]?.id)
-  const active = documents.find((document) => document.id === activeId)
+  // 明示的に選択されるまではnullのままにし、常に最新(先頭)を表示する。
+  // useStateに初期IDを固定すると、新Version生成後も古い書類が選ばれ続けるため。
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const active = documents.find((document) => document.id === selectedId) ?? documents[0]
   if (!active) return null
   const content = (active.content ?? {}) as DocumentContent
 
@@ -37,9 +39,9 @@ export function OEMDocumentView({ documents }: { documents: DocumentView[] }) {
           <button
             key={document.id}
             type="button"
-            onClick={() => setActiveId(document.id)}
+            onClick={() => setSelectedId(document.id)}
             className={
-              document.id === activeId
+              document.id === active.id
                 ? ' bg-brand px-3.5 py-1 text-[12px] font-bold text-white'
                 : ' border border-line px-3.5 py-1 text-[12px] font-semibold text-ink-muted hover:border-brand hover:text-brand'
             }

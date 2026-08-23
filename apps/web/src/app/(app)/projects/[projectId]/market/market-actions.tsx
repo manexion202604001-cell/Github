@@ -86,7 +86,7 @@ export function MarketActions({
         {job.running && job.job ? (
           <div className="space-y-2">
             <p className="text-[13px] font-semibold">分析中…(商品取得 → AI分析 → 競合保存)</p>
-            <Progress value={job.job.progress} />
+            <Progress value={job.job.progress} showValue />
           </div>
         ) : null}
       </CardBody>

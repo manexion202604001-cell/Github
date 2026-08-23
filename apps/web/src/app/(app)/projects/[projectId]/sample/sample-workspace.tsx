@@ -107,7 +107,7 @@ export function SampleWorkspace({ projectId, samples }: { projectId: string; sam
         </CardFooter>
       </Card>
 
-      {job.running && job.job ? <Progress value={job.job.progress} /> : null}
+      {job.running && job.job ? <Progress value={job.job.progress} showValue /> : null}
 
       {samples.map((sample) => {
         const decision = sample.decision ? DECISION[sample.decision] : null

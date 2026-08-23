@@ -77,7 +77,7 @@ export function ImagesWorkspace({
         <Card>
           <CardBody className="space-y-2">
             <p className="text-[13px] font-semibold">画像を生成しています…</p>
-            <Progress value={job.job.progress} />
+            <Progress value={job.job.progress} showValue />
           </CardBody>
         </Card>
       ) : null}

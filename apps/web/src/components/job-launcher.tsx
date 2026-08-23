@@ -46,12 +46,7 @@ export function JobLauncher({
       >
         {label}
       </Button>
-      {job.running && job.job ? (
-        <div className="flex items-center gap-3">
-          <Progress value={job.job.progress} className="flex-1" />
-          <span className="tabular w-10 text-right text-[12px] font-bold text-brand">{job.job.progress}%</span>
-        </div>
-      ) : null}
+      {job.running && job.job ? <Progress value={job.job.progress} showValue /> : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
     </div>
   )

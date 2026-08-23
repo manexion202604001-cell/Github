@@ -38,7 +38,7 @@ export function ScoreActions({ projectId, hasScore }: { projectId: string; hasSc
       {error || (job.running && job.job) ? (
         <CardBody className="space-y-2">
           {error ? <Notice tone="error">{error}</Notice> : null}
-          {job.running && job.job ? <Progress value={job.job.progress} /> : null}
+          {job.running && job.job ? <Progress value={job.job.progress} showValue /> : null}
         </CardBody>
       ) : null}
     </Card>

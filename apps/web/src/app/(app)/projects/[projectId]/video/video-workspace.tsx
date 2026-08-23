@@ -93,7 +93,7 @@ export function VideoWorkspace({
         <Card>
           <CardBody className="space-y-2">
             <p className="text-[13px] font-semibold">処理中…(動画生成には時間がかかります)</p>
-            <Progress value={job.job.progress} />
+            <Progress value={job.job.progress} showValue />
           </CardBody>
         </Card>
       ) : null}

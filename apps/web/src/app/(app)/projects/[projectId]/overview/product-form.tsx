@@ -166,7 +166,7 @@ export function ProductOverviewForm({ projectId, initial }: { projectId: string;
             />
           </Field>
 
-          {interview.running && interview.job ? <Progress value={interview.job.progress} /> : null}
+          {interview.running && interview.job ? <Progress value={interview.job.progress} showValue /> : null}
 
           {form.openQuestions.length > 0 ? (
             <div className="space-y-3">

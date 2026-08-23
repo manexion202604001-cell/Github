@@ -54,11 +54,27 @@ export function Notice({
   )
 }
 
-export function Progress({ value, className }: { value: number; className?: string }) {
+export function Progress({
+  value,
+  className,
+  showValue = false,
+}: {
+  value: number
+  className?: string
+  /** バーの横に残り%を数値でも表示する(要望: ジョブの進捗を数値で見たい)。 */
+  showValue?: boolean
+}) {
   const clamped = Math.max(0, Math.min(100, value))
-  return (
-    <div className={cn('h-1.5 w-full overflow-hidden bg-line', className)}>
+  const bar = (
+    <div className={cn('h-1.5 w-full overflow-hidden bg-line', !showValue && className)}>
       <div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${clamped}%` }} />
+    </div>
+  )
+  if (!showValue) return bar
+  return (
+    <div className={cn('flex items-center gap-3', className)}>
+      {bar}
+      <span className="tabular w-10 shrink-0 text-right text-[12px] font-bold text-brand">{Math.round(clamped)}%</span>
     </div>
   )
 }
