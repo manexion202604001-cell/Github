@@ -280,6 +280,7 @@ export interface ProviderRegistry<T extends Provider> {
 | 10.5 | 市場データの複数ソース併用(楽天+Amazon(Rainforest API)を同時取得・マージ、レビューは出所ソースへ問い合わせ) |
 | 11 | 次商品提案 → ワンクリック新プロジェクト作成(要件127のループ完成)/ ダッシュボード「AIからの提案」 |
 | 11.5 | コードレビュー2回(機能パス+セキュリティ監査)。テナント分離・OAuthリンク・権限昇格・Job復旧・レート制限等の13件を修正 |
+| 12 | UX総点検: AIヒアリング結果がフォームへ反映されないstale-stateバグ修正 / 全ジョブ進捗バーに%数値表示(Progress showValue) / OEM仕様書ビューの最新Version自動選択 |
 
 ### 運用構成(現行)
 
