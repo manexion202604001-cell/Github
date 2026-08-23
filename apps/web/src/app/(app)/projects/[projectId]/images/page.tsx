@@ -1,12 +1,10 @@
-import { listImages } from '@/features/images/service'
-import { imageProviders } from '@/providers/image'
+import { listImages, imageProviderStatus } from '@/features/images/service'
 import { ImagesWorkspace } from './images-workspace'
 
 /** STEP 2: コンセプト3案 → アンカー → 8方向360度 → 画像種類 → 編集(要件14〜20)。 */
 export default async function ImagesPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params
-  const images = await listImages(projectId)
-  const provider = imageProviders().get()
+  const [images, provider] = await Promise.all([listImages(projectId), imageProviderStatus(projectId)])
 
   const toView = (image: {
     id: string

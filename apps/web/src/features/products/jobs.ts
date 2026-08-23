@@ -53,21 +53,25 @@ const runInterview: JobHandler = async (context) => {
 
   const ai = result.data.product
   // 既存の値を優先し、未入力の項目だけAIの提案で埋める。
+  // 注意: フォーム保存で空文字がDBに入るため、'' も「未入力」として扱う
+  // (?? だと '' が入力済み判定になり、AIの提案が全て捨てられる)。
+  const fill = (current: string | null, proposed: string | null | undefined) =>
+    current !== null && current.trim() !== '' ? current : (proposed ?? null)
   const merged = {
-    name: product.name || ai.name,
-    category: product.category ?? ai.category,
-    description: product.description ?? ai.description,
-    purpose: product.purpose ?? ai.purpose,
-    problem: product.problem ?? ai.problem,
-    target: product.target ?? ai.target,
+    name: product.name.trim() !== '' ? product.name : ai.name,
+    category: fill(product.category, ai.category),
+    description: fill(product.description, ai.description),
+    purpose: fill(product.purpose, ai.purpose),
+    problem: fill(product.problem, ai.problem),
+    target: fill(product.target, ai.target),
     price: product.price ?? ai.price,
-    country: product.country ?? ai.country,
-    channel: product.channel ?? ai.channel,
-    size: product.size ?? ai.size,
-    weight: product.weight ?? ai.weight,
-    material: product.material ?? ai.material,
-    color: product.color ?? ai.color,
-    designNote: product.designNote ?? ai.designNote,
+    country: fill(product.country, ai.country),
+    channel: fill(product.channel, ai.channel),
+    size: fill(product.size, ai.size),
+    weight: fill(product.weight, ai.weight),
+    material: fill(product.material, ai.material),
+    color: fill(product.color, ai.color),
+    designNote: fill(product.designNote, ai.designNote),
     features: Array.isArray(product.features) && product.features.length > 0 ? product.features : ai.features,
     usp: Array.isArray(product.usp) && product.usp.length > 0 ? product.usp : ai.usp,
   }

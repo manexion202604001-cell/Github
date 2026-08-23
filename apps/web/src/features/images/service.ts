@@ -7,6 +7,18 @@ import { requireProjectAccess } from '@/server/authz'
 import { enqueueJob } from '@/jobs/queue'
 import { storage, buildKey, extensionForMime } from '@/providers/storage'
 import type { GeneratedImage } from '@/providers/image'
+import { imageChainFor } from '@/server/org-providers'
+
+/**
+ * この組織で実際に使われる画像Providerの状態。
+ * 環境変数だけでなくBYOK(設定画面のキー)も考慮する。
+ */
+export async function imageProviderStatus(projectId: string): Promise<{ provider: string; synthetic: boolean }> {
+  const context = await requireProjectAccess(projectId)
+  const chain = await imageChainFor(context.organizationId)
+  const first = chain[0]
+  return { provider: first?.id ?? 'mock', synthetic: first?.synthetic ?? true }
+}
 
 export async function listImages(projectId: string) {
   await requireProjectAccess(projectId)

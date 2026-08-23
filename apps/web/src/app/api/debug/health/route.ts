@@ -6,13 +6,19 @@ import { buildComparison } from '@/features/oem/service'
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
 
-type StepResult = { step: string; ok: boolean; ms: number; error?: string }
+type StepResult = { step: string; ok: boolean; ms: number; error?: string; data?: unknown }
 
 async function step(name: string, run: () => Promise<unknown>): Promise<StepResult> {
   const start = Date.now()
   try {
-    await run()
-    return { step: name, ok: true, ms: Date.now() - start }
+    const data = await run()
+    const result: StepResult = { step: name, ok: true, ms: Date.now() - start }
+    if (data !== undefined && data !== null) {
+      // 応答が肥大化しないよう上限を設ける
+      const text = JSON.stringify(data)
+      result.data = text.length > 6000 ? `${text.slice(0, 6000)}…(truncated)` : data
+    }
+    return result
   } catch (error) {
     const message =
       error instanceof Error ? `${error.name}: ${error.message}\n${(error.stack ?? '').slice(0, 600)}` : String(error)
@@ -46,22 +52,73 @@ export async function GET(request: NextRequest) {
 
   if (projectId) {
     const id = projectId
-    results.push(await step('oem.suppliers', () => db.oEMSupplier.findMany({ take: 5 })))
+    results.push(await step('oem.suppliers', () => db.oEMSupplier.findMany({ take: 5, select: { id: true } })))
     results.push(
       await step('oem.quotes+comparison', async () => {
         const quotes = await db.oEMQuote.findMany({ where: { projectId: id }, include: { supplier: true } })
         buildComparison(quotes, null)
       }),
     )
-    results.push(
-      await step('market.latest', () =>
-        db.marketResearch.findFirst({ where: { projectId: id }, orderBy: { createdAt: 'desc' } }),
-      ),
-    )
-    results.push(
-      await step('integrations', () => db.integration.findMany({ where: { enabled: true }, take: 5 })),
-    )
   }
+
+  // 直近ジョブの実行状況(市場調査・画像生成などの失敗原因調査用)
+  results.push(
+    await step('jobs.recent', () =>
+      db.job.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 12,
+        select: {
+          id: true,
+          kind: true,
+          handler: true,
+          status: true,
+          progress: true,
+          attempts: true,
+          error: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ),
+  )
+
+  // 直近の市場調査の状態とエラー・使用ソース
+  results.push(
+    await step('market.recent', async () => {
+      const rows = await db.marketResearch.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        select: {
+          id: true,
+          keyword: true,
+          source: true,
+          status: true,
+          error: true,
+          rawData: true,
+          createdAt: true,
+          completedAt: true,
+        },
+      })
+      return rows.map((row) => ({
+        ...row,
+        rawData:
+          row.rawData && typeof row.rawData === 'object'
+            ? { sourceErrors: (row.rawData as Record<string, unknown>).sourceErrors, sources: (row.rawData as Record<string, unknown>).sources }
+            : null,
+      }))
+    }),
+  )
+
+  // 有効な連携(キー本体は返さない)
+  results.push(
+    await step('integrations', () =>
+      db.integration.findMany({
+        where: { enabled: true },
+        take: 10,
+        select: { kind: true, provider: true, enabled: true, config: true },
+      }),
+    ),
+  )
 
   const failed = results.filter((result) => !result.ok)
   return NextResponse.json({ data: { healthy: failed.length === 0, results } }, { status: 200 })

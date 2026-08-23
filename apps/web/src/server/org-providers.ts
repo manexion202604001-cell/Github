@@ -75,13 +75,20 @@ export async function aiChainFor(organizationId: string): Promise<BaseAIProvider
 export async function imageChainFor(organizationId: string): Promise<ImageProvider[]> {
   const base = imageProviders().chain()
   const rows = await enabledIntegrations(organizationId)
-  const row = rows.find((item) => item.kind === 'IMAGE_PROVIDER')
+
+  // 画像用のIntegrationが無い場合は、AIプロバイダに登録済みのGoogle/OpenAIキーを
+  // 画像生成にも流用する(Google AI Studio / OpenAIのキーは画像APIと共通のため、
+  // キーを1回登録するだけで画像生成が動くようにする)。
+  const row =
+    rows.find((item) => item.kind === 'IMAGE_PROVIDER') ??
+    rows.find((item) => item.kind === 'AI_PROVIDER' && (item.provider === 'google' || item.provider === 'openai'))
   if (!row) return base
 
   const secret = secretOf(row)
   if (!secret) return base
 
-  const model = modelOf(row.config)
+  // AIプロバイダからの流用時はテキスト用モデル名を引き継がない(画像既定モデルを使う)。
+  const model = row.kind === 'IMAGE_PROVIDER' ? modelOf(row.config) : ''
   let override: ImageProvider | null = null
   if (row.provider === 'google') override = new GoogleImageProvider(secret, model)
   else if (row.provider === 'openai') override = new OpenAIImageProvider(secret, model)

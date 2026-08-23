@@ -69,7 +69,7 @@ export function ImagesWorkspace({
     <div className="space-y-5">
       {synthetic ? (
         <Notice tone="warning" title="画像生成Providerが未設定です">
-          現在はサンプルのモックアップ画像が生成されます。実際のAI画像を生成するには IMAGE_PROVIDER とAPIキーを設定してください。
+          現在はサンプルのモックアップ画像が生成されます。実際のAI画像を生成するには、設定画面の「連携」で画像生成またはAIプロバイダ(Google AI Studio / OpenAI)のAPIキーを登録してください。
         </Notice>
       ) : null}
       {error ? <Notice tone="error">{error}</Notice> : null}
