@@ -1,4 +1,5 @@
 import type { ContextProduct } from '@/types/context'
+import type { ConceptPlan, ImageBriefOutput } from './image-brief'
 
 /**
  * 画像生成用プロンプトの組み立て(要件14〜20)。
@@ -61,6 +62,26 @@ export function buildConceptPrompt(
   return `${describeProduct(product)}
 
 Design direction (${direction.label}): ${direction.description}
+
+${BASE_RULES}`
+}
+
+/**
+ * AIブリーフに基づくコンセプト案プロンプト。
+ * 3案が色違いにならないよう、シルエット・構造・素材の差別化を明示する。
+ */
+export function buildPlannedConceptPrompt(brief: ImageBriefOutput['brief'], plan: ConceptPlan): string {
+  return `Product type: ${brief.productType}
+Target user: ${brief.targetUser}
+Usage scene: ${brief.usageScene}
+Key features to express visually: ${brief.keyFeatures.slice(0, 5).join(', ')}
+Suggested material: ${brief.materialSuggestion}
+Color palette: ${brief.colorPalette}
+Premium level: ${brief.premiumLevel}
+
+Design direction (${plan.conceptName}): ${plan.visualDirection}
+
+This is one of three distinct design concepts. It must differ from the other concepts in silhouette, structure and material impression — never a mere color variation. The design must look manufacturable as a real mass-produced product, at product-photography quality (not concept art).
 
 ${BASE_RULES}`
 }

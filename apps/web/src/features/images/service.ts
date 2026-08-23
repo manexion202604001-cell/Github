@@ -50,14 +50,26 @@ export async function listImages(projectId: string) {
 
 const ANGLE_ORDER = ['FRONT', 'FRONT_RIGHT', 'RIGHT', 'BACK_RIGHT', 'BACK', 'BACK_LEFT', 'LEFT', 'FRONT_LEFT']
 
-export async function generateConcepts(projectId: string) {
+/** ラフなイメージ入力(全項目任意)。AIブリーフ化してコンセプト生成に使う。 */
+export type ConceptIdeaInput = {
+  rawIdea?: string
+  category?: string
+  target?: string
+  priceRange?: string
+  color?: string
+  taste?: string
+  brand?: string
+  notes?: string
+}
+
+export async function generateConcepts(projectId: string, idea?: ConceptIdeaInput) {
   const context = await requireProjectAccess(projectId, 'EDITOR')
   return enqueueJob({
     organizationId: context.organizationId,
     projectId,
     kind: 'IMAGE',
     handler: 'images.concepts',
-    payload: { projectId },
+    payload: { projectId, idea: idea ?? null },
     createdBy: context.user.id,
   })
 }
@@ -102,6 +114,31 @@ export async function generateAngles(projectId: string) {
     kind: 'IMAGE',
     handler: 'images.multiAngle',
     payload: { projectId },
+    createdBy: context.user.id,
+  })
+}
+
+/** 失敗・不満のある角度だけを1枚再生成する(全件やり直し不要)。 */
+export async function generateSingleAngle(projectId: string, angle: string) {
+  const context = await requireProjectAccess(projectId, 'EDITOR')
+  const product = await db.product.findUnique({
+    where: { projectId },
+    include: { images: { where: { isAnchor: true }, take: 1 } },
+  })
+  if (!product) throw AppError.notFound('商品情報が見つかりません')
+  if (product.images.length === 0) {
+    throw AppError.validation('先にアンカー画像を選択してください。')
+  }
+  if (!ANGLE_ORDER.includes(angle)) {
+    throw AppError.validation(`未知の角度です: ${angle}`)
+  }
+
+  return enqueueJob({
+    organizationId: context.organizationId,
+    projectId,
+    kind: 'IMAGE',
+    handler: 'images.singleAngle',
+    payload: { projectId, angle },
     createdBy: context.user.id,
   })
 }
