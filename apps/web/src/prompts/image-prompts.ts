@@ -28,7 +28,7 @@ export const CONCEPT_DIRECTIONS: ConceptDirection[] = [
     variant: 'B',
     label: 'フューチャー・イノベーティブ',
     description:
-      'Silhouette: a bold two-part architecture where the cap and body differ clearly in geometry — faceted, tapered or asymmetric — never a plain cylinder. Structure: a pronounced diagonal or stepped parting line, visible mechanical detail, a distinctive cap form factor. Material: semi-gloss technical polymer or glass with crisp edges. Lighting: directional rim light emphasising the facets. Overall impression: engineered, forward-looking.',
+      'Silhouette: a precise faceted or gently tapered body — clearly not a plain cylinder — with a cap that shares the same footprint and seats squarely and flush on the body. Structure: a crisp horizontal or subtly angled parting line where cap and body meet perfectly, no floating or misaligned parts, no exposed mechanism. Material: semi-gloss technical polymer or glass with sharp, cleanly machined edges and a slim metal collar. Lighting: directional rim light that catches each facet. Overall impression: engineered, forward-looking, immaculately assembled.',
   },
   {
     variant: 'C',
