@@ -40,18 +40,18 @@ export const CONCEPT_DIRECTIONS: ConceptDirection[] = [
 
 /** 各案が互いに別物であることを強制する共通指示。 */
 const DISTINCTNESS_RULE =
-  'This is one of three competing design concepts for the same product. It MUST differ from the others in overall silhouette, proportion, closure/cap type and material impression — a different colour of the same shape is unacceptable. Follow the design direction literally, even if it means a form factor far from the conventional one for this category. The result must still look like a real mass-producible product photographed for a flagship brand page.'
+  'This is one of three competing design concepts for the same product. It MUST differ from the others in overall silhouette, proportion, closure/cap type and material impression — a different colour of the same shape is unacceptable. Follow the design direction faithfully while staying unmistakably recognisable as a product of its stated category — a shopper must identify what it is at a glance. The result must still look like a real mass-producible product photographed for a flagship brand page.'
 
 const BASE_RULES = [
-  'ultra high-end commercial product photography, the hero image of a flagship brand product page',
-  'shot on a full-frame camera with an 85mm lens, f/8, tack-sharp focus across the entire product',
-  'large softbox key light with soft gradient falloff, subtle fill, one soft natural shadow grounding the product',
-  'physically accurate materials: correct reflections, micro-texture, and edge highlights for each surface finish',
-  'seamless studio backdrop in white to warm off-white (#F6F3EE), gentle vertical gradient, no props unless specified',
-  'the product must be fully in frame, centered with generous negative space, no cropping',
+  'a real studio photograph of a physical product — captured with a camera, NOT a 3D render, NOT CGI, NOT an illustration',
+  'shot on a full-frame camera with an 85mm lens at f/8, tack-sharp focus across the whole product, natural optical depth',
+  'large softbox key light from the upper left with a soft gradient falloff, gentle fill from the right, one soft contact shadow grounding the product',
+  'physically accurate materials: true-to-life reflections, fine micro-texture, crisp edge highlights, subtle real-world surface imperfections',
+  'seamless studio backdrop in clean white to very light neutral grey (#FFFFFF to #F2F2F2), softly lit, no colour cast, no props unless specified',
+  'the product must be fully in frame, centred, upright, with generous negative space and no cropping',
   'no text, no logo, no watermark, no brand name anywhere in the image',
   'no human hands or faces unless explicitly requested',
-  '4K detail, high dynamic range, professional color grading, absolutely photorealistic — not an illustration or 3D render look',
+  'high dynamic range, neutral professional colour grading, magazine-quality commercial retouching',
 ].join('. ')
 
 function describeProduct(product: Pick<ContextProduct, 'name' | 'category' | 'description' | 'material' | 'color' | 'size' | 'features'>): string {
