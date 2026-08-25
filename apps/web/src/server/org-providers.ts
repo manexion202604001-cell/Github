@@ -13,6 +13,7 @@ import { OpenAIImageProvider } from '@/providers/image/adapters/openai'
 import { marketDataProviders, type MarketDataProvider } from '@/providers/market-data'
 import { RakutenMarketDataProvider } from '@/providers/market-data/adapters/rakuten'
 import { RainforestMarketDataProvider } from '@/providers/market-data/adapters/rainforest'
+import { CONCEPT_DIRECTIONS, buildConceptPrompt } from '@/prompts/image-prompts'
 
 /**
  * Organization単位のBYOK(Bring Your Own Key)解決。
@@ -170,4 +171,62 @@ export async function marketDataChainFor(organizationId: string): Promise<Market
   overrides.sort((a, b) => (a.id === 'rainforest' ? -1 : b.id === 'rainforest' ? 1 : 0))
   const overrideIds = new Set(overrides.map((provider) => provider.id))
   return [...overrides, ...base.filter((provider) => !overrideIds.has(provider.id))]
+}
+
+/**
+ * 診断用: 本番のコンセプト生成プロンプトで実際に1枚生成し、画像を返す。
+ * /api/debug/health?image=concept&variant=A からのみ使用する(画質確認用)。
+ */
+export async function debugGenerateConceptImage(variant: 'A' | 'B' | 'C'): Promise<Record<string, unknown>> {
+  const imageRow =
+    (await db.integration.findFirst({ where: { enabled: true, kind: 'IMAGE_PROVIDER' } })) ??
+    (await db.integration.findFirst({
+      where: { enabled: true, kind: 'AI_PROVIDER', provider: { in: ['google', 'openai'] } },
+    }))
+  if (!imageRow) return { configured: false }
+
+  const secret = imageRow.encryptedSecret ? decryptSecret(imageRow.encryptedSecret) : null
+  if (!secret) return { configured: true, provider: imageRow.provider, decryptOk: false }
+
+  const model =
+    imageRow.kind === 'IMAGE_PROVIDER' &&
+    imageRow.config &&
+    typeof imageRow.config === 'object' &&
+    typeof (imageRow.config as Record<string, unknown>).model === 'string'
+      ? ((imageRow.config as Record<string, unknown>).model as string)
+      : ''
+  const provider =
+    imageRow.provider === 'google'
+      ? new GoogleImageProvider(secret, model)
+      : imageRow.provider === 'openai'
+        ? new OpenAIImageProvider(secret, model)
+        : null
+  if (!provider) return { provider: imageRow.provider, supported: false }
+
+  const direction = CONCEPT_DIRECTIONS.find((item) => item.variant === variant) ?? CONCEPT_DIRECTIONS[0]
+  if (!direction) return { ok: false, message: 'コンセプト方向が定義されていません' }
+
+  const prompt = buildConceptPrompt(
+    {
+      name: 'ラベンダーカラーの美容液ボトル',
+      category: 'スキンケア(美容液)',
+      description: '30代女性向け、ギフトにも選ばれる高級感のあるエアレスポンプ美容液',
+      material: 'マット塗装の樹脂+メタルアクセント',
+      color: 'ラベンダー / シルバー',
+      size: 'W45 × D30 × H120 mm',
+      features: ['エアレスポンプ', '片手で使える形状', '詰め替え対応'],
+    },
+    direction,
+  )
+
+  const outcome = await provider.generate({ prompt, count: 1, aspectRatio: '1:1' })
+  return outcome.ok
+    ? {
+        ok: true,
+        variant,
+        model: outcome.usage.model || model || '(default)',
+        mimeType: outcome.data[0]?.mimeType ?? 'image/png',
+        base64: outcome.data[0]?.base64 ?? '',
+      }
+    : { ok: false, variant, errorKind: outcome.error.kind, message: outcome.error.message.slice(0, 500) }
 }

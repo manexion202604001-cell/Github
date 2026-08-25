@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/server/db'
 import { env } from '@/lib/env'
 import { buildComparison } from '@/features/oem/service'
-import { debugTestImageProvider } from '@/server/org-providers'
+import { debugGenerateConceptImage, debugTestImageProvider } from '@/server/org-providers'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -36,6 +36,24 @@ export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET ?? ''
   if (!secret || token !== secret) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 })
+  }
+
+  // ?image=concept&variant=A — 本番のコンセプト生成プロンプトで1枚生成し、画像そのものを返す(画質確認用)
+  if (request.nextUrl.searchParams.get('image') === 'concept') {
+    const raw = request.nextUrl.searchParams.get('variant')
+    const variant = raw === 'B' || raw === 'C' ? raw : 'A'
+    const result = await debugGenerateConceptImage(variant)
+    if (result.ok !== true || typeof result.base64 !== 'string') {
+      return NextResponse.json({ data: result }, { status: 200 })
+    }
+    return new NextResponse(Buffer.from(result.base64, 'base64'), {
+      status: 200,
+      headers: {
+        'content-type': typeof result.mimeType === 'string' ? result.mimeType : 'image/png',
+        'x-image-model': typeof result.model === 'string' ? result.model : '',
+        'cache-control': 'no-store',
+      },
+    })
   }
 
   const results: StepResult[] = []

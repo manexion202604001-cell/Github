@@ -1,0 +1,61 @@
+# 本番の画像生成プロンプトで実際に3案を生成し、結果をリポジトリへ書き戻す(画質確認用)
+name: Image Quality Test
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/image-test-trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate concept images via production API
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID=$(curl -sS --fail "https://api.vercel.com/v9/projects?limit=100" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            | jq -r '[.projects[] | select((.link.repoId|tostring)=="1216588499")][0].id')
+          ENV_ID=$(curl -sS --fail "https://api.vercel.com/v9/projects/${PROJECT_ID}/env" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.envs[] | select(.key=="CRON_SECRET") | .id' | head -1)
+          SECRET=$(curl -sS --fail "https://api.vercel.com/v1/projects/${PROJECT_ID}/env/${ENV_ID}?decrypt=true" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" | jq -r '.value')
+          echo "::add-mask::$SECRET"
+
+          mkdir -p docs/demo-assets/quality-test
+          for V in A B C; do
+            echo "=== variant $V ==="
+            code=$(curl -sS -o "/tmp/${V}.bin" -w "%{http_code}" -D "/tmp/${V}.head" \
+              -H "Authorization: Bearer ${SECRET}" \
+              "https://github-ucchau.vercel.app/api/debug/health?image=concept&variant=${V}")
+            type=$(grep -i '^content-type' "/tmp/${V}.head" | tr -d '\r' | head -1 || true)
+            echo "HTTP $code / $type / $(stat -c%s /tmp/${V}.bin) bytes"
+            grep -i '^x-image-model' "/tmp/${V}.head" | tr -d '\r' || true
+            if echo "$type" | grep -qi 'image/'; then
+              cp "/tmp/${V}.bin" "docs/demo-assets/quality-test/concept-${V}.png"
+            else
+              echo "--- error body ---"; head -c 800 "/tmp/${V}.bin"; echo
+            fi
+          done
+          ls -la docs/demo-assets/quality-test/ || true
+
+      - name: Commit results
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/demo-assets/quality-test || true
+          if git diff --cached --quiet; then
+            echo "生成画像なし(コミットしません)"
+          else
+            git commit -m "画質テスト: 本番プロンプトで生成したコンセプト3案"
+            git push origin main
+          fi
