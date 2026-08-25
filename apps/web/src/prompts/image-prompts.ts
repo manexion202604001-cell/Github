@@ -12,27 +12,35 @@ export type ConceptDirection = {
   description: string
 }
 
-/** 3つのコンセプト方向(要件15)。 */
+/**
+ * 3つのコンセプト方向(要件15)。
+ * 色違いにならないよう、方向ごとにシルエット・構造・素材・仕上げを明示的に振り分ける。
+ * AIブリーフが使えない場合のフォールバックとしても、この定義だけで3案が明確に別物になる。
+ */
 export const CONCEPT_DIRECTIONS: ConceptDirection[] = [
   {
     variant: 'A',
-    label: '売れ筋重視',
+    label: 'ミニマル・プレミアム',
     description:
-      '市場のボリュームゾーンに寄せた、万人受けするデザイン。奇をてらわず、清潔感と分かりやすさを優先する。白やライトグレーを基調に、機能が一目で伝わる形状。',
+      'Silhouette: a single clean monolithic volume with tight, precise radii and one uninterrupted body surface. Structure: minimal parting lines, a flush integrated closure that reads as part of the body. Material: soft-touch matte finish with one thin brushed-metal accent line. Lighting: broad soft key, restrained contrast. Overall impression: quiet, precise, expensive.',
   },
   {
     variant: 'B',
-    label: '高級感重視',
+    label: 'フューチャー・イノベーティブ',
     description:
-      'マットな質感、抑えた彩度、細いパーティングライン。金属調のアクセントを最小限に配置し、質量感のあるプロポーションにする。ギフト需要に耐えるデザイン。',
+      'Silhouette: a bold two-part architecture where the cap and body differ clearly in geometry — faceted, tapered or asymmetric — never a plain cylinder. Structure: a pronounced diagonal or stepped parting line, visible mechanical detail, a distinctive cap form factor. Material: semi-gloss technical polymer or glass with crisp edges. Lighting: directional rim light emphasising the facets. Overall impression: engineered, forward-looking.',
   },
   {
     variant: 'C',
-    label: '差別化重視',
+    label: 'ライフスタイル・マーケット',
     description:
-      '競合が採用していない構造やシルエットで、棚に並んだときに一目で違いが分かるデザイン。色または形状のどちらかで明確なアイデンティティを作る。',
+      'Silhouette: a soft organic form that fits in the palm — wide, rounded, low-slung proportions rather than tall and slim. Structure: generous curvature, a friendly oversized cap or a squat jar-like body. Material: warm matte texture with a tactile grip detail. Lighting: warm natural window-like light. Overall impression: approachable, easy to pick up on a shelf.',
   },
 ]
+
+/** 各案が互いに別物であることを強制する共通指示。 */
+const DISTINCTNESS_RULE =
+  'This is one of three competing design concepts for the same product. It MUST differ from the others in overall silhouette, proportion, closure/cap type and material impression — a different colour of the same shape is unacceptable. Follow the design direction literally, even if it means a form factor far from the conventional one for this category. The result must still look like a real mass-producible product photographed for a flagship brand page.'
 
 const BASE_RULES = [
   'ultra high-end commercial product photography, the hero image of a flagship brand product page',
@@ -67,6 +75,8 @@ export function buildConceptPrompt(
 
 Design direction (${direction.label}): ${direction.description}
 
+${DISTINCTNESS_RULE}
+
 ${BASE_RULES}`
 }
 
@@ -85,7 +95,7 @@ Premium level: ${brief.premiumLevel}
 
 Design direction (${plan.conceptName}): ${plan.visualDirection}
 
-This is one of three distinct design concepts. It must differ from the other concepts in silhouette, structure and material impression — never a mere color variation. The design must look manufacturable as a real mass-produced product, at product-photography quality (not concept art).
+${DISTINCTNESS_RULE}
 
 ${BASE_RULES}`
 }
