@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { db } from '@/server/db'
 import { hashToken, randomToken } from '@/server/crypto'
@@ -53,8 +54,12 @@ export async function destroySession(): Promise<void> {
   store.delete(SESSION_COOKIE)
 }
 
-/** 未ログインなら null。例外は投げない。 */
-export async function getCurrentUser(): Promise<SessionUser | null> {
+/**
+ * 未ログインなら null。例外は投げない。
+ * layout/page/各service関数から同一リクエスト内で何度も呼ばれるため、
+ * React.cache でリクエスト単位にメモ化する(重複したセッション問い合わせを防ぐ)。
+ */
+export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const store = await cookies()
   const token = store.get(SESSION_COOKIE)?.value
   if (!token) return null
@@ -72,4 +77,4 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     image: session.user.image,
     emailVerified: session.user.emailVerifiedAt !== null,
   }
-}
+})

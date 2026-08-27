@@ -9,7 +9,7 @@ import { MarketActions, ComplaintChart } from './market-actions'
 /** STEP 3: 市場調査(要件21〜28)。 */
 export default async function MarketPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params
-  const [research, provider] = [await getLatestResearch(projectId), await providerInfoFor(projectId)]
+  const [research, provider] = await Promise.all([getLatestResearch(projectId), providerInfoFor(projectId)])
 
   const complaints = (research?.reviews ?? [])
     .filter((review) => review.sentiment === 'NEGATIVE' || review.sentiment === 'IMPROVEMENT_REQUEST')

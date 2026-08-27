@@ -84,8 +84,10 @@ jobs:
           encoded=$(jq -rn --arg p "$DB_PASSWORD" '$p|@uri')
           echo "::add-mask::$encoded"
           echo "DB_HOST=$found" >> "$GITHUB_ENV"
-          # 実行時: transaction pooler(6543, pgbouncer)+ 接続1本/Lambda(接続枯渇対策)
-          echo "DATABASE_URL=postgresql://${USER}:${encoded}@${found}:6543/postgres?pgbouncer=true&connection_limit=1" >> "$GITHUB_ENV"
+          # 実行時: transaction pooler(6543, pgbouncer)。pgbouncer自体が多重化するため
+          # connection_limit=1は過度に保守的(1リクエスト内の並列クエリまで直列化させていた)。
+          # pgbouncerのpool_size内で収まる範囲まで引き上げる(接続枯渇対策は維持)。
+          echo "DATABASE_URL=postgresql://${USER}:${encoded}@${found}:6543/postgres?pgbouncer=true&connection_limit=5&pool_timeout=20" >> "$GITHUB_ENV"
           # スキーマ反映用: session mode 直結
           echo "DIRECT_URL=postgresql://${USER}:${encoded}@${found}:5432/postgres" >> "$GITHUB_ENV"
 

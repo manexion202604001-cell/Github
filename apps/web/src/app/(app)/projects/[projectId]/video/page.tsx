@@ -4,7 +4,7 @@ import { VideoWorkspace } from './video-workspace'
 /** STEP 11: PR動画(要件58〜68)。 */
 export default async function VideoPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params
-  const [videoProjects, provider] = [await listVideoProjects(projectId), videoProviderInfo()]
+  const [videoProjects, provider] = await Promise.all([listVideoProjects(projectId), videoProviderInfo()])
 
   return (
     <VideoWorkspace
