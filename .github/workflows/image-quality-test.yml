@@ -45,6 +45,18 @@ jobs:
               echo "--- error body ---"; head -c 800 "/tmp/${V}.bin"; echo
             fi
           done
+          echo "=== preset LIFESTYLE(アンカー同一性テスト) ==="
+          code=$(curl -sS -o /tmp/life.bin -w "%{http_code}" -D /tmp/life.head \
+            -H "Authorization: Bearer ${SECRET}" \
+            "https://github-ucchau.vercel.app/api/debug/health?image=preset&presetId=LIFESTYLE")
+          type=$(grep -i '^content-type' /tmp/life.head | tr -d '\r' | head -1 || true)
+          echo "HTTP $code / $type / $(stat -c%s /tmp/life.bin) bytes"
+          if echo "$type" | grep -qi 'image/'; then
+            cp /tmp/life.bin docs/demo-assets/quality-test/preset-LIFESTYLE.png
+          else
+            echo "--- error body ---"; head -c 800 /tmp/life.bin; echo
+          fi
+
           ls -la docs/demo-assets/quality-test/ || true
 
       - name: Commit results

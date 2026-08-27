@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/server/db'
 import { env } from '@/lib/env'
 import { buildComparison } from '@/features/oem/service'
-import { debugGenerateConceptImage, debugTestImageProvider } from '@/server/org-providers'
+import { debugGenerateConceptImage, debugTestImageProvider, imageChainFor } from '@/server/org-providers'
+import { loadImageBytes } from '@/features/images/service'
+import { IMAGE_PRESETS, buildPresetPrompt } from '@/prompts/image-prompts'
 
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -36,6 +38,46 @@ export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET ?? ''
   if (!secret || token !== secret) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 })
+  }
+
+  // ?image=preset&presetId=LIFESTYLE — 本番のアンカー画像を参照に用途別画像を1枚生成して返す(同一性確認用)
+  if (request.nextUrl.searchParams.get('image') === 'preset') {
+    const presetId = request.nextUrl.searchParams.get('presetId') ?? 'LIFESTYLE'
+    const preset = IMAGE_PRESETS.find((item) => item.id === presetId)
+    if (!preset) return NextResponse.json({ data: { ok: false, message: `未知のプリセット: ${presetId}` } })
+
+    const anchorImage = await db.productImage.findFirst({
+      where: { isAnchor: true },
+      orderBy: { createdAt: 'desc' },
+      include: { product: { include: { project: { select: { organizationId: true } } } } },
+    })
+    if (!anchorImage) return NextResponse.json({ data: { ok: false, message: 'アンカー画像がありません' } })
+
+    const anchorBytes = await loadImageBytes(anchorImage.url)
+    if (!anchorBytes) return NextResponse.json({ data: { ok: false, message: 'アンカー画像を読み込めませんでした' } })
+
+    const chain = (await imageChainFor(anchorImage.product.project.organizationId)).filter((p) => !p.synthetic)
+    const provider = chain[0]
+    if (!provider) return NextResponse.json({ data: { ok: false, message: '実画像Providerが未設定です' } })
+
+    const productDescription = [anchorImage.product.name, anchorImage.product.category, anchorImage.product.color]
+      .filter((value): value is string => Boolean(value))
+      .join(' / ')
+    const outcome = await provider.generate({
+      prompt: buildPresetPrompt(productDescription, preset, true),
+      count: 1,
+      aspectRatio: preset.aspectRatio,
+      referenceImages: [anchorBytes],
+    })
+    if (!outcome.ok) {
+      return NextResponse.json({ data: { ok: false, errorKind: outcome.error.kind, message: outcome.error.message.slice(0, 500) } })
+    }
+    const image = outcome.data[0]
+    if (!image) return NextResponse.json({ data: { ok: false, message: '画像が返却されませんでした' } })
+    return new NextResponse(Buffer.from(image.base64, 'base64'), {
+      status: 200,
+      headers: { 'content-type': image.mimeType, 'cache-control': 'no-store' },
+    })
   }
 
   // ?image=concept&variant=A — 本番のコンセプト生成プロンプトで1枚生成し、画像そのものを返す(画質確認用)

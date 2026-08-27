@@ -100,6 +100,29 @@ ${DISTINCTNESS_RULE}
 ${BASE_RULES}`
 }
 
+
+/**
+ * 用途別画像(要件19)の専用プロンプト。
+ * コンセプト用と違い「新しいデザインを作らない」ことが最重要:
+ * アンカー画像の商品をそのまま、撮り方だけ変える。
+ */
+export function buildPresetPrompt(productDescription: string, preset: ImageKindPreset, hasAnchor: boolean): string {
+  const identity = hasAnchor
+    ? 'The attached reference image shows the exact product to photograph. Reproduce THIS product with complete fidelity — identical shape, proportions, colours, materials, cap, seams and details. Do NOT redesign, restyle or substitute the product in any way; only the setting, composition, camera and lighting change for this shot type.'
+    : `Product to photograph: ${productDescription}. Keep the product design consistent and plausible as a real mass-produced item.`
+  const person = preset.withPerson
+    ? 'Include one photorealistic human model as described. The model must look natural and belong to the scene; hands interacting with the product must be anatomically correct.'
+    : 'No people in the frame.'
+
+  return `${identity}
+
+Shot type (${preset.label}): ${preset.prompt}
+
+${person}
+
+Photography quality: a real photograph captured with a camera — not a 3D render, not an illustration. Full-frame camera, tack-sharp focus on the product, physically accurate materials and reflections, high dynamic range, professional colour grading. No text, no logo, no watermark anywhere in the image.`
+}
+
 /** アンカー画像を基準にした角度別プロンプト(要件16, 17)。 */
 export function buildAnglePrompt(productDescription: string, angleLabel: string): string {
   return `Render the exact same product as in the reference image, viewed from a different angle.
@@ -118,6 +141,8 @@ export type ImageKindPreset = {
   description: string
   prompt: string
   aspectRatio: '1:1' | '4:3' | '3:4' | '16:9' | '9:16'
+  /** 使用シーン等、人物モデルを含めて生成する種類か。 */
+  withPerson?: boolean
 }
 
 /** 商品画像の種類(要件19)。 */
@@ -146,9 +171,11 @@ export const IMAGE_PRESETS: ImageKindPreset[] = [
   {
     id: 'LIFESTYLE',
     label: '使用シーン',
-    description: '生活の中で使われている様子',
-    prompt: 'The product in a bright, tidy Japanese apartment, natural window light, lived-in but uncluttered scene.',
+    description: 'モデルが実際に使っている様子',
+    prompt:
+      'A Japanese adult model (matching the product\'s target customer) naturally using the product in a bright, tidy Japanese apartment — candid lifestyle photography, natural window light, relaxed authentic expression, the product clearly visible and in focus as the hero of the shot.',
     aspectRatio: '4:3',
+    withPerson: true,
   },
   {
     id: 'LUXURY',
@@ -175,8 +202,10 @@ export const IMAGE_PRESETS: ImageKindPreset[] = [
     id: 'SNS',
     label: 'SNS画像',
     description: 'SNS投稿・広告向け',
-    prompt: 'Vertical composition, the product placed in the upper third, warm and casual atmosphere, negative space at the bottom for text.',
+    prompt:
+      'Vertical composition for social media: a Japanese model casually holding or using the product, warm approachable atmosphere, the product in sharp focus in the upper two-thirds, negative space at the bottom for text overlay.',
     aspectRatio: '9:16',
+    withPerson: true,
   },
   {
     id: 'LP',

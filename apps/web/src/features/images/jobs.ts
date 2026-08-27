@@ -15,6 +15,7 @@ import {
   buildConceptPrompt,
   buildEditPrompt,
   buildPlannedConceptPrompt,
+  buildPresetPrompt,
 } from '@/prompts/image-prompts'
 import { imageBriefTask, type ImageBriefOutput } from '@/prompts/image-brief'
 import { runAITask } from '@/server/ai-task'
@@ -356,11 +357,18 @@ const generatePreset: JobHandler = async (context) => {
   const description = describe(product)
   const chain = await imageTargetsFor(context.organizationId)
 
-  const prompt = `${buildConceptPrompt(description, {
-    variant: 'A',
-    label: preset.label,
-    description: preset.description,
-  })}\n\nShot requirement: ${preset.prompt}`
+  // コンセプト用プロンプトは「新デザインを作る」指示のため使わない。
+  // アンカーがある場合はその商品の同一性維持を最優先する専用プロンプトを使う。
+  const productDescription = [
+    description.name,
+    description.category,
+    description.material,
+    description.color,
+    ...description.features.slice(0, 3),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(' / ')
+  const prompt = buildPresetPrompt(productDescription, preset, Boolean(anchorBytes))
 
   const outcome = await runWithFallback(chain, (provider) =>
     provider.generate({
