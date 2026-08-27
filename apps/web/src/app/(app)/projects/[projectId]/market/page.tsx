@@ -22,6 +22,7 @@ export default async function MarketPage({ params }: { params: Promise<{ project
         hasResearch={research?.status === 'COMPLETED'}
         hasReviews={(research?.reviews.length ?? 0) > 0}
         currentKeyword={research?.keyword ?? ''}
+        currentDepth={research?.depth ?? 'STANDARD'}
         providerLabel={provider.label}
         providerSynthetic={provider.synthetic}
         status={research?.status ?? null}

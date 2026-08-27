@@ -12,6 +12,7 @@ const schema = z.object({
   projectId: z.string().min(1),
   keyword: z.string().max(120).optional(),
   marketplace: z.string().max(120).optional(),
+  depth: z.enum(['QUICK', 'STANDARD', 'DEEP']).optional(),
 })
 
 export const POST = apiHandler(async (request) => {

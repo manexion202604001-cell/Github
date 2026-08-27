@@ -1,4 +1,5 @@
 import 'server-only'
+import type { ResearchDepth } from '@prisma/client'
 import { db } from '@/server/db'
 import { AppError } from '@/lib/errors'
 import { requireProjectAccess } from '@/server/authz'
@@ -6,18 +7,23 @@ import { enqueueJob } from '@/jobs/queue'
 import { marketDataProviders } from '@/providers/market-data'
 import { marketDataChainFor } from '@/server/org-providers'
 
-export async function startMarketResearch(projectId: string, input: { keyword?: string; marketplace?: string }) {
+export async function startMarketResearch(
+  projectId: string,
+  input: { keyword?: string; marketplace?: string; depth?: ResearchDepth },
+) {
   const context = await requireProjectAccess(projectId, 'EDITOR')
   const product = await db.product.findUnique({ where: { projectId } })
   if (!product) throw AppError.notFound('商品情報が見つかりません')
 
   const keyword = input.keyword?.trim() || product.category || product.name
   if (!keyword) throw AppError.validation('検索キーワードを指定してください')
+  const depth = input.depth ?? 'STANDARD'
 
   const research = await db.marketResearch.create({
     data: {
       projectId,
       status: 'PENDING',
+      depth,
       keyword,
       marketplace: input.marketplace ?? 'amazon.co.jp',
       source: (await marketDataChainFor(context.organizationId))
@@ -32,7 +38,7 @@ export async function startMarketResearch(projectId: string, input: { keyword?: 
     projectId,
     kind: 'MARKET_RESEARCH',
     handler: 'market.research',
-    payload: { projectId, researchId: research.id, keyword, marketplace: research.marketplace },
+    payload: { projectId, researchId: research.id, keyword, marketplace: research.marketplace, depth },
     createdBy: context.user.id,
   })
 

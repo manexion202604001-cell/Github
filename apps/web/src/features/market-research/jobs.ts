@@ -12,6 +12,8 @@ import { marketResearchTask } from '@/prompts/market-research'
 import { competitorAnalysisTask } from '@/prompts/competitor-analysis'
 import { reviewAnalysisTask } from '@/prompts/review-analysis'
 import { advanceStage } from '@/features/projects/service'
+import { enqueueJob } from '@/jobs/queue'
+import { DEPTH_CONFIG, heuristicCompetitorAnalysis } from './domain'
 import type { JobHandler } from '@/jobs/types'
 
 const researchPayload = z.object({
@@ -19,6 +21,7 @@ const researchPayload = z.object({
   researchId: z.string(),
   keyword: z.string(),
   marketplace: z.string(),
+  depth: z.enum(['QUICK', 'STANDARD', 'DEEP']).default('STANDARD'),
 })
 
 /**
@@ -70,6 +73,7 @@ async function fetchFromAllSources(
 /** STEP 3: 市場データ取得(複数ソース併用)→ AI分析 → 競合保存(要件21〜25)。 */
 const runResearch: JobHandler = async (context) => {
   const payload = researchPayload.parse(context.payload)
+  const depthConfig = DEPTH_CONFIG[payload.depth]
   const chain = await marketDataChainFor(context.organizationId)
   // 実データProviderが1つでもあれば全部使う。無ければmock1本。
   const realProviders = chain.filter((provider) => !provider.synthetic)
@@ -89,7 +93,7 @@ const runResearch: JobHandler = async (context) => {
       fetchTargets,
       payload.keyword,
       payload.marketplace,
-      20,
+      depthConfig.perSourceLimit,
     )
 
     await recordUsage({
@@ -126,7 +130,12 @@ const runResearch: JobHandler = async (context) => {
 
     const product = await db.product.findUnique({ where: { projectId: payload.projectId } })
 
-    // 2つのAI分析は互いに独立のため並列実行する(所要時間ほぼ半減)
+    // AIに渡す件数を深度ごとに絞る(件数が多いほど遅く・JSON生成が不安定になりやすいため)。
+    // DBへの保存(競合一覧)は取得した全件のまま行う。
+    const aiProducts = products.slice(0, depthConfig.aiProductCap)
+
+    // 2つのAI分析は互いに独立のため並列実行する(所要時間ほぼ半減)。
+    // 「簡易」では競合分析AIを呼ばず、実売データだけのヒューリスティックで代替してさらに高速化する。
     await context.setProgress(45)
     const [research, competitorAnalysis] = await Promise.all([
       runAITask(
@@ -137,15 +146,22 @@ const runResearch: JobHandler = async (context) => {
           marketplace: summary.marketplace,
           sourceLabel: summary.marketplace,
           summary,
-          products,
+          products: aiProducts,
         },
         { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
       ),
-      runAITask(
-        competitorAnalysisTask,
-        { productName: product?.name ?? payload.keyword, targetPrice: product?.price ?? null, products },
-        { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
-      ),
+      depthConfig.runCompetitorAnalysis
+        ? runAITask(
+            competitorAnalysisTask,
+            { productName: product?.name ?? payload.keyword, targetPrice: product?.price ?? null, products: aiProducts },
+            { organizationId: context.organizationId, projectId: payload.projectId, jobId: context.jobId },
+          )
+        : Promise.resolve({
+            data: heuristicCompetitorAnalysis(aiProducts, product?.price ?? null),
+            synthetic: false,
+            provider: 'heuristic',
+            model: 'heuristic',
+          }),
     ])
     await context.setProgress(85)
 
@@ -222,6 +238,7 @@ const runResearch: JobHandler = async (context) => {
             providerSynthetic: primary.synthetic,
             sources: usedSources.map((provider) => provider.id),
             sourceErrors: errors,
+            depth: payload.depth,
           },
           completedAt: new Date(),
         },
@@ -229,6 +246,18 @@ const runResearch: JobHandler = async (context) => {
     })
 
     await advanceStage(payload.projectId, 'MARKET_RESEARCH')
+
+    // 「詳細」は完了後に自動でレビュー解析まで続ける(ユーザーの再操作を待たない)。
+    if (depthConfig.autoReviewAnalysis) {
+      await enqueueJob({
+        organizationId: context.organizationId,
+        projectId: payload.projectId,
+        kind: 'MARKET_RESEARCH',
+        handler: 'market.reviews',
+        payload: { projectId: payload.projectId, researchId: payload.researchId },
+      })
+    }
+
     await context.setProgress(100)
 
     return {

@@ -10,12 +10,17 @@ import { Field, Input } from '@/components/ui/field'
 import { Notice, Progress } from '@/components/ui/feedback'
 import { SampleDataBadge } from '@/components/ui/badge'
 import { formatPercent } from '@/lib/format'
+import { cn } from '@/lib/cn'
+import { DEPTH_CONFIG, DEPTH_ORDER } from '@/features/market-research/domain'
+
+type Depth = (typeof DEPTH_ORDER)[number]
 
 export function MarketActions({
   projectId,
   hasResearch,
   hasReviews,
   currentKeyword,
+  currentDepth,
   providerLabel,
   providerSynthetic,
   status,
@@ -25,6 +30,7 @@ export function MarketActions({
   hasResearch: boolean
   hasReviews: boolean
   currentKeyword: string
+  currentDepth: Depth
   providerLabel: string
   providerSynthetic: boolean
   status: string | null
@@ -32,6 +38,7 @@ export function MarketActions({
 }) {
   const router = useRouter()
   const [keyword, setKeyword] = useState(currentKeyword)
+  const [depth, setDepth] = useState<Depth>(currentDepth)
   const [error, setError] = useState<string | null>(null)
   const job = useJob((finished) => {
     if (finished.status === 'FAILED') setError(finished.error ?? '調査に失敗しました')
@@ -64,12 +71,36 @@ export function MarketActions({
         {error ? <Notice tone="error">{error}</Notice> : null}
         {status === 'FAILED' && researchError ? <Notice tone="error">前回の調査が失敗しました: {researchError}</Notice> : null}
 
+        <Field label="調査レベル" hint="件数を絞るほど速く、増やすほど網羅的になります">
+          <div className="grid gap-2 sm:grid-cols-3">
+            {DEPTH_ORDER.map((option) => {
+              const config = DEPTH_CONFIG[option]
+              const selected = depth === option
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setDepth(option)}
+                  disabled={job.running}
+                  className={cn(
+                    'border px-3.5 py-2.5 text-left transition-colors disabled:opacity-60',
+                    selected ? 'border-brand bg-brand-wash' : 'border-line bg-surface hover:border-line-strong',
+                  )}
+                >
+                  <p className={cn('text-[13px] font-bold', selected && 'text-brand')}>{config.label}</p>
+                  <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-muted">{config.description}</p>
+                </button>
+              )
+            })}
+          </div>
+        </Field>
+
         <div className="flex flex-wrap items-end gap-3">
           <Field label="検索キーワード" className="min-w-64 flex-1" hint="空欄なら商品カテゴリ/商品名を使用します">
             <Input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="衣類スチーマー" />
           </Field>
           <Button
-            onClick={() => void start('/api/market-research', { projectId, keyword: keyword || undefined })}
+            onClick={() => void start('/api/market-research', { projectId, keyword: keyword || undefined, depth })}
             disabled={job.running}
           >
             {hasResearch ? '再調査する' : '市場調査を開始'}
@@ -85,7 +116,9 @@ export function MarketActions({
 
         {job.running && job.job ? (
           <div className="space-y-2">
-            <p className="text-[13px] font-semibold">分析中…(商品取得 → AI分析 → 競合保存)</p>
+            <p className="text-[13px] font-semibold">
+              分析中…(商品取得 → AI分析 → 競合保存){depth === 'DEEP' ? '。完了後、レビュー解析も自動で続けます' : ''}
+            </p>
             <Progress value={job.job.progress} showValue />
           </div>
         ) : null}

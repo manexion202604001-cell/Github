@@ -352,10 +352,18 @@ enum ResearchStatus {
   FAILED
 }
 
+/// 市場調査の深度(要件28拡張)。速度と網羅性のトレードオフをユーザーが選べるようにする。
+enum ResearchDepth {
+  QUICK
+  STANDARD
+  DEEP
+}
+
 model MarketResearch {
   id               String         @id @default(cuid())
   projectId        String
   status           ResearchStatus @default(PENDING)
+  depth            ResearchDepth  @default(STANDARD)
   source           String         @default("mock")
   keyword          String?
   marketplace      String         @default("amazon.co.jp")
