@@ -1,0 +1,629 @@
+// SNS COMPASS — 企業SNS企画・市場調査AI
+//
+// 設計方針
+//  - Organization を最上位のテナント境界とし、すべての業務テーブルが organizationId を持つ。
+//  - SNS種別(channel)・企画カテゴリ・トーン等は将来追加が前提のため enum ではなく String とし、
+//    許可値は src/lib/config/* の設定値 + zod で検証する(要件5)。
+//  - 生成物は上書きせず、状態(status)と履歴(AuditLog)で追跡する。
+//  - 重要データは物理削除せず deletedAt を立てる(要件104)。
+
+generator client {
+  provider = "prisma-client-js"
+  // 生成先を明示的に分ける。npm workspaces では @prisma/client がルートへ
+  // ホイストされるため、既定のままだと同一リポジトリ内の他アプリと
+  // 生成物を奪い合ってしまう。
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum MemberRole {
+  VIEWER
+  EDITOR
+  ADMIN
+  OWNER
+}
+
+enum ResearchStatus {
+  DRAFT
+  PLANNING
+  SEARCHING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+enum ResearchDepth {
+  QUICK
+  STANDARD
+  DEEP
+}
+
+enum InsightType {
+  FACT
+  INSIGHT
+  HYPOTHESIS
+}
+
+enum IdeaStatus {
+  DRAFT
+  APPROVED
+  SCRIPTED
+  ARCHIVED
+}
+
+enum ScriptStatus {
+  DRAFT
+  REVIEW
+  READY
+  ARCHIVED
+}
+
+enum CalendarStatus {
+  IDEA
+  SCRIPT
+  READY
+  PLANNED
+  POSTED
+  ARCHIVED
+}
+
+enum BrandCheckVerdict {
+  SAFE
+  WARNING
+  REVIEW
+}
+
+// ── アカウント ─────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String?
+  image        String?
+  jobTitle     String?
+  onboardedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions      Session[]
+  memberships   OrganizationMember[]
+  createdOrgs   Organization[]       @relation("OrganizationCreatedBy")
+  researchRuns  ResearchRun[]
+  ideas         Idea[]
+  scripts       Script[]
+  assignedItems CalendarItem[]       @relation("CalendarAssignee")
+  auditLogs     AuditLog[]
+  aiUsageLogs   AiUsageLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdById String
+  /// 組織ごとの既定AI Provider。未設定なら環境変数の設定に従う。
+  aiProvider  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy    User                 @relation("OrganizationCreatedBy", fields: [createdById], references: [id])
+  members      OrganizationMember[]
+  brands       Brand[]
+  researchRuns ResearchRun[]
+  ideas        Idea[]
+  scripts      Script[]
+  calendar     CalendarItem[]
+  auditLogs    AuditLog[]
+  aiUsageLogs  AiUsageLog[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String     @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole @default(EDITOR)
+  invitedAt      DateTime   @default(now())
+  joinedAt       DateTime?
+  createdAt      DateTime   @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+// ── ブランドカルテ ─────────────────────────────────────────────────
+
+model Brand {
+  id                String    @id @default(cuid())
+  organizationId    String
+  name              String
+  industry          String?
+  website           String?
+  region            String?
+  description       String?
+  targetCustomer    String?
+  brandTone         String?
+  /// 発信チャネル(instagram_reels 等)。許可値は src/lib/config/channels.ts。
+  snsChannels       String[]  @default([])
+  /// 運用目的(awareness / inquiry 等)。許可値は src/lib/config/goals.ts。
+  snsGoals          String[]  @default([])
+  brandKeywords     String[]  @default([])
+  additionalContext String?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products     BrandProduct[]
+  competitors  Competitor[]
+  rules        BrandRule?
+  researchRuns ResearchRun[]
+  ideas        Idea[]
+  scripts      Script[]
+  calendar     CalendarItem[]
+
+  @@index([organizationId])
+  @@map("brands")
+}
+
+model BrandProduct {
+  id               String   @id @default(cuid())
+  brandId          String
+  name             String
+  description      String?
+  priceRange       String?
+  strengths        String[] @default([])
+  weaknesses       String[] @default([])
+  differentiation  String?
+  customerProblems String[] @default([])
+  customerNeeds    String[] @default([])
+  purchaseReasons  String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@map("brand_products")
+}
+
+/// Brand Guard(要件45)。表現チェックの根拠になる社内ルール。
+model BrandRule {
+  id                   String   @id @default(cuid())
+  brandId              String   @unique
+  prohibitedWords      String[] @default([])
+  preferredWords       String[] @default([])
+  tone                 String?
+  allowCompetitorNames Boolean  @default(false)
+  avoidExpressions     String[] @default([])
+  legalNotes           String?
+  regulatoryNotes      String?
+  internalRules        String?
+  preferredCta         String?
+  visualPreferences    String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@map("brand_rules")
+}
+
+model Competitor {
+  id            String    @id @default(cuid())
+  brandId       String
+  name          String
+  website       String?
+  instagramUrl  String?
+  tiktokUrl     String?
+  youtubeUrl    String?
+  notes         String?
+  /// Webから取得できた公開情報の要約。取得できない場合は null のまま残す。
+  publicSummary String?
+  fetchedAt     DateTime?
+  fetchError    String?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@map("competitors")
+}
+
+// ── 市場調査 ───────────────────────────────────────────────────────
+
+model ResearchRun {
+  id             String         @id @default(cuid())
+  organizationId String
+  brandId        String
+  title          String
+  channel        String
+  region         String
+  objective      String
+  depth          ResearchDepth  @default(STANDARD)
+  status         ResearchStatus @default(DRAFT)
+  /// 進捗表示用のステージキー(planning / searching / ...)。
+  stage          String?
+  keywords       String[]       @default([])
+  competitorUrls String[]       @default([])
+  freeText       String?
+  /// 入力のスナップショット。再調査時の差分比較に使う。
+  inputJson      Json?
+  /// AIが立てた検索計画(research_questions / search_queries 等)。
+  planJson       Json?
+  summary        String?
+  /// キャッシュ判定用のハッシュ(brand + channel + region + keywords)。
+  fingerprint    String?
+  errorMessage   String?
+  createdById    String
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  completedAt    DateTime?
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brand        Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  createdBy    User              @relation(fields: [createdById], references: [id])
+  sources      ResearchSource[]
+  insights     ResearchInsight[]
+  ideas        Idea[]
+
+  @@index([organizationId, createdAt])
+  @@index([brandId])
+  @@index([fingerprint])
+  @@map("research_runs")
+}
+
+model ResearchSource {
+  id          String    @id @default(cuid())
+  researchId  String
+  title       String
+  url         String
+  domain      String
+  snippet     String?
+  publishedAt DateTime?
+  retrievedAt DateTime  @default(now())
+  searchQuery String
+  /// 参照順。レポート内の [1] 表記に対応する。
+  position    Int       @default(0)
+
+  research ResearchRun @relation(fields: [researchId], references: [id], onDelete: Cascade)
+
+  @@index([researchId])
+  @@map("research_sources")
+}
+
+model ResearchInsight {
+  id          String      @id @default(cuid())
+  researchId  String
+  /// overview / market / customer / sns / competitor / gap / opportunity
+  category    String
+  title       String
+  content     String
+  insightType InsightType @default(INSIGHT)
+  confidence  Int         @default(60)
+  sourceIds   String[]    @default([])
+  /// 競合カード等の追加構造データ。
+  metaJson    Json?
+  position    Int         @default(0)
+  createdAt   DateTime    @default(now())
+
+  research ResearchRun @relation(fields: [researchId], references: [id], onDelete: Cascade)
+
+  @@index([researchId, category])
+  @@map("research_insights")
+}
+
+// ── 企画 ───────────────────────────────────────────────────────────
+
+model Idea {
+  id             String     @id @default(cuid())
+  organizationId String
+  brandId        String
+  researchId     String?
+  title          String
+  category       String
+  channel        String
+  objective      String?
+  hook           String
+  summary        String
+  whyThisIdea    String
+  target         String?
+  cta            String?
+  durationSec    Int        @default(30)
+  difficulty     String     @default("MEDIUM")
+  status         IdeaStatus @default(DRAFT)
+  isFavorite     Boolean    @default(false)
+  /// 参照した ResearchInsight の id。
+  insightIds     String[]   @default([])
+  createdById    String
+  deletedAt      DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brand        Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  research     ResearchRun?   @relation(fields: [researchId], references: [id], onDelete: SetNull)
+  createdBy    User           @relation(fields: [createdById], references: [id])
+  score        IdeaScore?
+  hooks        IdeaHook[]
+  scripts      Script[]
+  calendar     CalendarItem[]
+
+  @@index([organizationId, createdAt])
+  @@index([brandId])
+  @@index([researchId])
+  @@map("ideas")
+}
+
+model IdeaScore {
+  id              String   @id @default(cuid())
+  ideaId          String   @unique
+  overall         Int
+  hook            Int
+  relevance       Int
+  differentiation Int
+  shareability    Int
+  saveability     Int
+  conversion      Int
+  brandFit        Int
+  feasibility     Int
+  brandSafety     Int
+  reasoning       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@map("idea_scores")
+}
+
+model IdeaHook {
+  id         String   @id @default(cuid())
+  ideaId     String
+  /// problem / question / number / shock / curiosity / contrarian / secret / mistake / example
+  hookType   String
+  text       String
+  rationale  String?
+  isSelected Boolean  @default(false)
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@index([ideaId])
+  @@map("idea_hooks")
+}
+
+// ── 台本 ───────────────────────────────────────────────────────────
+
+model Script {
+  id             String       @id @default(cuid())
+  organizationId String
+  brandId        String
+  ideaId         String?
+  title          String
+  channel        String
+  durationSec    Int          @default(30)
+  style          String       @default("face_to_camera")
+  tone           String       @default("friendly")
+  hook           String
+  cta            String?
+  status         ScriptStatus @default(DRAFT)
+  createdById    String
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brand        Brand            @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  idea         Idea?            @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  createdBy    User             @relation(fields: [createdById], references: [id])
+  scenes       ScriptScene[]
+  brief        ProductionBrief?
+  captions     ScriptCaption?
+  brandChecks  BrandCheck[]
+  calendar     CalendarItem[]
+
+  @@index([organizationId, createdAt])
+  @@index([brandId])
+  @@map("scripts")
+}
+
+model ScriptScene {
+  id           String   @id @default(cuid())
+  scriptId     String
+  position     Int
+  startSecond  Int
+  endSecond    Int
+  visual       String
+  voice        String
+  onscreenText String?
+  camera       String?
+  assets       String[] @default([])
+  purpose      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  script  Script        @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  prompts VideoPrompt[]
+
+  @@index([scriptId])
+  @@map("script_scenes")
+}
+
+model ProductionBrief {
+  id         String   @id @default(cuid())
+  scriptId   String   @unique
+  cast       String[] @default([])
+  locations  String[] @default([])
+  equipment  String[] @default([])
+  assets     String[] @default([])
+  shotList   Json
+  shootOrder String[] @default([])
+  cautions   String[] @default([])
+  captions   String[] @default([])
+  brollIdeas String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  script Script @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+
+  @@map("production_briefs")
+}
+
+model VideoPrompt {
+  id             String   @id @default(cuid())
+  scriptSceneId  String
+  /// generic / veo / sora / runway / kling(src/lib/config/video-presets.ts)
+  preset         String   @default("generic")
+  language       String   @default("en")
+  prompt         String
+  negativePrompt String?
+  /// Subject / Action / Camera 等の構造化フィールド。
+  structureJson  Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  scene ScriptScene @relation(fields: [scriptSceneId], references: [id], onDelete: Cascade)
+
+  @@unique([scriptSceneId, preset, language])
+  @@index([scriptSceneId])
+  @@map("video_prompts")
+}
+
+model ScriptCaption {
+  id               String   @id @default(cuid())
+  scriptId         String   @unique
+  instagramCaption String?
+  tiktokCaption    String?
+  youtubeTitle     String?
+  description      String?
+  cta              String?
+  hashtags         String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  script Script @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+
+  @@map("script_captions")
+}
+
+/// 表現チェック結果(要件46)。法的判断は断定せず「確認を促す」記録として保持する。
+model BrandCheck {
+  id        String            @id @default(cuid())
+  scriptId  String
+  verdict   BrandCheckVerdict
+  findings  Json
+  createdAt DateTime          @default(now())
+
+  script Script @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+
+  @@index([scriptId])
+  @@map("brand_checks")
+}
+
+// ── カレンダー ─────────────────────────────────────────────────────
+
+model CalendarItem {
+  id             String         @id @default(cuid())
+  organizationId String
+  brandId        String
+  ideaId         String?
+  scriptId       String?
+  title          String
+  channel        String
+  scheduledAt    DateTime
+  status         CalendarStatus @default(PLANNED)
+  assigneeId     String?
+  notes          String?
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brand        Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  idea         Idea?        @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  script       Script?      @relation(fields: [scriptId], references: [id], onDelete: SetNull)
+  assignee     User?        @relation("CalendarAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, scheduledAt])
+  @@index([brandId])
+  @@map("calendar_items")
+}
+
+// ── 運用ログ ───────────────────────────────────────────────────────
+
+model AiUsageLog {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  userId             String?
+  feature            String
+  provider           String
+  model              String
+  inputTokens        Int      @default(0)
+  outputTokens       Int      @default(0)
+  /// 概算コスト(マイクロ円)。請求額ではなく利用量把握のための目安。
+  estimatedCostMicro Int      @default(0)
+  latencyMs          Int?
+  failed             Boolean  @default(false)
+  error              String?
+  createdAt          DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("ai_usage_logs")
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  summary        String?
+  metaJson       Json?
+  ip             String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
+}

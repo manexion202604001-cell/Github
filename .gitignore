@@ -11,3 +11,4 @@ coverage/
 .turbo/
 apps/web/public/uploads/
 apps/web/.storage/
+apps/sns/src/generated/
