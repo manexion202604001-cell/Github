@@ -1,10 +1,12 @@
 'use client'
 
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-const COLORS = ['#135dff', '#248cff', '#39c6ff', '#6b5cf6', '#0e2a55', '#67748a']
-
-/** カテゴリー別の企画数(要件12)。 */
+/**
+ * カテゴリー別の企画数(要件12)。
+ * 単一系列のため色は1色に固定する。順位で色を変えると、色が
+ * 実体ではなく並び順を表してしまい、絞り込みのたびに意味が変わる。
+ */
 export function CategoryChart({ data }: { data: { category: string; label: string; count: number }[] }) {
   if (data.length === 0) {
     return (
@@ -27,11 +29,7 @@ export function CategoryChart({ data }: { data: { category: string; label: strin
             contentStyle={{ borderRadius: 12, border: '1px solid #dee7f2', fontSize: 12 }}
             formatter={(value: number) => [`${value}件`, '企画']}
           />
-          <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={16}>
-            {data.map((entry, index) => (
-              <Cell key={entry.category} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Bar>
+          <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={16} fill="#135dff" />
         </BarChart>
       </ResponsiveContainer>
     </div>

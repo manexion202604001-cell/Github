@@ -205,8 +205,64 @@ npm run build
 npm run start        # port 3100
 ```
 
-Vercel へデプロイする場合は、Root Directory に `apps/sns` を指定し、Build Command を `npm run build`、Install Command を `npm install`(ワークスペース対応)にしてください。
-環境変数はプロジェクト設定へ登録します。`AUTH_SECRET` は本番必須です。
+### Vercel へ公開する(Web上で見られるようにする)
+
+`apps/web` とは**別の Vercel プロジェクト**として作成します。同じプロジェクトに同居させることはできません。
+
+1. **プロジェクトを作成**
+   Vercel → Add New → Project → このリポジトリを選択。
+   - **Root Directory**: `apps/sns` ← 必ず変更する
+   - **Framework Preset**: Next.js(自動検出)
+   - Build / Install Command は `apps/sns/vercel.json` の設定が使われるため変更不要
+
+2. **データベースを用意する**
+   Supabase の新規プロジェクト、または既存DBの**専用スキーマ**を使います。
+   `apps/web` と同じスキーマを指すと、ビルド時の `prisma db push` が相手のテーブルを削除する可能性があります。
+
+   ```
+   # 別DBを使う場合
+   DATABASE_URL=postgresql://...:6543/postgres?pgbouncer=true
+   DIRECT_URL=postgresql://...:5432/postgres
+
+   # 既存DBを共有する場合は専用スキーマを指定する
+   DATABASE_URL=postgresql://...:6543/postgres?pgbouncer=true&schema=sns
+   DIRECT_URL=postgresql://...:5432/postgres?schema=sns
+   ```
+
+3. **環境変数を登録**(Settings → Environment Variables)
+
+   | 変数 | 値 |
+   |---|---|
+   | `DATABASE_URL` | 上記の接続文字列(必須) |
+   | `DIRECT_URL` | 直接接続(必須) |
+   | `AUTH_SECRET` | `openssl rand -base64 32` の出力(必須) |
+   | `APP_URL` | 割り当てられた本番URL |
+   | `AI_PROVIDER` / `ANTHROPIC_API_KEY` | 実AI生成を使う場合 |
+   | `SEARCH_PROVIDER` / `TAVILY_API_KEY` | 実Web検索を使う場合 |
+
+   AI・検索のキーは未設定でも構いません。その場合は Demo Mode として全画面が動作します。
+
+4. **Deploy**
+   ビルド時に `prisma db push` が走り、スキーマが自動で反映されます。
+   `DATABASE_URL` が未設定でもビルドは通りますが、ログイン等のDB機能は動きません。
+
+5. **デプロイ後**
+
+   ```bash
+   # 行レベルセキュリティを有効化(初回のみ)
+   psql "$DIRECT_URL" -f supabase/migrations/0001_row_level_security.sql
+
+   # デモデータを入れる(任意)
+   DATABASE_URL="..." npm run db:seed -w @manexion/sns
+   ```
+
+   シード後は `demo@example.com` / `demo-password-2026` でログインできます。
+   **公開URLで運用する場合は、必ずこのデモアカウントを削除してください。**
+
+### UIデモ(静的)
+
+DBを用意せずに画面だけを確認したい場合は、リポジトリ外の静的デモページで主要6画面を閲覧できます。
+実データ・AI生成は動作しない、見た目と導線の確認用です。
 
 ---
 
