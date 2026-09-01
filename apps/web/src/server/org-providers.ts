@@ -174,6 +174,31 @@ export async function marketDataChainFor(organizationId: string): Promise<Market
 }
 
 /**
+ * 診断用: 登録済みの市場データProvider(楽天/Rainforest)を実際に1回ずつ呼び、
+ * キーの有効性と生のエラー内容を確認する。/api/debug/health?market=1 からのみ使用する。
+ */
+export async function debugTestMarketProviders(): Promise<Record<string, unknown>> {
+  const row = await db.integration.findFirst({ where: { enabled: true, kind: 'MARKET_DATA' } })
+  const organizationId = row?.organizationId ?? (await db.organization.findFirst({ select: { id: true } }))?.id
+  if (!organizationId) return { configured: false, note: '組織がありません' }
+
+  const chain = (await marketDataChainFor(organizationId)).filter((provider) => !provider.synthetic)
+  if (chain.length === 0) return { configured: false, note: '実データProviderが未設定です' }
+
+  const results: Record<string, unknown>[] = []
+  for (const provider of chain) {
+    const started = Date.now()
+    const outcome = await provider.searchProducts({ keyword: '衣類スチーマー', limit: 3 })
+    results.push(
+      outcome.ok
+        ? { provider: provider.id, ok: true, ms: Date.now() - started, items: outcome.data.length, sample: outcome.data[0]?.title?.slice(0, 60) }
+        : { provider: provider.id, ok: false, ms: Date.now() - started, errorKind: outcome.error.kind, message: outcome.error.message.slice(0, 300) },
+    )
+  }
+  return { configured: true, results }
+}
+
+/**
  * 診断用: 本番のコンセプト生成プロンプトで実際に1枚生成し、画像を返す。
  * /api/debug/health?image=concept&variant=A からのみ使用する(画質確認用)。
  */

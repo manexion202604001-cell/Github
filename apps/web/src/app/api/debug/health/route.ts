@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/server/db'
 import { env } from '@/lib/env'
 import { buildComparison } from '@/features/oem/service'
-import { debugGenerateConceptImage, debugTestImageProvider, imageChainFor } from '@/server/org-providers'
+import { debugGenerateConceptImage, debugTestImageProvider, debugTestMarketProviders, imageChainFor } from '@/server/org-providers'
 import { loadImageBytes } from '@/features/images/service'
 import { IMAGE_PRESETS, buildPresetPrompt } from '@/prompts/image-prompts'
 
@@ -185,6 +185,12 @@ export async function GET(request: NextRequest) {
   // (画像1枚分のコストがかかるため明示オプトイン)
   if (request.nextUrl.searchParams.get('image') === '1') {
     results.push(await step('image.provider', () => debugTestImageProvider()))
+  }
+
+  // ?market=1 のときだけ、登録済み市場データProvider(楽天/Rainforest)を実際に1回ずつ呼ぶ
+  // (Rainforestはクレジットを消費するため明示オプトイン)
+  if (request.nextUrl.searchParams.get('market') === '1') {
+    results.push(await step('market.provider', () => debugTestMarketProviders()))
   }
 
   const failed = results.filter((result) => !result.ok)
