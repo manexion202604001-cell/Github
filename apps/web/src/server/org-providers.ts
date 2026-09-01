@@ -182,8 +182,23 @@ export async function debugTestMarketProviders(): Promise<Record<string, unknown
   const organizationId = row?.organizationId ?? (await db.organization.findFirst({ select: { id: true } }))?.id
   if (!organizationId) return { configured: false, note: '組織がありません' }
 
+  // 保存キーの形状だけを返す(全文は返さない)。「何が保存されているか」の切り分け用
+  const rows = await db.integration.findMany({ where: { enabled: true, kind: 'MARKET_DATA', organizationId } })
+  const keyShapes = rows.map((item) => {
+    const secret = item.encryptedSecret ? decryptSecret(item.encryptedSecret) : null
+    if (!secret) return { provider: item.provider, hasSecret: false }
+    return {
+      provider: item.provider,
+      hasSecret: true,
+      length: secret.length,
+      digitsOnly: /^\d+$/.test(secret),
+      hint: `${secret.slice(0, 2)}…${secret.slice(-2)}`,
+      updatedAt: item.updatedAt,
+    }
+  })
+
   const chain = (await marketDataChainFor(organizationId)).filter((provider) => !provider.synthetic)
-  if (chain.length === 0) return { configured: false, note: '実データProviderが未設定です' }
+  if (chain.length === 0) return { configured: false, note: '実データProviderが未設定です', keyShapes }
 
   const results: Record<string, unknown>[] = []
   for (const provider of chain) {
@@ -195,7 +210,7 @@ export async function debugTestMarketProviders(): Promise<Record<string, unknown
         : { provider: provider.id, ok: false, ms: Date.now() - started, errorKind: outcome.error.kind, message: outcome.error.message.slice(0, 300) },
     )
   }
-  return { configured: true, results }
+  return { configured: true, keyShapes, results }
 }
 
 /**
