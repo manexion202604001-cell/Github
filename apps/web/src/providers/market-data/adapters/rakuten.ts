@@ -12,10 +12,11 @@ import {
 } from '../types'
 
 /**
- * 2026年2月のインフラ刷新後の新エンドポイント(旧 app.rakuten.co.jp は2026年5月に停止)。
+ * 2026年2月のインフラ刷新後の新エンドポイント(旧 app.rakuten.co.jp は2026年5月に停止、
+ * 旧バージョン20220601も2026年8月17日に廃止)。
  * 認証は Application ID(UUID) + Access Key(pk_...)の2点セット。
  */
-const SEARCH_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601'
+const SEARCH_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701'
 
 type RakutenItem = {
   itemCode?: string
@@ -30,7 +31,11 @@ type RakutenItem = {
   itemCaption?: string
 }
 
-type RakutenResponse = { Items?: { Item?: RakutenItem }[] | RakutenItem[] }
+type RakutenResponse = {
+  Items?: { Item?: RakutenItem }[] | RakutenItem[]
+  /** 2026-07-01版で小文字キーになる可能性に備える */
+  items?: { Item?: RakutenItem }[] | RakutenItem[]
+}
 
 /**
  * 楽天ウェブサービス(Rakuten Developers)の公式API。
@@ -100,7 +105,9 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
     const body = result.body as RakutenResponse
     const items = normalizeItems(body)
     if (items.length === 0) {
-      return { ok: false, error: providerError(this.id, 'INVALID_RESPONSE', '検索結果が空でした'), usage }
+      // 応答形式の変化を切り分けられるよう、生ボディの先頭を添える
+      const preview = JSON.stringify(result.body).slice(0, 250)
+      return { ok: false, error: providerError(this.id, 'INVALID_RESPONSE', `検索結果が空でした [応答: ${preview}]`), usage }
     }
 
     const products = items.map((item, index): MarketProduct => ({
@@ -205,6 +212,6 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
 }
 
 function normalizeItems(body: RakutenResponse): RakutenItem[] {
-  const items = body.Items ?? []
+  const items = body.Items ?? body.items ?? []
   return items.map((entry) => ('Item' in entry && entry.Item ? entry.Item : (entry as RakutenItem)))
 }
