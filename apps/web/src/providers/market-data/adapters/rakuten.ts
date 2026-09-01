@@ -44,6 +44,11 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
   constructor(
     private readonly applicationId: string,
     private readonly accessKey: string,
+    /**
+     * Rakuten Developersの「許可されたWebサイト」に登録したURL。
+     * 新APIはOrigin/Refererヘッダー必須で、登録値と完全一致(末尾スラッシュなし)が必要。
+     */
+    private readonly applicationUrl = 'https://github-ucchau.vercel.app',
   ) {}
 
   isConfigured(): boolean {
@@ -62,10 +67,12 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
     })
     if (input.category) params.set('genreId', input.category)
 
-    // 注意: Origin/Refererヘッダーは送らない。リファラ制限未設定のアプリでは
-    // Refererを送ると HTTP_REFERRER_NOT_ALLOWED (403) で拒否される(実測)。
+    // Origin/Refererは必須(欠くと REFERRER_MISSING)。登録URLとの完全一致が必要で、
+    // 末尾スラッシュを付けると HTTP_REFERRER_NOT_ALLOWED になる(いずれも実測)。
     const result = await getJson(this.id, `${SEARCH_URL}?${params.toString()}`, {
       accessKey: this.accessKey,
+      Origin: this.applicationUrl,
+      Referer: this.applicationUrl,
     })
     if (!result.ok) {
       // 認証不備はユーザーが自力で直せるよう具体的に案内する(原因特定のため生エラーも添える)
