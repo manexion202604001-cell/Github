@@ -188,21 +188,30 @@ export async function debugTestMarketProviders(): Promise<Record<string, unknown
   const organizationId = row?.organizationId ?? (await db.organization.findFirst({ select: { id: true } }))?.id
   if (!organizationId) return { configured: false, note: '組織がありません' }
 
-  // 保存キーの形状だけを返す(全文は返さない)。「何が保存されているか」の切り分け用
-  const rows = await db.integration.findMany({ where: { enabled: true, kind: 'MARKET_DATA', organizationId } })
+  // 保存キーの形状だけを返す(全文は返さない)。「何が保存されているか」の切り分け用。
+  // 別組織に保存してしまっているケースを検出できるよう、全組織のMARKET_DATA行を対象にする
+  const rows = await db.integration.findMany({
+    where: { kind: 'MARKET_DATA' },
+    include: { organization: { select: { name: true } } },
+  })
   const keyShapes = rows.map((item) => {
     const secret = item.encryptedSecret ? decryptSecret(item.encryptedSecret) : null
     const config = item.config && typeof item.config === 'object' ? (item.config as Record<string, unknown>) : {}
     const applicationId = typeof config.applicationId === 'string' ? config.applicationId : null
-    if (!secret) return { provider: item.provider, hasSecret: false }
-    return {
+    const base = {
       provider: item.provider,
+      organization: item.organization.name,
+      enabled: item.enabled,
+      applicationId: applicationId ? `${applicationId.slice(0, 8)}…` : null,
+      updatedAt: item.updatedAt,
+    }
+    if (!secret) return { ...base, hasSecret: false }
+    return {
+      ...base,
       hasSecret: true,
       length: secret.length,
       digitsOnly: /^\d+$/.test(secret),
       hint: `${secret.slice(0, 2)}…${secret.slice(-2)}`,
-      applicationId: applicationId ? `${applicationId.slice(0, 8)}…` : null,
-      updatedAt: item.updatedAt,
     }
   })
 
