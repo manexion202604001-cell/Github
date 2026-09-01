@@ -11,7 +11,11 @@ import {
   type SearchInput,
 } from '../types'
 
-const SEARCH_URL = 'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601'
+/**
+ * 2026年2月のインフラ刷新後の新エンドポイント(旧 app.rakuten.co.jp は2026年5月に停止)。
+ * 認証は Application ID(UUID) + Access Key(pk_...)の2点セット。
+ */
+const SEARCH_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601'
 
 type RakutenItem = {
   itemCode?: string
@@ -29,7 +33,7 @@ type RakutenItem = {
 type RakutenResponse = { Items?: { Item?: RakutenItem }[] | RakutenItem[] }
 
 /**
- * 楽天ウェブサービスの公式API。
+ * 楽天ウェブサービス(Rakuten Developers)の公式API。
  * 規約上クリーンに実データを取得できるため、スクレイピングより優先して選択する。
  */
 export class RakutenMarketDataProvider implements MarketDataProvider {
@@ -37,16 +41,22 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
   readonly synthetic = false
   readonly sourceLabel = '楽天市場(公式API)'
 
-  constructor(private readonly applicationId: string) {}
+  constructor(
+    private readonly applicationId: string,
+    private readonly accessKey: string,
+    /** Rakuten Developersに登録したApplication URL。Origin/Refererとして送る(新APIの検証対策)。 */
+    private readonly applicationUrl = 'https://github-ucchau.vercel.app',
+  ) {}
 
   isConfigured(): boolean {
-    return this.applicationId.length > 0
+    return this.applicationId.length > 0 && this.accessKey.length > 0
   }
 
   async searchProducts(input: SearchInput): Promise<ProviderOutcome<MarketProduct[]>> {
     const usage = emptyUsage(this.id, 'ichiba-search')
     const params = new URLSearchParams({
       applicationId: this.applicationId,
+      accessKey: this.accessKey,
       keyword: input.keyword,
       hits: String(Math.min(30, input.limit ?? 24)),
       sort: '-reviewCount',
@@ -54,16 +64,27 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
     })
     if (input.category) params.set('genreId', input.category)
 
-    const result = await getJson(this.id, `${SEARCH_URL}?${params.toString()}`)
+    const result = await getJson(this.id, `${SEARCH_URL}?${params.toString()}`, {
+      accessKey: this.accessKey,
+      Origin: this.applicationUrl,
+      Referer: `${this.applicationUrl}/`,
+    })
     if (!result.ok) {
-      // アプリID不正はユーザーが自力で直せるよう具体的に案内する(原因特定のため生エラーも添える)
-      if (result.error.message.includes('wrong_parameter') || result.error.message.includes('applicationId')) {
+      // 認証不備はユーザーが自力で直せるよう具体的に案内する(原因特定のため生エラーも添える)
+      const message = result.error.message
+      if (
+        message.includes('wrong_parameter') ||
+        message.includes('applicationId') ||
+        message.includes('accessKey') ||
+        message.includes('access_key') ||
+        result.error.kind === 'AUTH'
+      ) {
         return {
           ok: false,
           error: providerError(
             this.id,
             'AUTH',
-            `楽天のアプリIDが正しくありません。設定画面で、楽天ウェブサービス(webservice.rakuten.co.jp/app/list)の「アプリID/デベロッパーID」(数字のみ)を貼り直してください。[詳細: ${result.error.message.slice(0, 200)}]`,
+            `楽天APIの認証に失敗しました。設定画面で、Rakuten Developers(webservice.rakuten.co.jp)の「Application ID」(UUID形式)と「Access Key」(pk_で始まる)の両方が正しく設定されているか確認してください。[詳細: ${message.slice(0, 200)}]`,
           ),
           usage,
         }

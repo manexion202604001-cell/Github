@@ -17,6 +17,7 @@ type Row = {
   enabled: boolean
   hasSecret: boolean
   model: string | null
+  applicationId: string | null
   updatedAt: string
 }
 
@@ -25,7 +26,7 @@ export function IntegrationsPanel({ initial, canManage }: { initial: Row[]; canM
   const [error, setError] = useState<string | null>(null)
   const [savingKind, setSavingKind] = useState<string | null>(null)
 
-  const save = async (kind: string, provider: string, secret: string, model: string) => {
+  const save = async (kind: string, provider: string, secret: string, model: string, applicationId: string) => {
     setError(null)
     setSavingKind(kind)
     try {
@@ -36,6 +37,7 @@ export function IntegrationsPanel({ initial, canManage }: { initial: Row[]; canM
           provider,
           secret: secret.trim() || undefined,
           model: model.trim() || undefined,
+          applicationId: applicationId.trim() || undefined,
         },
       })
       router.refresh()
@@ -98,7 +100,7 @@ function IntegrationForm({
   actives: Row[]
   disabled: boolean
   saving: boolean
-  onSave: (kind: string, provider: string, secret: string, model: string) => void
+  onSave: (kind: string, provider: string, secret: string, model: string, applicationId: string) => void
   onRemove: (id: string) => void
 }) {
   const [provider, setProvider] = useState(actives[0]?.provider ?? option.providers[0]?.id ?? '')
@@ -106,6 +108,8 @@ function IntegrationForm({
   const [model, setModel] = useState(actives[0]?.model ?? '')
   const selected = option.providers.find((entry) => entry.id === provider)
   const selectedActive = actives.find((row) => row.provider === provider)
+  const extraField = selected && 'extraField' in selected ? selected.extraField : undefined
+  const [applicationId, setApplicationId] = useState(actives.find((row) => row.applicationId)?.applicationId ?? '')
 
   return (
     <div className="border border-line p-5">
@@ -149,17 +153,34 @@ function IntegrationForm({
             type="password"
             value={secret}
             onChange={(event) => setSecret(event.target.value)}
-            placeholder={selectedActive ? '(変更する場合のみ入力)' : ''}
+            placeholder={selectedActive?.hasSecret ? '(変更する場合のみ入力)' : ''}
             disabled={disabled}
             autoComplete="off"
           />
         </Field>
         <div className="flex items-end">
-          <Button onClick={() => onSave(option.kind, provider, secret, model)} loading={saving} disabled={disabled}>
+          <Button
+            onClick={() => onSave(option.kind, provider, secret, model, applicationId)}
+            loading={saving}
+            disabled={disabled}
+          >
             保存
           </Button>
         </div>
       </div>
+      {extraField ? (
+        <div className="mt-3 max-w-lg">
+          <Field label={extraField.label} hint="Rakuten Developersの「Your Applications」画面からコピーしてください">
+            <Input
+              value={applicationId}
+              onChange={(event) => setApplicationId(event.target.value)}
+              placeholder={extraField.placeholder}
+              disabled={disabled}
+              autoComplete="off"
+            />
+          </Field>
+        </div>
+      ) : null}
       {option.hasModel ? (
         <ModelPicker
           models={selected?.models ?? []}

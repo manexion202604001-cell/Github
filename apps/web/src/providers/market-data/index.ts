@@ -14,7 +14,7 @@ export function marketDataProviders(): ProviderRegistry<MarketDataProvider> {
     registry = new ProviderRegistry<MarketDataProvider>(
       [
         new MockMarketDataProvider(),
-        new RakutenMarketDataProvider(env.marketData.rakutenApplicationId),
+        new RakutenMarketDataProvider(env.marketData.rakutenApplicationId, env.marketData.rakutenAccessKey),
         new RainforestMarketDataProvider(env.marketData.rainforestApiKey, env.marketData.amazonDomain),
         new ScraperMarketDataProvider({
           baseUrl: env.marketData.scraperBaseUrl,

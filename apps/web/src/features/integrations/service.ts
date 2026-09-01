@@ -18,18 +18,19 @@ export async function listIntegrations(organizationId?: string) {
     where: { organizationId: context.organizationId, kind: { in: ['AI_PROVIDER', 'IMAGE_PROVIDER', 'MARKET_DATA'] } },
     orderBy: [{ kind: 'asc' }, { updatedAt: 'desc' }],
   })
-  return rows.map((row) => ({
-    id: row.id,
-    kind: row.kind,
-    provider: row.provider,
-    enabled: row.enabled,
-    hasSecret: row.encryptedSecret !== null,
-    model:
-      row.config && typeof row.config === 'object' && typeof (row.config as Record<string, unknown>).model === 'string'
-        ? ((row.config as Record<string, unknown>).model as string)
-        : null,
-    updatedAt: row.updatedAt,
-  }))
+  return rows.map((row) => {
+    const config = row.config && typeof row.config === 'object' ? (row.config as Record<string, unknown>) : {}
+    return {
+      id: row.id,
+      kind: row.kind,
+      provider: row.provider,
+      enabled: row.enabled,
+      hasSecret: row.encryptedSecret !== null,
+      model: typeof config.model === 'string' ? config.model : null,
+      applicationId: typeof config.applicationId === 'string' ? config.applicationId : null,
+      updatedAt: row.updatedAt,
+    }
+  })
 }
 
 export async function upsertIntegration(input: UpsertIntegrationInput, organizationId?: string) {
@@ -40,14 +41,27 @@ export async function upsertIntegration(input: UpsertIntegrationInput, organizat
   if (!validProvider(input.kind, input.provider)) {
     throw AppError.validation('未対応のProviderです')
   }
-  // 楽天アプリIDは数字のみ(約20桁)。形式違いをここで弾いて実行時の400を防ぐ
-  if (input.provider === 'rakuten' && input.secret && !/^\d{10,25}$/.test(input.secret.trim())) {
-    throw AppError.validation(
-      '楽天のアプリIDは数字のみ(約20桁)です。楽天ウェブサービスの「アプリ情報」画面にある「アプリID/デベロッパーID」の数字をコピーしてください(affiliateIdやアプリシークレットではありません)。',
-    )
+  const applicationId = input.applicationId?.trim()
+  // 楽天(Rakuten Developers)は Application ID(UUID) + Access Key(pk_...)の2点セット。
+  // 形式違いをここで弾いて実行時の400を防ぐ
+  if (input.provider === 'rakuten') {
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (applicationId && !UUID.test(applicationId)) {
+      throw AppError.validation(
+        '楽天のApplication IDはUUID形式(例: 1dc59a13-7622-4f6a-…)です。Rakuten Developersの「Your Applications」画面のApplication ID欄をコピーしてください。',
+      )
+    }
+    if (input.secret && UUID.test(input.secret.trim())) {
+      throw AppError.validation(
+        'Access Key欄にApplication IDが入力されています。Access Keyは「Access Key」欄の目のアイコンで表示されるpk_で始まる値です。',
+      )
+    }
   }
 
-  const config = input.model ? { model: input.model } : {}
+  const config = {
+    ...(input.model ? { model: input.model } : {}),
+    ...(applicationId ? { applicationId } : {}),
+  }
   const secret = input.secret?.trim()
 
   // キー省略時は保存済みのキーを維持する(モデル・Providerの切替だけを許可)

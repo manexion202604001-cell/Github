@@ -162,9 +162,15 @@ export async function marketDataChainFor(organizationId: string): Promise<Market
   for (const row of rows.filter((item) => item.kind === 'MARKET_DATA')) {
     const secret = secretOf(row)
     if (!secret) continue
+    const config = row.config && typeof row.config === 'object' ? (row.config as Record<string, unknown>) : {}
     let override: MarketDataProvider | null = null
-    if (row.provider === 'rakuten') override = new RakutenMarketDataProvider(secret)
-    else if (row.provider === 'rainforest') override = new RainforestMarketDataProvider(secret)
+    if (row.provider === 'rakuten') {
+      // 新Rakuten Developers: Application ID(UUID・config) + Access Key(pk_...・暗号化secret)
+      const applicationId = typeof config.applicationId === 'string' ? config.applicationId : ''
+      override = new RakutenMarketDataProvider(applicationId, secret)
+    } else if (row.provider === 'rainforest') {
+      override = new RainforestMarketDataProvider(secret)
+    }
     if (override?.isConfigured()) overrides.push(override)
   }
 
@@ -186,6 +192,8 @@ export async function debugTestMarketProviders(): Promise<Record<string, unknown
   const rows = await db.integration.findMany({ where: { enabled: true, kind: 'MARKET_DATA', organizationId } })
   const keyShapes = rows.map((item) => {
     const secret = item.encryptedSecret ? decryptSecret(item.encryptedSecret) : null
+    const config = item.config && typeof item.config === 'object' ? (item.config as Record<string, unknown>) : {}
+    const applicationId = typeof config.applicationId === 'string' ? config.applicationId : null
     if (!secret) return { provider: item.provider, hasSecret: false }
     return {
       provider: item.provider,
@@ -193,6 +201,7 @@ export async function debugTestMarketProviders(): Promise<Record<string, unknown
       length: secret.length,
       digitsOnly: /^\d+$/.test(secret),
       hint: `${secret.slice(0, 2)}…${secret.slice(-2)}`,
+      applicationId: applicationId ? `${applicationId.slice(0, 8)}…` : null,
       updatedAt: item.updatedAt,
     }
   })

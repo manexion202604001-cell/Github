@@ -74,6 +74,7 @@ export const env = {
   marketData: {
     provider: read('MARKET_DATA_PROVIDER', 'mock'),
     rakutenApplicationId: read('RAKUTEN_APPLICATION_ID'),
+    rakutenAccessKey: read('RAKUTEN_ACCESS_KEY'),
     rainforestApiKey: read('RAINFOREST_API_KEY'),
     amazonDomain: read('AMAZON_DOMAIN', 'amazon.co.jp'),
     scraperBaseUrl: read('SCRAPER_BASE_URL'),
