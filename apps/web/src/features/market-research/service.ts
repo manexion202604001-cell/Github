@@ -57,17 +57,36 @@ export async function getLatestResearch(projectId: string) {
   })
 }
 
+/** 指定IDの調査を取得する(履歴からの参照用)。他プロジェクトのIDは404。 */
+export async function getResearch(projectId: string, researchId: string) {
+  await requireProjectAccess(projectId)
+  const research = await db.marketResearch.findUnique({
+    where: { id: researchId },
+    include: {
+      competitors: { orderBy: [{ rank: 'asc' }] },
+      reviews: { orderBy: { share: 'desc' } },
+    },
+  })
+  if (!research || research.projectId !== projectId) throw AppError.notFound('調査が見つかりません')
+  return research
+}
+
 export async function listResearch(projectId: string) {
   await requireProjectAccess(projectId)
   return db.marketResearch.findMany({
     where: { projectId },
     orderBy: { createdAt: 'desc' },
+    take: 30,
     select: {
       id: true,
       status: true,
+      depth: true,
       keyword: true,
       marketplace: true,
       source: true,
+      marketSize: true,
+      averagePrice: true,
+      error: true,
       createdAt: true,
       completedAt: true,
       _count: { select: { competitors: true, reviews: true } },

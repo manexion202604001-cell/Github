@@ -41,7 +41,13 @@ export function MarketActions({
   const [depth, setDepth] = useState<Depth>(currentDepth)
   const [error, setError] = useState<string | null>(null)
   const job = useJob((finished) => {
-    if (finished.status === 'FAILED') setError(finished.error ?? '調査に失敗しました')
+    if (finished.status === 'FAILED') {
+      setError(finished.error ?? '調査に失敗しました')
+      router.refresh()
+      return
+    }
+    // 完了した最新の調査を表示する(過去の調査を?researchId=で固定表示していても外す)
+    router.replace(`/projects/${projectId}/market`)
     router.refresh()
   })
 
@@ -103,7 +109,7 @@ export function MarketActions({
             onClick={() => void start('/api/market-research', { projectId, keyword: keyword || undefined, depth })}
             disabled={job.running}
           >
-            {hasResearch ? '再調査する' : '市場調査を開始'}
+            {hasResearch ? '追加調査を実行' : '市場調査を開始'}
           </Button>
           <Button
             variant="secondary"
