@@ -57,6 +57,24 @@ export async function getLatestResearch(projectId: string) {
   })
 }
 
+/**
+ * 実行中(または再試行待ち)の市場調査系Jobを返す。
+ * ページを離れて戻ってきたときに進捗の追跡を再開するために使う
+ * (Job自体はサーバー側で動き続けており、止まるのは画面の追跡だけ)。
+ */
+export async function findActiveMarketJob(projectId: string) {
+  await requireProjectAccess(projectId)
+  return db.job.findFirst({
+    where: {
+      projectId,
+      handler: { in: ['market.research', 'market.reviews'] },
+      status: { in: ['PENDING', 'QUEUED', 'PROCESSING'] },
+    },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, handler: true },
+  })
+}
+
 /** 指定IDの調査を取得する(履歴からの参照用)。他プロジェクトのIDは404。 */
 export async function getResearch(projectId: string, researchId: string) {
   await requireProjectAccess(projectId)

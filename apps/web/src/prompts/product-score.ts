@@ -46,8 +46,16 @@ export const productScoreTask: AITask<{ context: ProjectContextSnapshot }, Produ
 - expandability シリーズ展開性: 5
 - risk 規制リスクの低さ(リスクが低いほど高得点): 5
 
+採点態度(厳格に。甘い評価は事業判断を誤らせる):
+- 加点主義ではなく減点主義で採点する。実データ(市場調査・レビュー分析・原価計算)の裏付けがない項目は、その項目の上限の1/3を超える点を付けない。
+- 満点や上限近くの点を付けるのは、複数の定量的根拠が揃う例外的な場合のみ。迷ったら必ず低い方に倒す。
+- 「たぶん売れる」「工夫次第で差別化できる」のような楽観的推測で加点しない。根拠を挙げられない強みは強みではない。
+- 競合が既に同じ強みを持つ場合、それは差別化(differentiation)に数えない。
+- weaknesses は strengths と同数以上を目安に、致命的になり得るリスクから率直に列挙する。
+- decision は合計点と下の判定基準に厳密に一致させる(点数と矛盾する判定を出さない)。
+
 判定基準:
-- 合計70点以上 → GO
+- 合計70点以上 → GO(「今すぐ開発に着手すべき明確な根拠がある」場合に限る)
 - 合計50〜69点 → IMPROVE_GO(improvements を必ず3件以上出す)
 - 合計49点以下 → NO_GO(reason で理由を明示し、alternativeIdeas を必ず2件以上出す)
 
@@ -55,7 +63,7 @@ improvements は「現状 → AI推奨 → 理由」の形式で、レビュー�
   schema: productScoreSchema,
   maxTokens: 6144,
   buildUser: (input) =>
-    `${formatProjectContext(input.context)}\n\n上記データに基づいて商品を評価してください。データが不足している項目は保守的(低め)に採点し、reason で不足を明記してください。`,
+    `${formatProjectContext(input.context)}\n\n上記データに基づいて商品を厳格に評価してください。データが不足している項目は保守的(低め)に採点し、reason で不足を明記してください。投資家に説明できる水準の根拠がない加点はしないこと。`,
   mock: (input) => {
     const hasMarket = input.context.market !== null
     const hasReviews = input.context.reviewClusters.length > 0

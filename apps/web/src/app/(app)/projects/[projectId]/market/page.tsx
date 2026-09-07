@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getLatestResearch, getResearch, listResearch, providerInfoFor } from '@/features/market-research/service'
+import { findActiveMarketJob, getLatestResearch, getResearch, listResearch, providerInfoFor } from '@/features/market-research/service'
 import { DEPTH_CONFIG } from '@/features/market-research/domain'
 import { toStringArray } from '@/features/assistant/context'
 import { formatCurrency, formatDateTime, formatPercent } from '@/lib/format'
@@ -44,10 +44,11 @@ export default async function MarketPage({
   const { projectId } = await params
   const { researchId, keyword: keywordParam } = await searchParams
 
-  const [research, history, provider] = await Promise.all([
+  const [research, history, provider, activeJob] = await Promise.all([
     researchId ? getResearch(projectId, researchId) : getLatestResearch(projectId),
     listResearch(projectId),
     providerInfoFor(projectId),
+    findActiveMarketJob(projectId),
   ])
 
   const complaints = (research?.reviews ?? [])
@@ -75,6 +76,8 @@ export default async function MarketPage({
         hasReviews={(research?.reviews?.length ?? 0) > 0}
         currentKeyword={actionKeyword}
         currentDepth={research?.depth ?? 'STANDARD'}
+        activeJobId={activeJob?.id ?? null}
+        activeJobKind={activeJob?.handler === 'market.reviews' ? 'reviews' : 'research'}
         providerLabel={provider.label}
         providerSynthetic={provider.synthetic}
         status={research?.status ?? null}

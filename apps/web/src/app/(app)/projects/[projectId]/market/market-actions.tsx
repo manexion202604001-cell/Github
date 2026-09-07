@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '@/hooks/api'
 import { useJob } from '@/hooks/use-job'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,8 @@ export function MarketActions({
   hasReviews,
   currentKeyword,
   currentDepth,
+  activeJobId,
+  activeJobKind,
   providerLabel,
   providerSynthetic,
   status,
@@ -31,6 +33,9 @@ export function MarketActions({
   hasReviews: boolean
   currentKeyword: string
   currentDepth: Depth
+  /** 実行中のJobがあれば、ページ再訪時に追跡を自動再開する(調査自体は裏で動き続けている)。 */
+  activeJobId: string | null
+  activeJobKind: 'research' | 'reviews'
   providerLabel: string
   providerSynthetic: boolean
   status: string | null
@@ -50,6 +55,12 @@ export function MarketActions({
     router.replace(`/projects/${projectId}/market`)
     router.refresh()
   })
+
+  // ページを離れて戻ってきたとき、実行中のJobがあれば追跡を再開する
+  const track = job.track
+  useEffect(() => {
+    if (activeJobId) track(activeJobId)
+  }, [activeJobId, track])
 
   const start = async (path: string, body: unknown) => {
     setError(null)
@@ -123,7 +134,9 @@ export function MarketActions({
         {job.running && job.job ? (
           <div className="space-y-2">
             <p className="text-[13px] font-semibold">
-              分析中…(商品取得 → AI分析 → 競合保存){depth === 'DEEP' ? '。完了後、レビュー解析も自動で続けます' : ''}
+              {job.job.id === activeJobId && activeJobKind === 'reviews'
+                ? 'レビュー解析を実行中…(ページを離れても処理は続きます)'
+                : `分析中…(商品取得 → AI分析 → 競合保存)${depth === 'DEEP' ? '。完了後、レビュー解析も自動で続けます。' : ''}ページを離れても処理は続きます`}
             </p>
             <Progress value={job.job.progress} showValue />
           </div>
