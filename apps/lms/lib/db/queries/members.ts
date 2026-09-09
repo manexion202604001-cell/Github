@@ -97,7 +97,7 @@ export async function getMemberEmail(userId: string): Promise<string | null> {
 /** 登録済みメール（小文字）を一括で引く */
 export async function findExistingEmails(emails: string[]): Promise<Set<string>> {
   if (emails.length === 0) return new Set()
-  const rows = await db.execute<{ email: string }>(sql`select lower(email) as email from auth.users where lower(email) in ${emails.map((e) => e.toLowerCase())}`)
+  const rows = await db.execute<{ email: string }>(sql`select lower(email) as email from auth.users where lower(email) = any(${emails.map((e) => e.toLowerCase())}::text[])`)
   return new Set(rows.map((r) => r.email))
 }
 

@@ -68,7 +68,7 @@ export async function createInvitations(
   const pending = await db
     .select({ email: invitations.email })
     .from(invitations)
-    .where(sql`lower(${invitations.email}) in ${valid} and ${invitations.usedAt} is null and ${invitations.expiresAt} > now()`)
+    .where(sql`lower(${invitations.email}) = any(${valid}::text[]) and ${invitations.usedAt} is null and ${invitations.expiresAt} > now()`)
   const pendingSet = new Set(pending.map((p) => p.email.toLowerCase()))
 
   const sent: string[] = []
