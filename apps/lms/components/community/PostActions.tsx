@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { Dialog, DialogContent } from '@/components/ui/Dialog'
 import { Textarea } from '@/components/ui/Input'
 import { Field } from '@/components/ui/Label'
-import { FormMessage } from '@/components/ui/FormMessage'
 import { toast } from '@/components/ui/Toaster'
 import { ReportDialog } from './ReportDialog'
 
@@ -97,7 +96,6 @@ export function PostActions({
             <Field label="本文（Markdown 可）" htmlFor="edit-post-body" error={error ?? undefined}>
               <Textarea id="edit-post-body" value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={10_000} className="min-h-[200px]" />
             </Field>
-            <FormMessage message={null} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setEditing(false)} disabled={pending}>
                 キャンセル

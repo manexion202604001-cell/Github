@@ -111,12 +111,14 @@ export async function deletePost(postId: string): Promise<ActionResult<{ channel
   const isAdmin = hasRole(user.profile, 'admin')
   if (post.userId !== user.id && !isAdmin) return fail(ERR.forbidden)
 
+  const commentIds = (await db.select({ id: comments.id }).from(comments).where(eq(comments.postId, post.id))).map((c) => c.id)
   await withRls(user.id, async (tx) => {
     await tx.delete(posts).where(eq(posts.id, post.id))
   })
-  // 添付・リアクション・通報は FK が無いためサーバー側で掃除する
+  // 添付・リアクションは FK が無いためサーバー側で掃除する（コメントは FK でカスケード）
   await db.delete(attachments).where(and(eq(attachments.targetType, 'post'), eq(attachments.targetId, post.id)))
   await db.delete(reactions).where(and(eq(reactions.targetType, 'post'), eq(reactions.targetId, post.id)))
+  if (commentIds.length > 0) await db.delete(reactions).where(and(eq(reactions.targetType, 'comment'), inArray(reactions.targetId, commentIds)))
   if (isAdmin && post.userId !== user.id) {
     await db.insert(auditLogs).values({ actorId: user.id, action: 'community.post.delete', targetType: 'post', targetId: post.id, detail: { ownerId: post.userId } })
     await db.update(reports).set({ resolvedAt: new Date() }).where(and(eq(reports.targetType, 'post'), eq(reports.targetId, post.id), isNull(reports.resolvedAt)))

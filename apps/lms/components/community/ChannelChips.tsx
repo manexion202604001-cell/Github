@@ -30,7 +30,7 @@ function Chip({ href, active, label, followed }: { href: string; active: boolean
         active ? 'border-ink-900 bg-ink-900 text-paper-100 hover:text-paper-100' : 'border-stone-300 text-ink-700 hover:border-bronze-500 hover:text-ink-700',
       )}
     >
-      {followed && <span aria-hidden className={cn('inline-block size-1.5 rounded-full', active ? 'bg-bronze-500' : 'bg-bronze-500')} />}
+      {followed && <span aria-hidden title="フォロー中" className="inline-block size-1.5 rounded-full bg-bronze-500" />}
       {label}
     </Link>
   )
