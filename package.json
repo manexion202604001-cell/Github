@@ -2,14 +2,23 @@
   "name": "manexion-monorepo",
   "private": true,
   "version": "1.0.0",
-  "description": "MANEXION monorepo — static sites + AI商品開発OS (apps/web)",
-  "workspaces": ["apps/*"],
+  "description": "MANEXION monorepo — static sites + AI商品開発OS (apps/web) + studio N LMS (apps/lms)",
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev": "npm run dev -w @manexion/web",
     "build": "npm run build -w @manexion/web",
     "lint": "npm run lint -w @manexion/web",
     "typecheck": "npm run typecheck -w @manexion/web",
-    "test": "npm run test -w @manexion/web"
+    "test": "npm run test -w @manexion/web",
+    "dev:lms": "npm run dev -w @studio-n/lms",
+    "build:lms": "npm run build -w @studio-n/lms",
+    "lint:lms": "npm run lint -w @studio-n/lms",
+    "typecheck:lms": "npm run typecheck -w @studio-n/lms",
+    "test:lms": "npm run test -w @studio-n/lms"
   },
-  "engines": { "node": ">=20.11" }
+  "engines": {
+    "node": ">=20.11"
+  }
 }

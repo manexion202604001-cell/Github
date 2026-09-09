@@ -5,6 +5,7 @@
 | パス | 内容 | 注意 |
 |---|---|---|
 | `apps/web/` | **UCCHAU — AI商品開発OS**(Next.js 15 / TS strict / Prisma / Tailwind v4)。メインプロダクト | ここで開発する |
+| `apps/lms/` | **studio N 学習プラットフォーム**(Next.js 15 / TS strict / Supabase / Drizzle / Tailwind v3)。仕様は `apps/lms/REQUIREMENTS.md`、規約は `apps/lms/CLAUDE.md` | 独立した Vercel プロジェクト(Root Directory = apps/lms) |
 | `index.html` + `config.js` + `setup.sql` | 顧客台帳(静的サイト・GitHub Pages公開中) | **変更禁止** |
 | `k2j-bridge/`, `patent-match/` | 既存の静的サイト | **変更禁止** |
 | `docs/` | 設計書(00)とVercelデプロイ手順(01) | |
