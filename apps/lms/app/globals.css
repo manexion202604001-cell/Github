@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  studio N デザインシステム（REQUIREMENTS.md §9）
+  色は tailwind.config.ts のトークンのみ。ここでは変数へ写像するのみで HEX を増やさない。
+*/
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    @apply bg-paper-100 text-ink-700 antialiased;
+    font-feature-settings: 'palt';
+  }
+  body {
+    @apply font-serif text-[16px] leading-[1.9] tracking-wide;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif font-medium text-ink-900;
+  }
+  h1 { @apply text-[32px] leading-[1.4] tracking-wide md:text-[40px]; }
+  h2 { @apply text-[24px] leading-[1.5] tracking-wide md:text-[28px]; }
+  h3 { @apply text-[18px] leading-[1.6] tracking-[0.02em] md:text-[20px]; }
+  a {
+    @apply text-ink-700 underline decoration-bronze-500 underline-offset-4 transition-colors hover:text-bronze-500;
+  }
+  button, input, select, textarea, table, nav, label {
+    @apply font-sans;
+  }
+  code, kbd, pre {
+    @apply font-mono text-[13px] leading-[1.7] md:text-[14px];
+  }
+  *:focus-visible {
+    @apply outline-none ring-1 ring-bronze-500 ring-offset-2 ring-offset-paper-100;
+  }
+  .dark-surface *:focus-visible {
+    @apply ring-offset-ink-900;
+  }
+  ::placeholder {
+    @apply text-stone-400;
+  }
+  ::selection {
+    @apply bg-bronze-500/30;
+  }
+  /* View transition: cross-fade 160ms */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 160ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .ui-label {
+    @apply font-sans text-[13px] leading-[1.5] tracking-[0.06em] md:text-[14px];
+  }
+  .caption {
+    @apply font-sans text-[12px] leading-[1.5] tracking-wide text-stone-500;
+  }
+  .eyebrow {
+    @apply font-sans text-[11px] font-light uppercase tracking-widest text-stone-400;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  .surface-dark {
+    @apply bg-ink-900 text-paper-100;
+  }
+  .prose-n {
+    @apply prose prose-stone max-w-prose font-serif leading-[1.9] tracking-wide text-ink-700
+      prose-headings:font-serif prose-headings:font-medium prose-headings:text-ink-900
+      prose-a:text-ink-700 prose-a:decoration-bronze-500 prose-a:underline-offset-4 hover:prose-a:text-bronze-500
+      prose-strong:font-medium prose-strong:text-ink-900
+      prose-code:rounded prose-code:bg-paper-200 prose-code:px-1 prose-code:py-0.5 prose-code:font-mono prose-code:text-[13px] prose-code:font-normal prose-code:text-ink-700
+      prose-code:before:content-none prose-code:after:content-none
+      prose-pre:rounded prose-pre:border prose-pre:border-dark prose-pre:bg-ink-800 prose-pre:text-paper-100
+      prose-blockquote:border-l-bronze-500 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-stone-500
+      prose-hr:border-stone-300 prose-img:rounded prose-th:font-sans prose-td:font-sans;
+  }
+  .prose-n img {
+    filter: saturate(0.7);
+  }
+}
+
+/* highlight.js（rehype-highlight）— パレット内の低彩度配色のみ */
+.hljs { color: theme('colors.paper.100'); }
+.hljs-comment, .hljs-quote { color: theme('colors.stone.400'); }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section, .hljs-link { color: theme('colors.bronze.400'); }
+.hljs-string, .hljs-title, .hljs-name, .hljs-type, .hljs-attribute, .hljs-symbol, .hljs-bullet, .hljs-addition, .hljs-variable, .hljs-template-tag, .hljs-template-variable { color: theme('colors.paper.200'); }
+.hljs-number, .hljs-meta, .hljs-built_in, .hljs-builtin-name, .hljs-params { color: theme('colors.stone.300'); }
+.hljs-deletion { color: theme('colors.state.danger'); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 500; }
