@@ -62,8 +62,8 @@ export async function listCoursesWithProgress(
       course: courses,
       categoryName: categories.name,
       categorySlug: categories.slug,
-      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = ${courses.id})`,
-      completedCount: sql<number>`(select count(*) from ${lessonProgress} lp join ${lessons} l on l.id = lp.lesson_id join ${sections} s on s.id = l.section_id where s.course_id = ${courses.id} and lp.user_id = ${userId} and lp.status = 'completed')`,
+      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = "courses"."id")`,
+      completedCount: sql<number>`(select count(*) from ${lessonProgress} lp join ${lessons} l on l.id = lp.lesson_id join ${sections} s on s.id = l.section_id where s.course_id = "courses"."id" and lp.user_id = ${userId} and lp.status = 'completed')`,
       enrolledAt: enrollments.enrolledAt,
       completedAt: enrollments.completedAt,
     })

@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/lib/db'
 import { profiles, type Profile, type UserRole } from '@/lib/db/schema'
+import { devPreviewUserId } from '@/lib/dev-preview'
 
 export type CurrentUser = {
   id: string
@@ -14,6 +15,11 @@ export type CurrentUser = {
 
 /** リクエスト内でキャッシュされる現在ユーザー（未ログインなら null） */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  const preview = devPreviewUserId()
+  if (preview) {
+    const profile = await db.query.profiles.findFirst({ where: eq(profiles.id, preview) })
+    return profile ? { id: preview, email: 'preview@example.com', profile } : null
+  }
   const supabase = await createClient()
   const {
     data: { user },

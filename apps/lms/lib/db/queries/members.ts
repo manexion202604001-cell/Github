@@ -137,8 +137,8 @@ export async function getMemberCourseProgress(userId: string): Promise<MemberCou
       slug: courses.slug,
       title: courses.title,
       status: courses.status,
-      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = ${courses.id})`,
-      completedCount: sql<number>`(select count(*) from ${lessonProgress} lp join ${lessons} l on l.id = lp.lesson_id join ${sections} s on s.id = l.section_id where s.course_id = ${courses.id} and lp.user_id = ${userId} and lp.status = 'completed')`,
+      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = "courses"."id")`,
+      completedCount: sql<number>`(select count(*) from ${lessonProgress} lp join ${lessons} l on l.id = lp.lesson_id join ${sections} s on s.id = l.section_id where s.course_id = "courses"."id" and lp.user_id = ${userId} and lp.status = 'completed')`,
       enrolledAt: enrollments.enrolledAt,
       completedAt: enrollments.completedAt,
     })
@@ -201,7 +201,7 @@ export async function getProgressMatrix(opts: { includeEmail?: boolean } = {}): 
     .select({
       id: courses.id,
       title: courses.title,
-      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = ${courses.id})`,
+      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = "courses"."id")`,
     })
     .from(courses)
     .where(eq(courses.status, 'published'))

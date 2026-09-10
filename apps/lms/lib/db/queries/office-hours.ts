@@ -32,8 +32,8 @@ export async function listAllOfficeHoursForAdmin(): Promise<(OfficeHour & { ques
   const rows = await db
     .select({
       oh: officeHours,
-      questionCount: sql<number>`(select count(*) from ${officeHourQuestions} q where q.office_hour_id = ${officeHours.id})`,
-      attendeeCount: sql<number>`(select count(*) from ${officeHourAttendance} a where a.office_hour_id = ${officeHours.id})`,
+      questionCount: sql<number>`(select count(*) from ${officeHourQuestions} q where q.office_hour_id = "office_hours"."id")`,
+      attendeeCount: sql<number>`(select count(*) from ${officeHourAttendance} a where a.office_hour_id = "office_hours"."id")`,
     })
     .from(officeHours)
     .orderBy(desc(officeHours.scheduledAt))
@@ -85,13 +85,13 @@ export async function listOfficeHourQuestions(officeHourId: string, userId: stri
       displayName: profiles.displayName,
       avatarUrl: profiles.avatarUrl,
       deletedAt: profiles.deletedAt,
-      voteCount: sql<number>`(select count(*) from ${officeHourQuestionVotes} v where v.question_id = ${officeHourQuestions.id})`,
-      votedByMe: sql<boolean>`exists(select 1 from ${officeHourQuestionVotes} v where v.question_id = ${officeHourQuestions.id} and v.user_id = ${userId})`,
+      voteCount: sql<number>`(select count(*) from ${officeHourQuestionVotes} v where v.question_id = "office_hour_questions"."id")`,
+      votedByMe: sql<boolean>`exists(select 1 from ${officeHourQuestionVotes} v where v.question_id = "office_hour_questions"."id" and v.user_id = ${userId})`,
     })
     .from(officeHourQuestions)
     .innerJoin(profiles, eq(profiles.id, officeHourQuestions.userId))
     .where(eq(officeHourQuestions.officeHourId, officeHourId))
-    .orderBy(desc(sql`(select count(*) from ${officeHourQuestionVotes} v where v.question_id = ${officeHourQuestions.id})`), asc(officeHourQuestions.createdAt))
+    .orderBy(desc(sql`(select count(*) from ${officeHourQuestionVotes} v where v.question_id = "office_hour_questions"."id")`), asc(officeHourQuestions.createdAt))
   return rows.map((r) => ({
     id: r.id,
     body: r.body,

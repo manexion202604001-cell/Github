@@ -23,7 +23,7 @@ export async function listChannels(userId: string): Promise<ChannelWithFollow[]>
     .select({
       channel: channels,
       followed: sql<boolean>`${channelFollows.userId} is not null`,
-      postCount: sql<number>`(select count(*) from ${posts} p where p.channel_id = ${channels.id} and p.is_hidden = false)`,
+      postCount: sql<number>`(select count(*) from ${posts} p where p.channel_id = "channels"."id" and p.is_hidden = false)`,
     })
     .from(channels)
     .leftJoin(channelFollows, and(eq(channelFollows.channelId, channels.id), eq(channelFollows.userId, userId)))
@@ -119,7 +119,7 @@ const postSelect = {
   authorAvatar: avatarSql,
   authorRole: profiles.role,
   authorDeleted: sql<boolean>`${profiles.deletedAt} is not null`,
-  commentCount: sql<number>`(select count(*) from ${comments} c where c.post_id = ${posts.id} and c.is_hidden = false)`,
+  commentCount: sql<number>`(select count(*) from ${comments} c where c.post_id = "posts"."id" and c.is_hidden = false)`,
 }
 
 type PostRow = {
@@ -332,7 +332,7 @@ export async function listReports(): Promise<ReportItem[]> {
 /** ADM-07: チャンネル一覧（管理用） */
 export async function listChannelsForAdmin(): Promise<(Channel & { postCount: number })[]> {
   const rows = await db
-    .select({ channel: channels, postCount: sql<number>`(select count(*) from ${posts} p where p.channel_id = ${channels.id})` })
+    .select({ channel: channels, postCount: sql<number>`(select count(*) from ${posts} p where p.channel_id = "channels"."id")` })
     .from(channels)
     .orderBy(asc(channels.sortOrder), asc(channels.name))
   return rows.map((r) => ({ ...r.channel, postCount: Number(r.postCount) }))

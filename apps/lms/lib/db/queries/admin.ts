@@ -42,16 +42,16 @@ export async function getAdminStats(): Promise<AdminStats> {
     select count(distinct p.id)::int as n
     from profiles p
     where p.deleted_at is null and (
-      exists (select 1 from lesson_progress lp where lp.user_id = p.id and lp.updated_at >= ${since})
-      or exists (select 1 from posts po where po.user_id = p.id and po.created_at >= ${since})
-      or exists (select 1 from qa_threads q where q.user_id = p.id and q.created_at >= ${since})
-      or exists (select 1 from office_hour_attendance oa where oa.user_id = p.id and oa.joined_at >= ${since})
+      exists (select 1 from lesson_progress lp where lp.user_id = p.id and lp.updated_at >= ${since.toISOString()}::timestamptz)
+      or exists (select 1 from posts po where po.user_id = p.id and po.created_at >= ${since.toISOString()}::timestamptz)
+      or exists (select 1 from qa_threads q where q.user_id = p.id and q.created_at >= ${since.toISOString()}::timestamptz)
+      or exists (select 1 from office_hour_attendance oa where oa.user_id = p.id and oa.joined_at >= ${since.toISOString()}::timestamptz)
     )
   `)
   const [enr] = await db.select({ n: count() }).from(enrollments)
   const [done] = await db.select({ n: count() }).from(enrollments).where(isNotNull(enrollments.completedAt))
   const [unanswered] = await db.execute<{ n: number }>(sql`select count(*)::int as n from qa_threads where status = 'open'`)
-  const [posts] = await db.execute<{ n: number }>(sql`select count(*)::int as n from posts where created_at >= ${since} and is_hidden = false`)
+  const [posts] = await db.execute<{ n: number }>(sql`select count(*)::int as n from posts where created_at >= ${since.toISOString()}::timestamptz and is_hidden = false`)
   const [pending] = await db
     .select({ n: count() })
     .from(profiles)
@@ -88,7 +88,7 @@ export async function listAdminCourses() {
       publishedAt: courses.publishedAt,
       updatedAt: courses.updatedAt,
       categoryName: categories.name,
-      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = ${courses.id})`,
+      lessonCount: sql<number>`(select count(*) from ${lessons} l join ${sections} s on s.id = l.section_id where s.course_id = "courses"."id")`,
     })
     .from(courses)
     .leftJoin(categories, eq(categories.id, courses.categoryId))
@@ -164,7 +164,7 @@ export async function listAdminCategories() {
       slug: categories.slug,
       name: categories.name,
       sortOrder: categories.sortOrder,
-      courseCount: sql<number>`(select count(*) from ${courses} c where c.category_id = ${categories.id})`,
+      courseCount: sql<number>`(select count(*) from ${courses} c where c.category_id = "categories"."id")`,
     })
     .from(categories)
     .orderBy(asc(categories.sortOrder), asc(categories.name))

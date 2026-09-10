@@ -59,8 +59,8 @@ function listSelection() {
     courseId: qaThreads.courseId,
     courseTitle: courses.title,
     courseSlug: courses.slug,
-    replyCount: sql<number>`(select count(*) from ${qaReplies} r where r.thread_id = ${qaThreads.id})`,
-    officialCount: sql<number>`(select count(*) from ${qaReplies} r where r.thread_id = ${qaThreads.id} and r.is_official)`,
+    replyCount: sql<number>`(select count(*) from ${qaReplies} r where r.thread_id = "qa_threads"."id")`,
+    officialCount: sql<number>`(select count(*) from ${qaReplies} r where r.thread_id = "qa_threads"."id" and r.is_official)`,
   }
 }
 

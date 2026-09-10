@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { devPreviewUserId } from '@/lib/dev-preview'
 
 const PUBLIC_PREFIXES = ['/login', '/signup', '/reset-password', '/verify', '/faq', '/terms', '/privacy', '/api', '/_next', '/favicon']
 
@@ -9,6 +10,7 @@ function isPublicPath(pathname: string) {
 }
 
 export async function updateSession(request: NextRequest) {
+  if (devPreviewUserId()) return NextResponse.next({ request }) // 開発専用プレビュー（本番では無効）
   let response = NextResponse.next({ request })
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
