@@ -14,6 +14,9 @@ npm install
 cd apps/lms
 cp .env.example .env.local   # 値を設定
 
+# DB: 最短ルート（Supabase ダッシュボード → SQL Editor）
+#   supabase/setup-all.sql を貼り付けて Run → supabase/bootstrap-admin.sql で最初の管理者を作成
+
 # DB: Supabase CLI がある場合
 supabase link --project-ref <ref>
 supabase db push             # supabase/migrations（テーブル・RLS・トリガー・view）
