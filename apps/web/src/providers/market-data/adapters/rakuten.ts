@@ -62,55 +62,72 @@ export class RakutenMarketDataProvider implements MarketDataProvider {
 
   async searchProducts(input: SearchInput): Promise<ProviderOutcome<MarketProduct[]>> {
     const usage = emptyUsage(this.id, 'ichiba-search')
-    const params = new URLSearchParams({
-      applicationId: this.applicationId,
-      accessKey: this.accessKey,
-      keyword: input.keyword,
-      hits: String(Math.min(30, input.limit ?? 24)),
-      sort: '-reviewCount',
-      format: 'json',
-    })
-    if (input.category) params.set('genreId', input.category)
+    // 楽天APIは1リクエスト最大30件。それ以上はページを跨いで収集する(最大4ページ=120件)
+    const limit = Math.min(input.limit ?? 24, 120)
+    const maxPages = Math.min(4, Math.ceil(limit / 30))
+    const items: RakutenItem[] = []
 
-    // Origin/Refererは必須(欠くと REFERRER_MISSING)。登録URLとの完全一致が必要で、
-    // 末尾スラッシュを付けると HTTP_REFERRER_NOT_ALLOWED になる(いずれも実測)。
-    const result = await getJson(this.id, `${SEARCH_URL}?${params.toString()}`, {
-      accessKey: this.accessKey,
-      Origin: this.applicationUrl,
-      Referer: this.applicationUrl,
-    })
-    if (!result.ok) {
-      // 認証不備はユーザーが自力で直せるよう具体的に案内する(原因特定のため生エラーも添える)
-      const message = result.error.message
-      if (
-        message.includes('wrong_parameter') ||
-        message.includes('applicationId') ||
-        message.includes('accessKey') ||
-        message.includes('access_key') ||
-        result.error.kind === 'AUTH'
-      ) {
-        return {
-          ok: false,
-          error: providerError(
-            this.id,
-            'AUTH',
-            `楽天APIの認証に失敗しました。設定画面で、Rakuten Developers(webservice.rakuten.co.jp)の「Application ID」(UUID形式)と「Access Key」(pk_で始まる)の両方が正しく設定されているか確認してください。[詳細: ${message.slice(0, 200)}]`,
-          ),
-          usage,
+    for (let page = 1; page <= maxPages && items.length < limit; page += 1) {
+      // レート制限(約1リクエスト/秒)を守る
+      if (page > 1) await new Promise((resolve) => setTimeout(resolve, 1100))
+
+      const params = new URLSearchParams({
+        applicationId: this.applicationId,
+        accessKey: this.accessKey,
+        keyword: input.keyword,
+        hits: String(Math.min(30, limit - items.length)),
+        page: String(page),
+        sort: '-reviewCount',
+        format: 'json',
+      })
+      if (input.category) params.set('genreId', input.category)
+
+      // Origin/Refererは必須(欠くと REFERRER_MISSING)。登録URLとの完全一致が必要で、
+      // 末尾スラッシュを付けると HTTP_REFERRER_NOT_ALLOWED になる(いずれも実測)。
+      const result = await getJson(this.id, `${SEARCH_URL}?${params.toString()}`, {
+        accessKey: this.accessKey,
+        Origin: this.applicationUrl,
+        Referer: this.applicationUrl,
+      })
+      if (!result.ok) {
+        // 2ページ目以降の失敗は、取得済み分で続行する(部分結果を無駄にしない)
+        if (items.length > 0) break
+        // 認証不備はユーザーが自力で直せるよう具体的に案内する(原因特定のため生エラーも添える)
+        const message = result.error.message
+        if (
+          message.includes('wrong_parameter') ||
+          message.includes('applicationId') ||
+          message.includes('accessKey') ||
+          message.includes('access_key') ||
+          result.error.kind === 'AUTH'
+        ) {
+          return {
+            ok: false,
+            error: providerError(
+              this.id,
+              'AUTH',
+              `楽天APIの認証に失敗しました。設定画面で、Rakuten Developers(webservice.rakuten.co.jp)の「Application ID」(UUID形式)と「Access Key」(pk_で始まる)の両方が正しく設定されているか確認してください。[詳細: ${message.slice(0, 200)}]`,
+            ),
+            usage,
+          }
         }
+        return { ok: false, error: result.error, usage }
       }
-      return { ok: false, error: result.error, usage }
+
+      const pageItems = normalizeItems(result.body as RakutenResponse)
+      if (pageItems.length === 0) {
+        if (items.length > 0) break
+        // 応答形式の変化を切り分けられるよう、生ボディの先頭を添える
+        const preview = JSON.stringify(result.body).slice(0, 250)
+        return { ok: false, error: providerError(this.id, 'INVALID_RESPONSE', `検索結果が空でした [応答: ${preview}]`), usage }
+      }
+
+      items.push(...pageItems)
+      // ページが埋まっていなければ最終ページ
+      if (pageItems.length < 30) break
     }
 
-    const body = result.body as RakutenResponse
-    const items = normalizeItems(body)
-    if (items.length === 0) {
-      // 応答形式の変化を切り分けられるよう、生ボディの先頭を添える
-      const preview = JSON.stringify(result.body).slice(0, 250)
-      return { ok: false, error: providerError(this.id, 'INVALID_RESPONSE', `検索結果が空でした [応答: ${preview}]`), usage }
-    }
-
-    const products = items.map((item, index): MarketProduct => ({
+    const products = items.slice(0, limit).map((item, index): MarketProduct => ({
       externalId: item.itemCode ?? `rakuten-${index}`,
       title: item.itemName ?? '(no title)',
       url: item.itemUrl,

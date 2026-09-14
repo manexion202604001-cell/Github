@@ -83,23 +83,40 @@ export class RainforestMarketDataProvider implements MarketDataProvider {
 
   async searchProducts(input: SearchInput): Promise<ProviderOutcome<MarketProduct[]>> {
     const usage = emptyUsage(this.id, 'search')
-    const result = await getJson(
-      this.id,
-      this.url({ type: 'search', search_term: input.keyword, sort_by: 'featured' }),
-      {},
-      60_000,
-    )
-    if (!result.ok) return { ok: false, error: result.error, usage }
+    const limit = Math.min(input.limit ?? 24, 120)
+    const items: RainforestSearchItem[] = []
 
-    const body = result.body as { search_results?: RainforestSearchItem[] }
-    const items = body.search_results ?? []
-    if (items.length === 0) {
-      return { ok: false, error: providerError(this.id, 'INVALID_RESPONSE', '検索結果が空でした'), usage }
+    // 1ページ=1クレジット消費のため、必要な件数に届くまでだけ追加ページを取得する(最大3ページ)
+    for (let page = 1; page <= 3 && items.length < limit; page += 1) {
+      const result = await getJson(
+        this.id,
+        this.url({
+          type: 'search',
+          search_term: input.keyword,
+          sort_by: 'featured',
+          ...(page > 1 ? { page: String(page) } : {}),
+        }),
+        {},
+        60_000,
+      )
+      if (!result.ok) {
+        // 2ページ目以降の失敗は取得済み分で続行する
+        if (items.length > 0) break
+        return { ok: false, error: result.error, usage }
+      }
+
+      const body = result.body as { search_results?: RainforestSearchItem[] }
+      const pageItems = body.search_results ?? []
+      if (pageItems.length === 0) {
+        if (items.length > 0) break
+        return { ok: false, error: providerError(this.id, 'INVALID_RESPONSE', '検索結果が空でした'), usage }
+      }
+      items.push(...pageItems)
     }
 
     const products = items
       .filter((item): item is RainforestSearchItem & { asin: string } => typeof item.asin === 'string')
-      .slice(0, input.limit ?? 24)
+      .slice(0, limit)
       .map(
         (item, index): MarketProduct => ({
           externalId: item.asin,

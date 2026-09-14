@@ -167,6 +167,7 @@ const runResearch: JobHandler = async (context) => {
 
     const analysisById = new Map(competitorAnalysis.data.competitors.map((item) => [item.externalId, item]))
 
+    // 詳細調査では最大120件を逐次保存するため、既定5秒のタイムアウトでは不足する
     await db.$transaction(async (tx) => {
       await tx.competitorProduct.deleteMany({ where: { marketResearchId: payload.researchId } })
 
@@ -243,7 +244,7 @@ const runResearch: JobHandler = async (context) => {
           completedAt: new Date(),
         },
       })
-    })
+    }, { timeout: 60_000, maxWait: 10_000 })
 
     await advanceStage(payload.projectId, 'MARKET_RESEARCH')
 
