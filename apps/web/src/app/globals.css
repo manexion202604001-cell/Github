@@ -83,3 +83,42 @@
     transform: translateX(0);
   }
 }
+
+/* AI Copilot: 球体アイコンのまばたきとタイピングインジケータ */
+@keyframes orb-blink {
+  0%,
+  91%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.1);
+  }
+}
+
+.orb-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orb-blink 4.4s infinite;
+}
+
+@keyframes cp-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.cp-dot {
+  animation: cp-blink 1s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-eye,
+  .cp-dot {
+    animation: none;
+  }
+}
