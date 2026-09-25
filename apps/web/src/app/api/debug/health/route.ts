@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/server/db'
 import { env } from '@/lib/env'
+import { cookies } from 'next/headers'
 import { hashPassword } from '@/server/auth/password'
 import { hashToken, randomToken } from '@/server/crypto'
 import { buildComparison } from '@/features/oem/service'
@@ -118,6 +119,35 @@ export async function GET(request: NextRequest) {
     )
 
     diag.push(await step('hashPassword', () => hashPassword('Diagnostic-Password-123')))
+
+    // createSession が行う cookies().set() を DB書き込みなしで単体検証する。
+    diag.push(
+      await step('cookies.set', async () => {
+        const store = await cookies()
+        store.set('mx_diag', 'x', {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          path: '/',
+          expires: new Date(Date.now() + 1000),
+        })
+        store.delete('mx_diag')
+        return { cookieSetOk: true }
+      }),
+    )
+
+    // 途中で失敗したサインアップの痕跡(組織なしの孤立ユーザー等)を件数だけ確認する。
+    // 公開リポジトリのActionsログにPIIを残さないため、メール等は出力しない。
+    diag.push(
+      await step('users.footprint', async () => {
+        const userCount = await db.user.count()
+        const orgCount = await db.organization.count()
+        const membershipCount = await db.organizationMember.count()
+        const usersWithoutOrg = await db.user.count({ where: { memberships: { none: {} } } })
+        const recentUsers = await db.user.count({ where: { createdAt: { gte: new Date(Date.now() - 3 * 3600_000) } } })
+        return { userCount, orgCount, membershipCount, usersWithoutOrg, recentUsers }
+      }),
+    )
 
     diag.push(
       await step('signup.db_sequence(rollback)', async () => {
