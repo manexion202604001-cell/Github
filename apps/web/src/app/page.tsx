@@ -1,6 +1,11 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { env } from '@/lib/env'
 import { Logo } from '@/components/layout/logo'
 import { Button } from '@/components/ui/button'
+
+// AUTO_LOGIN の切り替えをデプロイなしで反映させるため、リクエスト時に判定する
+export const dynamic = 'force-dynamic'
 
 const FLOW = [
   '商品概要入力',
@@ -37,6 +42,9 @@ const FEATURES = [
 ]
 
 export default function MarketingPage() {
+  // 開発フェーズはトップを開いたら即アプリへ。LPは正式公開時に AUTO_LOGIN=false で復活する
+  if (env.auth.autoLogin) redirect('/dashboard')
+
   return (
     <div className="min-h-dvh bg-canvas">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">

@@ -42,6 +42,40 @@ export async function signup(input: SignupInput, meta: { userAgent?: string | nu
   return { id: user.id, email: user.email }
 }
 
+/**
+ * 開発フェーズの自動ログイン(AUTO_LOGIN=false で無効化)。
+ * 最初に登録されたユーザーとしてセッションを作成する。ユーザーが1人もいなければ
+ * デモ用アカウントと組織を作成する。ログイン画面は残してあり、正式公開時に
+ * 環境変数を切り替えるだけで従来の認証フローに戻る。
+ */
+export async function autoLogin(meta: { userAgent?: string | null; ip?: string | null } = {}) {
+  if (!env.auth.autoLogin) throw AppError.forbidden('自動ログインは無効です')
+
+  let user = await db.user.findFirst({
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, email: true },
+  })
+
+  if (!user) {
+    const created = await db.user.create({
+      data: {
+        email: 'demo@ucchau.local',
+        name: 'デモユーザー',
+        // パスワードなし(自動ログイン専用)。login() は passwordHash null を拒否する。
+        passwordHash: null,
+        emailVerifiedAt: new Date(),
+      },
+    })
+    await createOrganization({ name: 'MANEXION', ownerId: created.id })
+    user = { id: created.id, email: created.email }
+  }
+
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
+  await createSession(user.id, meta)
+  logger.info('auth.auto_login', { userId: user.id })
+  return user
+}
+
 export async function login(
   input: { email: string; password: string },
   meta: { userAgent?: string | null; ip?: string | null } = {},

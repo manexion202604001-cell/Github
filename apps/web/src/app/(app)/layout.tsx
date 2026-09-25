@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { env } from '@/lib/env'
 import { getCurrentUser } from '@/server/auth/session'
 import { Logo } from '@/components/layout/logo'
 import { LogoutButton } from '@/components/layout/logout-button'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
-  if (!user) redirect('/login')
+  // 開発フェーズは未ログインでも自動ログインを経由して即アプリを開く(AUTO_LOGIN=falseで従来動作)
+  if (!user) redirect(env.auth.autoLogin ? '/api/auth/auto-login' : '/login')
 
   return (
     <div className="min-h-dvh bg-canvas">

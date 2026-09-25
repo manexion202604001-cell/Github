@@ -49,6 +49,11 @@ export const env = {
   },
   isProduction: process.env.NODE_ENV === 'production',
 
+  auth: {
+    // 開発フェーズの自動ログイン。既定は無効で、AUTO_LOGIN=true を明示した環境のみ有効。
+    autoLogin: readBool('AUTO_LOGIN', false),
+  },
+
   google: {
     clientId: read('GOOGLE_CLIENT_ID'),
     clientSecret: read('GOOGLE_CLIENT_SECRET'),
