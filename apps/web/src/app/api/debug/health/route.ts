@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/server/db'
 import { env } from '@/lib/env'
+import { hashPassword } from '@/server/auth/password'
+import { hashToken, randomToken } from '@/server/crypto'
 import { buildComparison } from '@/features/oem/service'
 import { debugGenerateConceptImage, debugTestImageProvider, debugTestMarketProviders, imageChainFor } from '@/server/org-providers'
 import { loadImageBytes } from '@/features/images/service'
@@ -96,6 +98,75 @@ export async function GET(request: NextRequest) {
         'cache-control': 'no-store',
       },
     })
+  }
+
+  // ?signup=1 — サインアップの500調査。実際のsignupと同じDB挿入を
+  // トランザクション内で行い最後に必ずロールバックする(副作用なし)。
+  // パスワードハッシュ・暗号鍵・メールProviderの状態も併せて報告する。
+  if (request.nextUrl.searchParams.get('signup') === '1') {
+    const diag: StepResult[] = []
+
+    diag.push(
+      await step('env.mail', async () => ({
+        mailProvider: env.mail.provider,
+        hasResendKey: env.mail.resendApiKey.length > 0,
+        mailFrom: env.mail.from,
+        appUrl: env.appUrl,
+        autoLogin: env.auth.autoLogin,
+        hasEncryptionKey: env.encryptionKey.length > 0,
+      })),
+    )
+
+    diag.push(await step('hashPassword', () => hashPassword('Diagnostic-Password-123')))
+
+    diag.push(
+      await step('signup.db_sequence(rollback)', async () => {
+        const marker = new Error('__ROLLBACK__')
+        const email = `diag-${Date.now()}@example.invalid`
+        try {
+          await db.$transaction(async (tx) => {
+            const user = await tx.user.create({
+              data: { email, name: 'diag', passwordHash: await hashPassword('Diagnostic-Password-123') },
+            })
+            const slug = `diag-${Date.now().toString(36)}`
+            await tx.organization.create({
+              data: {
+                name: 'diag org',
+                slug,
+                members: { create: { userId: user.id, role: 'OWNER', joinedAt: new Date() } },
+              },
+            })
+            await tx.auditLog.create({
+              data: {
+                organizationId: (await tx.organization.findUniqueOrThrow({ where: { slug } })).id,
+                userId: user.id,
+                action: 'organization.create',
+                entityType: 'Organization',
+              },
+            })
+            await tx.verificationToken.create({
+              data: {
+                userId: user.id,
+                email,
+                kind: 'EMAIL_VERIFICATION',
+                tokenHash: hashToken(randomToken()),
+                expiresAt: new Date(Date.now() + 86_400_000),
+              },
+            })
+            await tx.session.create({
+              data: { userId: user.id, tokenHash: hashToken(randomToken()), expiresAt: new Date(Date.now() + 1000) },
+            })
+            throw marker
+          })
+        } catch (error) {
+          if (error === marker) return { allInsertsOk: true }
+          throw error
+        }
+      }),
+    )
+
+    const failed = diag.filter((r) => !r.ok)
+    return NextResponse.json({ data: { healthy: failed.length === 0, results: diag } }, { status: 200 })
   }
 
   const results: StepResult[] = []
